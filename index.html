@@ -403,7 +403,7 @@
 
   /* ---- Banco (substitui "db") ---- */
   function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
-  const SHARED=k=>/^(ch_|intro_|ent_|tema_)/.test(k);
+  const SHARED=k=>/^(ch_|intro_|ent_|tema_|rf_)/.test(k);
   const db={ doc(path){ const key=keyOf(path); return {
     async get(){ await CFG.ready;
       if(SHARED(key)){ const { data } = await CFG.sb.from("shared_content").select("value").eq("key",key).maybeSingle(); return {exists:!!data,data:()=>data&&data.value}; }
@@ -534,7 +534,7 @@ REGRAS GERAIS
 - Onde estudiosos discordam, diga que há debate.
 - Se a referência não existir, responda apenas "REFERÊNCIA INVÁLIDA" e sugira a correta.`;
 function fbHint(){ const v=Object.entries(S.fb||{}).sort().slice(-10).map(x=>x[1]); const up=v.filter(x=>x>0).length, dn=v.filter(x=>x<0).length; return dn>up?"\nO leitor tem achado as reflexões pouco úteis: seja mais concreto, prático e próximo do dia a dia, sem perder a profundidade.":up>=3?"\nO leitor tem gostado do tom das reflexões: mantenha o mesmo estilo.":""; }
-function shortPrompt(ref){ return `${BASE}${fbHint()}
+function shortPrompt(ref,generic){ return `${BASE}${generic?"":fbHint()}
 
 Escreva a REFLEXÃO DO DIA sobre ${ref}: curta, profunda e filosófica, para ler em 2 minutos. No máximo 260 palavras no total.
 
@@ -609,15 +609,27 @@ function show(r, kind){
 }
 function renderQA(){ $("qa").innerHTML=(cur.qa||[]).map(x=>`<div class="q">${esc(x.q)}</div><div class="a md">${md(x.a)}</div>`).join(""); }
 function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||[]).filter(x=>x.date!==dstr()); S.dayIndex.unshift({date:dstr(),ref:cur.ref}); S.dayIndex=S.dayIndex.slice(0,180); kvSet("day_"+dstr(),{ref:cur.ref,text:cur.text,deep:cur.deep,date:dstr()}); } const sv=S.saved.find(x=>x.id===cur.id); if(sv) Object.assign(sv,clone(cur)); save(); }
+/* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
+   "Gerar de novo" continua pessoal (leva em conta o feedback do leitor) e não sobrescreve a versão compartilhada. */
+function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
+async function sharedReflection(ref,kind,prompt,target){
+  const key=rfKey(ref,kind);
+  try{ const c=await kvGet(key); if(c&&c.text){ target.innerHTML=md(c.text); return c.text; } }catch(e){}
+  const t=await stream(prompt,target,{shared:true});
+  if(!/REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t) && t.indexOf("veio incompleto")<0){ try{ await kvSet(key,{text:t}); }catch(e){} }
+  return t;
+}
 let regenArm=0;
 async function generate(){
   if(busy||!cur) return;
   if((cur.text||cur.deep) && Date.now()-regenArm>4000){ regenArm=Date.now(); const g=$("gen"); g.textContent="Toque de novo para confirmar"; setTimeout(()=>{ if(!busy) show(cur,$("kind").textContent); },4000); toast("Isso substitui o texto atual"); return; }
+  const isRegen=!!(cur.text||cur.deep);
   regenArm=0; busy=true; $("note").hidden=true; const b=$("gen"); b.disabled=true; b.innerHTML='<span class="spin"></span>Traduzindo do original…';
   $("outCard").hidden=false; $("qaWrap").hidden=true; $("deepBtn").hidden=true;
   const deepMode=cur.mode==="deep";
   const target=deepMode?$("deep"):$("out"); if(deepMode) $("out").innerHTML=""; skel(target);
-  try{ const t=await stream(deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref),target);
+  try{ const t=isRegen ? await stream(deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref),target)
+      : await sharedReflection(cur.ref, deepMode?"d":"s", deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref,true), target);
     if(/^\s*REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t)){ busy=false; b.disabled=false; b.textContent="Tentar de novo"; return; }
     if(deepMode) cur.deep=t; else { cur.text=t; cur.deep=null; } cur.qa=[]; cur.date=dstr(); persist(); markVisit(); autoRead(t,cur.ref,"hoje"); }
   catch(e){ console.warn(e); $("outCard").hidden=true; if(e&&e.code==="no_sample") needClaude("note"); else { $("note").textContent=errMsg(e); $("note").hidden=false; } }
@@ -626,7 +638,7 @@ async function generate(){
 async function deepen(){
   if(busy||!cur) return; busy=true; const b=$("deepBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>Preparando o estudo completo…';
   skel($("deep"),"Preparando o estudo completo…");
-  try{ cur.deep=await stream(deepPrompt(cur.ref),$("deep")); persist(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
+  try{ cur.deep=await sharedReflection(cur.ref,"d",deepPrompt(cur.ref),$("deep")); persist(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
   catch(e){ $("deep").textContent=e&&e.code==="no_sample"?"Entre na sua conta para o estudo completo.":errMsg(e); }
   busy=false; b.disabled=false; b.textContent="Aprofundar: estudo completo do texto"; show(cur,$("kind").textContent);
 }

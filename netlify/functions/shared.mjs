@@ -1,7 +1,7 @@
 import { json, getUser, sb } from "./_lib.mjs";
-/* Conteúdo compartilhado entre todos os usuários: capítulos traduzidos, introduções, verbetes e buscas por tema.
+/* Conteúdo compartilhado entre todos os usuários: capítulos traduzidos, introduções, verbetes, buscas por tema e reflexões das passagens.
    Regra: nunca sobrescreve texto pronto; só completa o que estava faltando. */
-const OK = /^(ch_|intro_|ent_|tema_)[A-Za-z0-9_]{1,80}$/;
+const OK = /^(ch_|intro_|ent_|tema_|rf_)[A-Za-z0-9_]{1,80}$/;
 export default async (req) => {
   if (req.method !== "POST") return json(405, { error: "method" });
   const user = await getUser(req); if (!user) return json(401, { error: "login" });
