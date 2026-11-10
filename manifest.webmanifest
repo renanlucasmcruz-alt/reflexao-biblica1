@@ -1,0 +1,19 @@
+{
+  "name": "Reflexão Bíblica",
+  "short_name": "Reflexão",
+  "description": "Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexão diária, estudo dirigido e dicionário.",
+  "id": "/",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5ede1",
+  "theme_color": "#f5ede1",
+  "lang": "pt-BR",
+  "categories": ["books", "education", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

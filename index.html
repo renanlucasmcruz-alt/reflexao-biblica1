@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5ede1">
+<title>Reflexão Bíblica</title>
+<meta name="description" content="Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexão diária, estudo dirigido e dicionário.">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700;9..144,800&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  /* Layout: app de leitura de uma tela; topo fixo, texto em coluna estreita, abas embaixo. Clima de "café com a Palavra": de dia, aveia e espresso com acento caramelo; à noite, café escuro e luz âmbar. */
+  :root{
+    --bg:#f5ede1; --surface:#fffaf2; --surface2:#f1e5d3; --line:#e5d4bd;
+    --text:#2a1c12; --muted:#7b6553; --gold:#b26a24; --gold2:#8c4f17;
+    --onaccent:#fff; --mdtext:#3a2a1e; --nav:rgba(255,250,242,.96); --toast:#2a1c12; --toastText:#fff8ef;
+    --shadow:0 1px 0 rgba(90,60,30,.04),0 10px 30px rgba(90,60,30,.08);
+    --glow:rgba(178,106,36,.12);
+    --serif:"Literata",Georgia,"Times New Roman",serif;
+    --display:"Fraunces","Literata",Georgia,serif;
+    --ui:"Manrope",-apple-system,"Segoe UI",Roboto,sans-serif;
+    color-scheme:light;
+  }
+  html[data-theme="dark"]{
+    --bg:#16100c; --surface:#211813; --surface2:#2c211a; --line:#3d2f25;
+    --text:#f4eadf; --muted:#b9a593; --gold:#dda15e; --gold2:#f2c88f;
+    --onaccent:#1d120a; --mdtext:#ebdfd2; --nav:rgba(22,16,12,.96); --toast:#f4eadf; --toastText:#1d120a;
+    --shadow:0 10px 30px rgba(0,0,0,.35); --glow:rgba(221,161,94,.14);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--ui)}
+  body{overflow:hidden}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+  button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  h1,h2,h3{margin:0;text-wrap:balance}
+  #app{height:100%;display:flex;flex-direction:column}
+  .top{flex:none;padding:calc(14px + env(safe-area-inset-top)) 20px 10px;display:flex;justify-content:space-between;align-items:flex-end}
+  .top .eyebrow{color:var(--gold2)}
+  .top h1{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.01em}
+  .scroll{flex:1;overflow-y:auto;padding:6px 18px 28px}
+  .view{display:none;max-width:640px;margin:0 auto;flex-direction:column;gap:16px}
+  .view.on{display:flex}
+  nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--nav);backdrop-filter:blur(10px);padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
+  nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11.5px;font-weight:600;color:var(--muted)}
+  nav svg{width:23px;height:23px}
+  nav button.on{color:var(--gold)}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:20px;box-shadow:var(--shadow)}
+  .hero{background:radial-gradient(120% 120% at 100% 0%,var(--glow),transparent 60%),var(--surface)}
+  .ref{font-family:var(--display);letter-spacing:-.01em;font-size:36px;font-weight:700;line-height:1.1;margin:6px 0 8px;color:var(--gold2)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 16px;border-radius:14px;background:var(--gold);color:var(--onaccent);font-weight:800}
+  .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line);font-weight:700}
+  .btn:disabled{opacity:.55}
+  .btn.full{width:100%;padding:15px}
+  input,textarea{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px 14px;font:inherit;font-size:16px;outline:none}
+  input:focus,textarea:focus{border-color:var(--gold)}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{padding:8px 13px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);font-size:13.5px;font-weight:600;font-family:var(--serif)}
+  .note{border-radius:14px;padding:12px 14px;font-size:13.5px;background:var(--glow);border:1px solid var(--line);color:var(--gold2)}
+  .muted{color:var(--muted)} .sm{font-size:13.5px}
+  .spin{width:16px;height:16px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:r .8s linear infinite;display:inline-block}
+  @keyframes r{to{transform:rotate(360deg)}}
+  /* leitura */
+  .md{font-family:var(--serif);font-size:17px;line-height:1.75;color:var(--mdtext)}
+  .md h3{font-family:var(--ui);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin:28px 0 10px}
+  .md h3:first-child{margin-top:0}
+  .md h4{font-size:17px;margin:14px 0 4px;color:var(--text)}
+  .md p{margin:8px 0}
+  .md ul,.md ol{padding-left:20px;margin:8px 0}
+  .md li{margin:6px 0}
+  .md b{color:var(--text)}
+  .md i{color:var(--gold2)}
+  .md blockquote{margin:0;padding:2px 0;font-size:18.5px;line-height:1.75;color:var(--text)}
+  .md blockquote b{font-family:var(--ui);font-size:11px;font-weight:800;color:var(--gold);vertical-align:5px;margin-right:5px}
+  .md blockquote + p{font-family:var(--ui);font-size:12.5px;color:var(--muted);margin-top:14px;padding-top:10px;border-top:1px solid var(--line)}
+  .qa{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+  .q{align-self:flex-end;max-width:88%;background:var(--gold);color:var(--onaccent);font-weight:600;padding:10px 14px;border-radius:16px 16px 4px 16px}
+  .a{align-self:flex-start;max-width:96%;background:var(--surface2);border:1px solid var(--line);padding:12px 14px;border-radius:16px 16px 16px 4px}
+  .a.md{font-size:15.5px}
+  .composer{display:flex;gap:8px;margin-top:12px}
+  .composer textarea{min-height:48px;max-height:130px;resize:none}
+  .send{flex:none;width:48px;height:48px;border-radius:14px;background:var(--gold);color:var(--onaccent);display:grid;place-items:center}
+  .li{display:flex;gap:12px;align-items:center;padding:13px 0;border-top:1px solid var(--line)}
+  .li:first-child{border-top:0}
+  .li .t{font-family:var(--serif);font-weight:700;font-size:17px}
+  .x{width:32px;height:32px;color:var(--muted);font-size:20px;flex:none}
+  .toast{position:fixed;left:50%;bottom:calc(90px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--toast);color:var(--toastText);padding:10px 18px;border-radius:999px;font-weight:600;font-size:14px;opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+  .toast.on{opacity:1}
+  .empty{color:var(--muted);text-align:center;padding:16px}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+  .seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface2);border-radius:12px;padding:4px;gap:4px;margin-bottom:12px}
+  .seg button{padding:9px;border-radius:9px;font-weight:700;font-size:13.5px;color:var(--muted)}
+  .seg button.on{background:var(--gold);color:var(--onaccent)}
+  .track{border-top:1px solid var(--line);padding:12px 0}
+  .track:first-child{border-top:0}
+  .track>button{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;gap:10px}
+  .track .tt{font-family:var(--serif);font-weight:700;font-size:17px}
+  .lessons{display:none;flex-direction:column;gap:6px;margin-top:10px}
+  .track.open .lessons{display:flex}
+  .lesson{display:flex;gap:10px;align-items:center;text-align:left;padding:10px 12px;border-radius:12px;background:var(--surface2);border:1px solid var(--line)}
+  .lesson .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:var(--surface);color:var(--muted)}
+  .lesson.done .n{background:var(--gold);color:var(--onaccent)}
+  .lesson .lt{font-size:14.5px;font-weight:600}
+  .lesson .lr{font-size:12px;color:var(--muted)}
+  .bar{height:8px;border-radius:5px;background:var(--surface2);overflow:hidden}
+  .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2))}
+  .pill{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);color:var(--muted)}
+  .mentor{border:1px solid var(--line);background:var(--glow);border-radius:16px;padding:14px;margin-top:18px}
+  [hidden]{display:none!important}
+  #gate{position:fixed;inset:0;z-index:70;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:28px}
+  #proBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:65;display:flex;align-items:flex-end;justify-content:center}
+  #proSheet{width:100%;max-width:620px;background:var(--bg);border-radius:24px 24px 0 0;padding:22px 20px calc(26px + env(safe-area-inset-bottom));border:1px solid var(--line)}
+  .skel{display:flex;flex-direction:column;gap:10px}
+  .skel i{display:block;height:14px;border-radius:7px;background:linear-gradient(90deg,var(--surface2),var(--line),var(--surface2));background-size:200% 100%;animation:sh 1.4s linear infinite}
+  .sk-msg{font-family:var(--display);color:var(--gold2);font-size:15px;margin-bottom:4px}
+  @keyframes sh{to{background-position:-200% 0}}
+  .link-btn{color:var(--gold2);font-weight:700;font-size:13.5px;padding:4px 0}
+  .chip.on{background:var(--gold);color:var(--onaccent);border-color:var(--gold)}
+  details{border-top:1px solid var(--line);padding:4px 0}
+  details>summary{cursor:pointer;list-style:none;font-family:var(--ui);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);padding:14px 0 10px;display:flex;justify-content:space-between}
+  details>summary::after{content:"＋";font-size:14px} details[open]>summary::after{content:"－"}
+  details>summary::-webkit-details-marker{display:none}
+  .rprog{position:sticky;top:0;height:4px;background:var(--surface2);border-radius:3px;overflow:hidden;z-index:3;margin-bottom:10px}
+  .rprog i{display:block;height:100%;width:0;background:var(--gold);transition:width .15s}
+  .qz{padding:10px 0;border-top:1px solid var(--line)}
+  .qopt{display:block;width:100%;text-align:left;padding:10px 12px;margin:5px 0;border-radius:12px;background:var(--surface2);border:1px solid var(--line);font-size:14.5px}
+  .qopt.ok{background:rgba(52,170,110,.18);border-color:#34aa6e} .qopt.bad{background:rgba(229,72,77,.15);border-color:#e5484d}
+  .cafe{position:relative;overflow:hidden}
+  .cafe .cup{position:absolute;right:-6px;top:-4px;width:118px;height:118px;opacity:.95;pointer-events:none}
+  .cafe .hello{font-family:var(--display);font-size:15px;color:var(--gold2);font-weight:700;margin-bottom:2px}
+  .steam path{animation:steam 3.2s ease-in-out infinite;opacity:.0}
+  .steam path:nth-child(2){animation-delay:1s}.steam path:nth-child(3){animation-delay:2s}
+  @keyframes steam{0%{opacity:0;transform:translateY(6px)}40%{opacity:.55}100%{opacity:0;transform:translateY(-10px)}}
+  #welcome{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px 26px;gap:16px}
+  #welcome h2{font-family:var(--display);font-size:34px;line-height:1.05;letter-spacing:-.02em}
+  .feat{display:flex;gap:12px;text-align:left;align-items:flex-start;max-width:360px}
+  .feat span:first-child{font-size:22px}
+  @media (prefers-reduced-motion:reduce){.steam path{animation:none;opacity:.4}}
+  blockquote.v{cursor:pointer;border-radius:8px;margin:0 -6px!important;padding:3px 6px!important;transition:background .2s}
+  blockquote.v:hover{background:var(--glow)}
+  blockquote.v.hasnote::after{content:" ✏️";font-size:13px}
+  blockquote.v.fav b::after{content:" ★";color:var(--gold)}
+  blockquote.v.flash{animation:fl 1.6s ease}
+  @keyframes fl{0%,60%{background:var(--line)}}
+  .dot{width:34px;height:34px;border-radius:50%;border:2px solid transparent}
+  .dot.on{border-color:var(--text)}
+  .vgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .vbtn{padding:12px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);font-weight:700;font-size:14px;text-align:left}
+  .ilgrid{display:flex;flex-wrap:wrap;gap:8px}
+  .ilw{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-width:88px;text-align:center}
+  .ilo{font-size:22px;font-family:"SBL Hebrew","Ezra SIL","Times New Roman",serif;color:var(--gold2)}
+  .ilt{font-size:12.5px;font-style:italic;color:var(--muted)}
+  .ils{font-size:13.5px;font-weight:700;margin-top:2px}
+  .ilm{font-size:11px;color:var(--muted);margin-top:2px}
+  .cdot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:0}
+  .tl{display:flex;gap:14px;text-align:left;width:100%;padding:12px 0;border-left:2px solid var(--line);margin-left:8px;padding-left:18px;position:relative}
+  .tld{position:absolute;left:-7px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--gold)}
+  #listenUI{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px calc(96px + env(safe-area-inset-bottom))}
+  .lsCard{width:100%;max-width:520px;background:var(--surface);border:1px solid var(--gold);border-radius:22px;padding:20px;text-align:center}
+  .lsDot{width:54px;height:54px;border-radius:50%;margin:0 auto 10px;background:#e5484d;animation:pulse 1.2s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.15);opacity:.7}}
+  .lsText{font-family:var(--serif);font-size:20px;min-height:30px;margin-top:8px}
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+  html[data-fs="2"] body{font-size:17px} html[data-fs="2"] .md{font-size:20px} html[data-fs="2"] .md blockquote{font-size:21px}
+  html[data-fs="3"] body{font-size:19px} html[data-fs="3"] .md{font-size:23px} html[data-fs="3"] .md blockquote{font-size:24px} html[data-fs="3"] .sm{font-size:16px}
+  html[data-contrast="1"]{--bg:#000;--surface:#0a0a0a;--surface2:#161616;--line:#7a7f93;--text:#fff;--muted:#e0e3ea;--gold:#ffd166;--gold2:#ffe39e}
+  html[data-contrast="1"] .md{color:#fff}
+  .iconbtn{width:44px;height:44px;border-radius:14px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--text)}
+  .mic{flex:none;width:48px;height:48px;border-radius:14px;background:var(--surface2);border:1px solid var(--line);display:grid;place-items:center;color:var(--text)}
+  .mic.on,#vcBtn.on{background:#e5484d;border-color:#e5484d;color:#fff}
+  #vcBtn{position:fixed;right:16px;bottom:calc(84px + env(safe-area-inset-bottom));width:58px;height:58px;border-radius:50%;background:var(--gold);color:var(--onaccent);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:20}
+  #player{position:fixed;left:12px;right:12px;bottom:calc(80px + env(safe-area-inset-bottom));z-index:21;max-width:600px;margin:0 auto;display:flex;gap:10px;align-items:center;background:var(--surface);box-shadow:var(--shadow);border:1px solid var(--gold);border-radius:16px;padding:10px 12px}
+  #player[hidden]{display:none}
+  #setBg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:40;display:flex;align-items:flex-end;justify-content:center}
+  #setBg[hidden]{display:none}
+  #setSheet{width:100%;max-width:620px;background:var(--bg);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));max-height:90%;overflow:auto}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></header>
+  <div class="scroll" id="scroll">
+    <section class="view on" id="v-hoje">
+      <div class="card" id="dailyPlan" hidden></div>
+      <div class="card hero cafe">
+        <svg class="cup" viewBox="0 0 120 120" aria-hidden="true"><g class="steam" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"><path d="M48 40c-6-8 6-12 0-20"/><path d="M62 42c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M34 52h56v22a24 24 0 0 1-24 24h-8a24 24 0 0 1-24-24z" fill="var(--surface2)" stroke="var(--gold)" stroke-width="3"/><path d="M90 58h6a10 10 0 0 1 0 20h-7" fill="none" stroke="var(--gold)" stroke-width="3"/><path d="M38 60h48" stroke="var(--gold)" stroke-width="2" opacity=".35"/><ellipse cx="62" cy="106" rx="38" ry="5" fill="var(--gold)" opacity=".18"/></svg>
+        <div class="row" style="gap:8px"><div class="hello" id="hello">Bom dia</div><span class="pill" id="streak" hidden></span></div>
+        <div class="eyebrow" id="kind">Reflexão do dia</div>
+        <div class="ref" id="ref" style="padding-right:78px;font-size:clamp(26px,7.4vw,36px)"></div>
+        <p class="sm muted" id="heroSub" style="margin:0 0 4px;padding-right:70px">Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você.</p>
+        <div class="row" style="margin-top:6px"><button class="btn" id="gen">Ler reflexão</button><button class="btn ghost" id="sayHoje" data-say="hoje" hidden aria-label="Ouvir em voz alta">🔊 Ouvir</button><button class="btn ghost" id="copy" hidden>Copiar</button><button class="btn ghost" id="saveBtn" hidden>Salvar</button></div>
+        <div class="note" id="note" hidden style="margin-top:12px"></div>
+        <button class="link-btn" id="histBtn" style="margin-top:10px">📅 Reflexões anteriores</button>
+      </div>
+      <div class="card" id="outCard" hidden>
+        <div class="md" id="out"></div>
+        <div class="row" id="fbRow" hidden style="margin-top:18px;justify-content:space-between;flex-wrap:nowrap"><span class="sm muted">Essa reflexão te ajudou?</span><span class="row" style="gap:6px"><button class="chip" id="fbUp" aria-label="Sim, ajudou">👍</button><button class="chip" id="fbDn" aria-label="Não ajudou">👎</button></span></div>
+        <button class="btn full" id="deepBtn" hidden style="margin-top:20px">Aprofundar: estudo completo do texto</button>
+        <div class="md" id="deep" style="margin-top:22px"></div>
+        <div id="qaWrap" hidden>
+          <div class="eyebrow" style="margin-top:26px">Pergunte sobre esta passagem</div>
+          <div class="qa" id="qa"></div>
+          <div class="composer"><textarea id="ask" data-mic="send" rows="1" placeholder="Ex.: o que significa essa palavra no original?"></textarea><button class="send" id="askBtn" aria-label="Perguntar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-estudos">
+      <div id="studyHome">
+        <div class="card hero">
+          <div class="eyebrow">Estudo dirigido</div>
+          <h2 style="font-family:var(--serif);font-size:24px;margin:6px 0 6px">A Bíblia inteira, por temas</h2>
+          <p class="sm muted" style="margin:0 0 14px">Cada lição junta textos de vários livros sobre o mesmo tema, traduzidos do original, mostra como eles se conectam e como as diferentes tradições os leem. No fim, você responde e o mentor comenta suas respostas.</p>
+          <div class="row" style="justify-content:space-between;margin-bottom:6px"><span class="sm" id="stProg"></span><span class="sm muted" id="stPct"></span></div>
+          <div class="bar"><i id="stBar" style="width:0"></i></div>
+          <button class="btn full" id="stCont" style="margin-top:14px">Começar</button>
+        </div>
+        <button class="card" id="tlOpen" style="text-align:left;width:100%;display:flex;gap:12px;align-items:center"><span style="font-size:26px" aria-hidden="true">🕰️</span><span style="flex:1"><span class="eyebrow" style="display:block">Linha do tempo bíblica</span><span class="sm muted">De Abraão à formação do cânon, com datas e debates</span></span><span class="pill">›</span></button>
+        <div class="card" id="tracks"></div>
+      </div>
+      <div id="tlView" hidden><button class="btn ghost" id="tlBack" style="margin-bottom:12px">← Estudos</button><div class="card"><p class="sm muted" style="margin:0 0 8px">Datas aproximadas; onde há debate entre estudiosos, isso está indicado. Toque num período para abrir o verbete.</p><div id="tlList"></div></div></div>
+      <div id="lessonView" hidden>
+        <div class="rprog" aria-hidden="true"><i id="rprog"></i></div>
+        <button class="btn ghost" id="lessonBack" style="margin-bottom:12px">← Trilhas</button>
+        <div class="card hero">
+          <div class="eyebrow" id="lTrack"></div>
+          <h2 id="lTitle" style="font-family:var(--serif);font-size:26px;margin:6px 0 8px;line-height:1.15"></h2>
+          <div class="chips" id="lRefs"></div>
+          <div class="note" id="lNote" hidden style="margin-top:12px"></div>
+        </div>
+        <div class="card"><button class="btn ghost full" data-say="lic" style="margin-bottom:14px">🔊 Ouvir lição</button><div class="md" id="lOut"></div>
+          <div class="mentor" id="mentor" hidden>
+            <div class="eyebrow" style="color:var(--gold)">Sua vez · mentor</div>
+            <p class="sm muted" style="margin:6px 0 10px">Responda às perguntas acima com suas palavras. O mentor comenta, corrige o que for preciso e aprofunda.</p>
+            <textarea id="ans" data-mic="fill" style="min-height:130px" placeholder="1. …&#10;2. …&#10;3. …"></textarea>
+            <button class="btn full" id="ansBtn" style="margin-top:10px">Enviar ao mentor</button>
+            <div class="md" id="fb" style="margin-top:14px"></div>
+            <button class="btn ghost full" data-say="fb" style="margin-top:10px">🔊 Ouvir comentário</button>
+          </div>
+          <div id="lExtra" hidden>
+            <div id="quizBox" style="margin-top:18px"></div>
+            <div class="eyebrow" style="margin:18px 0 6px">Minhas anotações da lição</div>
+            <textarea id="lNoteIn" data-mic="fill" style="min-height:90px" placeholder="O que você quer guardar desta lição?"></textarea>
+          </div>
+          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="lRegen">Gerar de novo</button><button class="btn" id="lDone">Concluir lição</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-biblia">
+      <div id="bHome">
+        <div class="card" id="contBox" hidden></div>
+        <div class="card" id="planBox"></div>
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:8px">Ir para uma passagem</div>
+          <div class="row" style="flex-wrap:nowrap"><input id="refIn" data-mic="go" placeholder="Ex.: Marcos 4:35-41" autocomplete="off"><button class="btn" id="goRef">Abrir</button></div>
+          <div class="seg" style="margin:10px 0 0"><button class="on" data-mode="short">Reflexão rápida</button><button data-mode="deep">Estudo completo</button></div>
+          <div class="chips" id="sugs" style="margin-top:12px"></div>
+        </div>
+        <div class="card">
+          <div class="eyebrow" style="margin-bottom:6px">Ler a Bíblia</div>
+          <p class="sm muted" style="margin:0 0 12px">Escolha o livro e o capítulo. O texto é traduzido na hora do hebraico, do aramaico ou do grego e fica guardado para você.</p>
+          <div class="seg" id="testSeg" style="grid-template-columns:repeat(3,1fr)"></div>
+          <div class="chips" id="books"></div>
+          <div id="chaps" style="margin-top:14px"></div>
+        </div>
+      </div>
+      <div id="chView" hidden>
+        <div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="row"><button class="btn ghost" id="chBack">← Livros</button><button class="btn ghost" id="chIntro" aria-label="Sobre este livro">ℹ️</button></div><div class="row"><button class="btn ghost" id="chPrev" aria-label="Capítulo anterior">‹</button><button class="btn ghost" id="chNext" aria-label="Próximo capítulo">›</button></div></div>
+        <div class="card">
+          <div class="md" id="chOut"></div>
+          <div class="note" id="chNote" hidden style="margin-top:12px"></div>
+          <button class="btn ghost full" id="chMore" hidden style="margin-top:14px">Continuar a tradução</button>
+          <button class="btn ghost full" data-say="cap" style="margin-top:14px">🔊 Ouvir capítulo</button>
+          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="chRegen">Traduzir de novo</button><button class="btn" id="chStudy">Estudar este capítulo</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-dic">
+      <div id="dHome">
+        <div class="card">
+          <div class="seg" id="dModeSeg"><button class="on" data-dm="verbetes">Verbetes</button><button data-dm="tema">O que a Bíblia diz sobre…</button></div>
+          <input id="dSearch" data-mic="search" placeholder="Pesquisar: anjo, Satanás, Gabriel, aliança…" autocomplete="off">
+          <button class="btn full" id="dThemeGo" hidden style="margin-top:10px">Buscar passagens</button>
+          <div class="chips" id="dCats" style="margin-top:12px"></div>
+        </div>
+        <div class="card"><div id="dList"></div></div>
+      </div>
+      <div id="dView" hidden>
+        <button class="btn ghost" id="dBack" style="margin-bottom:12px">← Dicionário</button>
+        <div class="card hero"><div class="eyebrow" id="dCat"></div><div class="ref" id="dTitle" style="font-size:30px"></div><div class="sm muted" id="dSub"></div><div class="note" id="dNote" hidden style="margin-top:12px"></div></div>
+        <div class="card"><button class="btn ghost full" data-say="dic" style="margin-bottom:14px">🔊 Ouvir verbete</button><div class="md" id="dOut"></div>
+          <button class="btn full" id="dDeep" hidden style="margin-top:20px">Aprofundar este verbete</button>
+          <div id="dRel"></div>
+          <div class="md" id="dDeepOut" style="margin-top:22px"></div>
+          <button class="btn ghost" id="dRegen" style="margin-top:16px">Gerar de novo</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="v-salvas">
+      <div class="card"><div class="seg" id="mySeg" style="grid-template-columns:repeat(4,1fr)"></div>
+        <div class="row" id="myTools" hidden style="flex-wrap:nowrap;margin-bottom:10px"><input id="mySearch" placeholder="Buscar nas suas anotações"><button class="btn ghost" id="myExport" aria-label="Exportar">⤓</button></div>
+        <div id="list"></div><div id="myList" hidden></div></div>
+    </section>
+  </div>
+  <nav id="tabs" style="grid-template-columns:repeat(5,1fr)">
+    <button data-v="hoje" class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Hoje</button>
+    <button data-v="biblia"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5 7 4.5 3 5v14c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5V5c-4-.5-7 0-9 1.5zM12 6.5V20"/></svg>Bíblia</button>
+    <button data-v="estudos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 9L12 4 2 9l10 5 10-5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg>Estudos</button>
+    <button data-v="dic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>Dicionário</button>
+    <button data-v="salvas"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Meus</button>
+  </nav>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div id="gate" hidden role="dialog" aria-modal="true" aria-label="Entrar">
+  <svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true"><path d="M34 52h56v22a24 24 0 0 1-24 24h-8a24 24 0 0 1-24-24z" fill="var(--surface2)" stroke="var(--gold)" stroke-width="3"/><path d="M90 58h6a10 10 0 0 1 0 20h-7" fill="none" stroke="var(--gold)" stroke-width="3"/><g fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"><path d="M48 40c-6-8 6-12 0-20"/><path d="M62 42c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g></svg>
+  <h2 style="font-family:var(--display);font-size:30px;margin:6px 0 4px">Reflexão Bíblica</h2>
+  <p class="muted" style="margin:0 0 18px;max-width:340px">Um café, um texto, uma reflexão. Entre para salvar suas leituras, anotações e estudos em qualquer aparelho.</p>
+  <button class="btn full" id="gGoogle" style="max-width:340px">Entrar com Google</button>
+  <div class="row" style="max-width:340px;width:100%;margin-top:10px;flex-wrap:nowrap"><input id="gEmail" type="email" placeholder="ou seu e-mail" autocomplete="email"><button class="btn ghost" id="gEmailGo">Enviar link</button></div>
+  <p class="sm muted" id="gMsg" style="margin:12px 0 0;max-width:340px"></p>
+  <p class="sm muted" style="margin:18px 0 0">Ao entrar, você concorda com a <a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a>.</p>
+</div>
+<div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
+  <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:26px;margin:0">Reflexão Bíblica <span style="color:var(--gold)">Pro</span></h2><button class="iconbtn" id="proClose" aria-label="Fechar">✕</button></div>
+  <p class="muted" id="proWhy" style="margin:8px 0 14px">Sem limites para estudar a Palavra.</p>
+  <div class="feat"><span>☕</span><span>Reflexões, estudos completos e perguntas <b>sem limite diário</b></span></div>
+  <div class="feat" style="margin-top:10px"><span>🎓</span><span>Estudo dirigido com mentor, teste e certificado, <b>no seu ritmo</b></span></div>
+  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Interlinear</b>, referências cruzadas e outras traduções</span></div>
+  <div class="feat" style="margin-top:10px"><span>🔎</span><span>Dicionário e busca por tema <b>ilimitados</b></span></div>
+  <button class="btn full" id="proBuy" style="margin-top:18px">Assinar Pro</button>
+  <button class="btn ghost full" id="proRestore" style="margin-top:8px">Já assinei: restaurar</button>
+  <p class="sm muted" id="proNote" style="margin:10px 0 0"></p>
+</div></div>
+<div id="welcome" hidden role="dialog" aria-modal="true" aria-label="Boas-vindas">
+  <svg viewBox="0 0 120 120" width="120" height="120" aria-hidden="true" style="overflow:visible"><g class="steam" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"><path d="M48 40c-6-8 6-12 0-20"/><path d="M62 42c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M34 52h56v22a24 24 0 0 1-24 24h-8a24 24 0 0 1-24-24z" fill="var(--surface2)" stroke="var(--gold)" stroke-width="3"/><path d="M90 58h6a10 10 0 0 1 0 20h-7" fill="none" stroke="var(--gold)" stroke-width="3"/><path d="M38 60h48" stroke="var(--gold)" stroke-width="2" opacity=".35"/><ellipse cx="62" cy="106" rx="38" ry="5" fill="var(--gold)" opacity=".18"/></svg>
+  <h2>Um café, um texto,<br>uma reflexão.</h2>
+  <p class="muted" style="margin:0;max-width:360px">A Bíblia traduzida direto do hebraico e do grego, com leituras curtas para o dia a dia e estudo profundo quando você quiser.</p>
+  <div class="stack" style="display:flex;flex-direction:column;gap:12px;margin:6px 0">
+    <div class="feat"><span>☕</span><span><b>Reflexão do dia</b><br><span class="sm muted">2 minutos, com senso crítico</span></span></div>
+    <div class="feat"><span>📖</span><span><b>Bíblia completa e planos de leitura</b><br><span class="sm muted">Destaque, anote e veja o original</span></span></div>
+    <div class="feat"><span>🎓</span><span><b>Estudo dirigido com mentor</b><br><span class="sm muted">A Bíblia inteira, por temas</span></span></div>
+  </div>
+  <input id="wName" placeholder="Como podemos te chamar? (opcional)" style="max-width:360px" autocomplete="given-name">
+  <button class="btn full" id="welcomeGo" style="max-width:360px">Começar meu café com a Palavra</button>
+</div>
+<div id="sr" class="sr-only" aria-live="polite"></div>
+<div id="player" hidden role="region" aria-label="Leitura em voz alta"><span aria-hidden="true">🔊</span><span id="plLabel" class="sm" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn ghost" id="plPause" style="padding:8px 12px">Pausar</button><button class="btn" id="plStop" style="padding:8px 12px">Parar</button></div>
+<button id="vcBtn" hidden aria-label="Comando de voz: fale o que deseja, por exemplo, abrir Salmo 23"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
+<input id="vcIn" type="hidden">
+<div id="listenUI" hidden role="dialog" aria-live="assertive" aria-label="Ouvindo"><div class="lsCard"><div class="lsDot" aria-hidden="true"></div><div class="eyebrow" style="color:var(--gold)">Ouvindo… pode falar</div><div id="lsText" class="lsText">…</div><div class="row" style="justify-content:center;margin-top:14px"><button class="btn ghost" id="lsCancel">Cancelar</button><button class="btn" id="lsDone">Pronto</button></div></div></div>
+<div id="setBg" hidden><div id="setSheet" role="dialog" aria-modal="true" aria-label="Acessibilidade"></div></div>
+<script>
+/* Camada de plataforma: substitui as capacidades do Claude por serviços próprios
+   (Supabase para login e dados, função /api/ai para a IA, voz e microfone do navegador). */
+(function(){
+  const CFG={ ready:null, sb:null, user:null, session:null, plan:"free" };
+  window.RB=CFG;
+  async function loadConfig(){
+    const r=await fetch("/api/config"); if(!r.ok) throw new Error("config"); const c=await r.json();
+    const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
+    CFG.sb=createClient(c.supabaseUrl,c.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+    CFG.priceLabel=c.priceLabel||"";
+    const { data } = await CFG.sb.auth.getSession(); CFG.session=data.session; CFG.user=data.session?.user||null;
+    CFG.sb.auth.onAuthStateChange((_e,s)=>{ const was=!!CFG.user; CFG.session=s; CFG.user=s?.user||null; if(!was&&CFG.user) location.reload(); });
+    if(CFG.user) await refreshPlan();
+    return CFG;
+  }
+  async function refreshPlan(){ try{ const { data } = await CFG.sb.from("profiles").select("plan,pro_until").eq("id",CFG.user.id).maybeSingle();
+    CFG.plan = data && data.plan==="pro" && (!data.pro_until || new Date(data.pro_until)>new Date()) ? "pro" : "free"; }catch(e){} return CFG.plan; }
+  CFG.refreshPlan=refreshPlan;
+  CFG.ready=loadConfig().catch(e=>{ console.warn("config",e); return CFG; });
+  async function token(){ const { data } = await CFG.sb.auth.getSession(); return data.session?.access_token; }
+
+  /* ---- IA (substitui "sample") ---- */
+  async function blobToB64(b){ const buf=await b.arrayBuffer(); let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
+  async function sample(input, opts={}){
+    await CFG.ready; if(!CFG.user) throw {code:"no_sample"};
+    const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
+    const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
+    const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
+      body:JSON.stringify({messages,tier:opts.modelTier||"default",images}),signal:opts.signal});
+    if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
+    if(r.status===429) throw {code:"rate_limited"};
+    if(!r.ok||!r.body) throw {code:"unavailable"};
+    const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="";
+    for(;;){ const {done,value}=await rd.read(); if(done) break; text+=dec.decode(value,{stream:true});
+      const i=text.indexOf("\u0000"); const visible=i>=0?text.slice(0,i):text; if(opts.onText) opts.onText({text:visible}); }
+    const i=text.indexOf("\u0000"); if(i>=0){ stop=text.slice(i+1).replace("STOP:",""); text=text.slice(0,i); }
+    if(stop==="error") throw {code:"unavailable"};
+    return {text,truncated:stop==="max_tokens"};
+  }
+  sample.limits=async()=>({images:true});
+
+  /* ---- Banco (substitui "db") ---- */
+  function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
+  const SHARED=k=>/^(ch_|intro_|ent_|tema_)/.test(k);
+  const db={ doc(path){ const key=keyOf(path); return {
+    async get(){ await CFG.ready;
+      if(SHARED(key)){ const { data } = await CFG.sb.from("shared_content").select("value").eq("key",key).maybeSingle(); return {exists:!!data,data:()=>data&&data.value}; }
+      if(!CFG.user) return {exists:false,data:()=>undefined};
+      const { data } = await CFG.sb.from("kv").select("value").eq("user_id",CFG.user.id).eq("key",key).maybeSingle(); return {exists:!!data,data:()=>data&&data.value}; },
+    async set(value){ await CFG.ready; if(!CFG.user) throw {code:"invalid_argument"};
+      if(SHARED(key)){ const r=await fetch("/api/shared",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},body:JSON.stringify({key,value})}); if(!r.ok&&r.status!==409) throw {code:"unavailable"}; return; }
+      const { error } = await CFG.sb.from("kv").upsert({user_id:CFG.user.id,key,value,updated_at:new Date().toISOString()}); if(error) throw {code:"unavailable",message:error.message}; } }; } };
+
+  /* ---- Usuário ---- */
+  const user={ async id(){ await CFG.ready; return CFG.user?CFG.user.id:null; }, isOwner:()=>true, canEdit:()=>true, can:()=>true };
+
+  /* ---- Microfone (substitui "dictation") ---- */
+  function makeDictation(){ const R=window.SpeechRecognition||window.webkitSpeechRecognition; if(!R) return null;
+    let rec=null, h={p:null,f:null,s:null};
+    return { onPartial(f){h.p=f}, onFinal(f){h.f=f}, onState(f){h.s=f},
+      start(){ return new Promise((res,rej)=>{ try{ rec=new R(); rec.lang="pt-BR"; rec.interimResults=true; rec.continuous=true;
+        rec.onstart=()=>{ h.s&&h.s({state:"listening"}); res(); };
+        rec.onresult=e=>{ let part=""; for(let i=e.resultIndex;i<e.results.length;i++){ const t=e.results[i][0].transcript; if(e.results[i].isFinal) h.f&&h.f({text:t.trim()}); else part+=t; } if(part) h.p&&h.p({text:part.trim()}); };
+        rec.onerror=e=>{ if(e.error==="not-allowed"||e.error==="service-not-allowed") rej({code:"not_granted"}); };
+        rec.onend=()=>{ h.s&&h.s({state:"idle",reason:"stopped"}); };
+        rec.start(); }catch(e){ rej({code:"unavailable"}); } }); },
+      stop(){ try{ rec&&rec.stop(); }catch(e){} return Promise.resolve(); } }; }
+
+  /* ---- Downloads ---- */
+  const downloads={ async save({filename,data}){ const b=data instanceof Blob?data:new Blob([data]); const u=URL.createObjectURL(b); const a=document.createElement("a"); a.href=u; a.download=filename; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); } };
+
+  window.claude={ use:async(name)=>{ await CFG.ready;
+    if(name==="sample") return CFG.user?sample:null;
+    if(name==="db") return CFG.sb?db:null;
+    if(name==="user") return user;
+    if(name==="dictation") return makeDictation();
+    if(name==="downloads") return downloads;
+    if(name==="tts") return null; /* usa a voz nativa do aparelho (speechSynthesis) */
+    return null; } };
+
+  /* ---- Login ---- */
+  CFG.signInGoogle=()=>CFG.sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin}});
+  CFG.signInEmail=async(email)=>{ const { error } = await CFG.sb.auth.signInWithOtp({email,options:{emailRedirectTo:location.origin}}); if(error) throw error; };
+  CFG.signOut=async()=>{ await CFG.sb.auth.signOut(); location.reload(); };
+
+  /* ---- Assinatura Pro (Google Play Billing via Digital Goods API) ---- */
+  const PLAY="https://play.google.com/billing", SKU="pro_mensal";
+  CFG.billingAvailable=async()=>{ if(!("getDigitalGoodsService" in window)) return false; try{ await window.getDigitalGoodsService(PLAY); return true; }catch(e){ return false; } };
+  CFG.proPrice=async()=>{ try{ const s=await window.getDigitalGoodsService(PLAY); const [d]=await s.getDetails([SKU]); return d?new Intl.NumberFormat("pt-BR",{style:"currency",currency:d.price.currency}).format(d.price.value)+"/mês":""; }catch(e){ return CFG.priceLabel||""; } };
+  CFG.buyPro=async()=>{ const req=new PaymentRequest([{supportedMethods:PLAY,data:{sku:SKU}}],{total:{label:"Total",amount:{currency:"BRL",value:"0"}}});
+    const resp=await req.show(); const purchaseToken=resp.details.purchaseToken;
+    const r=await fetch("/api/verify-purchase",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},body:JSON.stringify({purchaseToken,sku:SKU})});
+    if(r.ok){ await resp.complete("success"); await refreshPlan(); return true; } await resp.complete("fail"); return false; };
+  CFG.restorePurchases=async()=>{ try{ const s=await window.getDigitalGoodsService(PLAY); const list=await s.listPurchases(); for(const p of list){ if(p.itemId===SKU){ await fetch("/api/verify-purchase",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},body:JSON.stringify({purchaseToken:p.purchaseToken,sku:SKU})}); } } await refreshPlan(); }catch(e){} return CFG.plan; };
+})();
+
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const dstr=(d=new Date())=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const pday=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d);};
+const fdate=s=>pday(s).toLocaleDateString("pt-BR",{day:"2-digit",month:"short",year:"numeric"});
+const rid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36);
+function clone(o){return JSON.parse(JSON.stringify(o));}
+function toast(t){const e=$("toast");e.textContent=t;e.classList.add("on");clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove("on"),2300);}
+const store={mode:"local",ref:null,chain:Promise.resolve(),t:null,key:"app"};
+function save(){ if(typeof prune==="function") prune(); clearTimeout(store.t);
+  store.t=setTimeout(()=>{const snap=clone(S);try{localStorage.setItem(store.key,JSON.stringify(snap));}catch(e){}
+    if(store.mode==="db"&&store.ref){store.chain=store.chain.then(()=>store.ref.set(snap)).catch(e=>{console.warn(e);
+      if(e&&e.code==="invalid_argument"){store.mode="local";} else toast(e&&e.code==="quota_exceeded"?"Espaço cheio: apague itens antigos":"Salvo só neste aparelho por enquanto");});}},450);}
+async function initStore(key,normalize,onLoad){
+  store.key=key; try{const t=localStorage.getItem(key); if(t) S=normalize(JSON.parse(t));}catch(e){}
+  onLoad();
+  if(!(window.claude&&typeof window.claude.use==="function")) return;
+  try{const [user,db]=await Promise.all([window.claude.use("user"),window.claude.use("db")]);
+    const id=user?await user.id():null; if(!db||!id) return;
+    const ref=db.doc(`data/users/${id}/main`);
+    const snap=await Promise.race([ref.get(),new Promise((_,r)=>setTimeout(()=>r({code:"timeout"}),10000))]);
+    store.ref=ref; store.mode="db"; store.db=db; store.uid=id;
+    if(snap.exists){S=normalize(clone(snap.data())); try{localStorage.setItem(key,JSON.stringify(S));}catch(e){} onLoad();} else save();
+  }catch(e){console.warn("db",e);}
+}
+let _sample=null;
+function getSample(){if(!_sample)_sample=(window.claude&&typeof window.claude.use==="function")?window.claude.use("sample"):Promise.resolve(null);return _sample;}
+function errMsg(e){const c=e&&e.code; if(c==="quota") return "Você usou o limite grátis de hoje. Assine o Pro para continuar sem limites."; if(c==="no_sample") return "Entre na sua conta para usar a IA."; if(c==="not_granted") return "Entre na sua conta para usar a IA."; if(c==="rate_limited") return "Muitos pedidos seguidos. Espere um minuto e tente de novo."; return "Não consegui falar com o servidor agora. Verifique a internet e tente de novo.";}
+function md(src){
+  const L=esc(src).split("\n"); let h="",list=null;
+  const inl=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*(?!\s)([^*]+?)\*/g,"$1<i>$2</i>");
+  const close=()=>{if(list){h+=`</${list}>`;list=null;}};
+  for(const raw of L){const l=raw.trim();let m;
+    if(!l){close();continue;}
+    if((m=l.match(/^&gt;\s?(.*)/))){close();h+=`<blockquote>${inl(m[1])}</blockquote>`;}
+    else if((m=l.match(/^#{1,2}\s+(.*)/))){close();h+=`<h3>${inl(m[1])}</h3>`;}
+    else if((m=l.match(/^#{3,}\s+(.*)/))){close();h+=`<h4>${inl(m[1])}</h4>`;}
+    else if((m=l.match(/^[-*•]\s+(.*)/))){if(list!=="ul"){close();h+="<ul>";list="ul";}h+=`<li>${inl(m[1])}</li>`;}
+    else if((m=l.match(/^\d+[.)]\s+(.*)/))){if(list!=="ol"){close();h+="<ol>";list="ol";}h+=`<li>${inl(m[1])}</li>`;}
+    else{close();h+=`<p>${inl(l)}</p>`;}}
+  close();return h;}
+
+async function kvGet(key){ try{ if(store.mode==="db"&&store.db&&store.uid){ const s=await store.db.doc(`data/users/${store.uid}/${key}`).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); }
+  try{ const t=localStorage.getItem(store.key+"_kv_"+key); return t?JSON.parse(t):null; }catch(e){ return null; } }
+async function kvSet(key,obj){ try{ localStorage.setItem(store.key+"_kv_"+key,JSON.stringify(obj)); }catch(e){}
+  try{ if(store.mode==="db"&&store.db&&store.uid) await store.db.doc(`data/users/${store.uid}/${key}`).set(obj); }catch(e){ console.warn(e); } }
+
+const DEFAULT={daily:{},saved:[],study:{done:{},last:null},a11y:{fs:1,contrast:false,auto:false,rate:1}};
+let S=clone(DEFAULT);
+function normalize(d){const o=Object.assign(clone(DEFAULT),d||{}); o.study=Object.assign({done:{},last:null},o.study||{}); o.a11y=Object.assign({fs:1,contrast:false,auto:false,rate:1,theme:"auto"},o.a11y||{}); return o;}
+function prune(){ const k=Object.keys(S.daily).sort(); while(k.length>3) delete S.daily[k.shift()]; S.saved=S.saved.slice(0,12); const hk=Object.keys(S.hl||{}); if(hk.length>700) hk.sort((a,b)=>(S.hl[a].d||'').localeCompare(S.hl[b].d||'')).slice(0,hk.length-700).forEach(x=>delete S.hl[x]); }
+const PASS=["Gênesis 1:1-5", "Jó 42:10-17", "Isaías 53:3-6", "Marcos 10:35-45", "2 Coríntios 12:7-10", "Êxodo 34:5-9", "Salmo 127", "Miqueias 4:1-4", "João 8:1-11", "Hebreus 12:1-3", "1 Reis 3:5-14", "Eclesiastes 5:1-7", "Mateus 14:22-33", "Romanos 8:31-39", "Gênesis 15:1-6", "Salmo 24", "Jeremias 29:4-14", "Lucas 7:36-50", "Efésios 5:15-20", "Deuteronômio 15:7-11", "Provérbios 3:1-12", "Malaquias 3:16-18", "João 15:12-17", "1 Pedro 3:8-12", "1 Crônicas 29:10-18", "Isaías 2:2-5", "Mateus 26:36-46", "1 Coríntios 9:24-27", "Gênesis 45:1-15", "Salmo 51:1-12", "Daniel 3:16-18", "Lucas 18:1-8", "1 Tessalonicenses 4:13-18", "Rute 1:16-17", "Provérbios 17:17-22", "Mateus 5:21-26", "Atos 7:54-60", "Apocalipse 21:1-7", "Jó 28:12-28", "Isaías 43:1-7", "Marcos 9:33-37", "2 Coríntios 5:1-10", "Êxodo 20:1-17", "Salmo 104:24-35", "Jonas 1:1-10", "João 4:7-26", "Hebreus 10:23-25", "2 Samuel 11:1-5", "Eclesiastes 3:1-8", "Mateus 11:25-30", "Romanos 7:15-20", "Gênesis 9:8-17", "Salmo 19", "Jeremias 17:5-10", "Lucas 4:16-21", "Efésios 3:14-21", "Deuteronômio 6:4-9", "Salmo 146", "Ageu 1:2-9", "João 14:1-7", "Tiago 5:7-11", "2 Reis 2:1-14", "Cântico dos Cânticos 2:8-13", "Mateus 23:23-28", "1 Coríntios 1:26-31", "Gênesis 32:22-31", "Salmo 40:1-5", "Ezequiel 36:25-27", "Lucas 15:11-32", "Colossenses 1:15-20", "Juízes 6:11-16", "Provérbios 15:1-4", "Mateus 4:1-11", "Atos 2:42-47", "Apocalipse 1:9-18", "Jó 2:7-13", "Isaías 40:1-11", "Marcos 5:21-43", "2 Coríntios 1:3-7", "Êxodo 16:1-15", "Salmo 96", "Joel 2:28-32", "João 2:1-11", "Tito 3:3-7", "1 Samuel 24:1-12", "Eclesiastes 1:2-11", "Mateus 7:24-27", "Romanos 5:1-5", "Gênesis 4:1-16", "Salmo 13", "Jeremias 1:4-10", "Lucas 1:46-55", "Gálatas 6:1-10", "Números 11:10-17", "Salmo 139:1-12", "Habacuque 2:1-4", "João 11:32-44", "Tiago 2:14-26", "1 Reis 19:1-8", "Eclesiastes 11:1-6", "Mateus 18:21-35", "Romanos 14:1-12", "Gênesis 22:1-14", "Salmo 34:1-10", "Ezequiel 2:1-7", "Lucas 12:13-21", "Filipenses 4:4-7", "Josué 2:1-14", "Provérbios 11:24-25", "Mateus 1:18-25", "João 21:15-19", "1 João 4:7-12", "Neemias 8:1-10", "Isaías 25:6-9", "Marcos 2:23-28", "1 Coríntios 13:8-13", "Êxodo 4:10-17", "Salmo 88", "Oseias 6:1-6", "Lucas 24:13-35", "2 Timóteo 1:6-7", "1 Samuel 8:4-9", "Provérbios 27:17", "Mateus 6:25-34", "Atos 20:32-35", "Gênesis 2:7-9", "Salmo 2", "Isaías 58:6-12", "Marcos 14:3-9", "Gálatas 3:26-29", "Levítico 19:33-34", "Salmo 131", "Miqueias 7:18-20", "João 9:1-12", "Hebreus 13:1-8", "1 Reis 8:22-30", "Eclesiastes 7:1-6", "Mateus 16:24-26", "Romanos 12:1-2", "Gênesis 18:22-33", "Salmo 27", "Jeremias 32:6-15", "Lucas 10:25-37", "Filipenses 1:20-26", "Deuteronômio 31:6-8", "Provérbios 6:6-11", "Sabedoria 7:7-14", "João 18:33-38", "2 Pedro 3:8-13", "Esdras 3:10-13", "Isaías 7:10-14", "Mateus 28:16-20", "1 Coríntios 12:12-27", "Êxodo 1:8-22", "Salmo 63:1-8", "Daniel 6:10-23", "Lucas 19:1-10", "2 Tessalonicenses 3:6-13", "Rute 4:13-17", "Provérbios 22:1-9", "Mateus 6:1-4", "Atos 10:34-43", "Apocalipse 22:12-17", "Jó 42:1-6", "Isaías 49:13-16", "Marcos 10:17-27", "2 Coríntios 9:6-11", "Êxodo 33:12-23", "Salmo 126", "Jonas 4:1-11", "João 6:35-40", "Hebreus 11:8-16", "2 Samuel 18:31-33", "Eclesiastes 4:9-12", "Mateus 13:44-46", "Romanos 8:26-30", "Gênesis 12:1-9", "Salmo 23", "Jeremias 20:7-13", "Lucas 6:27-36", "Efésios 4:25-32", "Deuteronômio 10:12-22", "Provérbios 1:1-7", "Zacarias 9:9-10", "João 15:1-11", "1 Pedro 2:9-10", "2 Reis 22:8-13", "Isaías 1:16-17", "Mateus 25:31-46", "1 Coríntios 6:12-20", "Gênesis 39:1-12", "Salmo 46", "Daniel 1:8-16", "Lucas 17:11-19", "Colossenses 3:12-17", "Juízes 16:23-30", "Provérbios 16:32", "Mateus 5:13-16", "Atos 4:32-35", "Apocalipse 7:9-17", "Jó 19:23-27", "Isaías 42:1-9", "Marcos 8:27-38", "2 Coríntios 4:16-18", "Êxodo 19:1-8", "Salmo 103:1-14", "Amós 8:4-7", "João 3:16-21", "Hebreus 4:12-16", "2 Samuel 7:18-29", "Eclesiastes 2:18-26", "Mateus 10:26-31", "Romanos 6:1-11", "Gênesis 8:20-22", "Salmo 16", "Jeremias 9:23-24", "Lucas 2:41-52", "Efésios 2:1-10", "Números 21:4-9", "Salmo 145:8-21", "Sofonias 3:14-17", "João 13:34-35", "Tiago 4:13-17", "1 Reis 21:1-19", "Eclesiastes 12:9-14", "Mateus 22:34-40", "1 Coríntios 1:18-25", "Gênesis 28:10-22", "Salmo 39:4-7", "Ezequiel 34:11-16", "Lucas 15:1-10", "Filipenses 4:10-13", "Juízes 4:4-10", "Provérbios 14:29-35", "Mateus 3:13-17", "Atos 2:1-13", "Judas 1:20-25", "Jó 1:20-22", "Isaías 35:1-10", "Marcos 4:35-41", "1 Coríntios 15:51-58", "Êxodo 14:10-22", "Salmo 91", "Joel 2:12-17", "João 1:14-18", "2 Timóteo 4:6-8", "1 Samuel 17:32-50", "Provérbios 31:10-31", "Mateus 7:7-12", "Romanos 3:21-26", "Gênesis 3:1-13", "Salmo 8", "Isaías 65:17-25", "Lucas 1:26-38", "Gálatas 5:22-23", "Números 6:22-27", "Salmo 137:1-6", "Habacuque 1:1-4", "João 11:17-27", "Tiago 1:19-27", "1 Reis 18:20-39", "Eclesiastes 9:7-10", "Mateus 18:15-20", "Romanos 13:8-10", "Gênesis 21:8-21", "Salmo 32", "Lamentações 3:31-40", "Lucas 11:1-13", "Filipenses 3:7-14", "Josué 1:1-9", "Provérbios 10:1-12", "Eclesiástico 6:14-17", "João 20:24-29", "1 João 3:16-18", "Neemias 2:11-20", "Isaías 11:1-9", "Marcos 2:1-12", "1 Coríntios 13:4-7", "Êxodo 3:1-14", "Salmo 84", "Daniel 12:1-3", "Lucas 23:32-43", "1 Timóteo 6:6-12", "1 Samuel 3:1-10", "Provérbios 25:11-22", "Mateus 6:19-24", "Atos 17:22-31", "Gênesis 1:26-31", "Salmo 1", "Isaías 55:1-11", "Marcos 12:41-44", "Gálatas 2:19-21", "Levítico 19:9-18", "Salmo 130", "Miqueias 6:8", "João 8:31-36", "Hebreus 12:7-13", "1 Reis 3:16-28", "Eclesiastes 5:10-20", "Mateus 16:13-20", "Romanos 10:9-13", "Gênesis 18:1-15", "Salmo 25:1-10", "Jeremias 31:31-34", "Lucas 9:57-62", "Efésios 6:10-18", "Deuteronômio 30:11-20", "Provérbios 4:23-27", "Tobias 4:5-11", "João 17:20-23", "1 Pedro 5:6-11", "2 Crônicas 7:12-16", "Isaías 6:1-8", "Mateus 27:45-54", "1 Coríntios 10:12-13", "Gênesis 50:15-21", "Salmo 62", "Daniel 5:1-9", "Lucas 18:9-14", "1 Tessalonicenses 5:12-22", "Rute 2:1-12", "Provérbios 18:10-24", "Mateus 5:38-48", "Atos 9:1-9", "Apocalipse 22:1-5", "Jó 38:1-11", "Isaías 43:18-21", "Marcos 10:13-16", "2 Coríntios 5:17-21", "Êxodo 32:1-14", "Salmo 121", "Jonas 2:1-10", "João 5:1-9", "Hebreus 11:1-3", "2 Samuel 12:1-13", "Eclesiastes 3:9-15", "Mateus 13:1-9", "Romanos 8:18-25", "Gênesis 11:1-9", "Salmo 22:1-11", "Jeremias 18:1-6", "Lucas 5:1-11", "Efésios 4:1-6", "Deuteronômio 8:1-10", "Salmo 150", "Zacarias 4:6-10", "João 14:25-27", "1 Pedro 1:3-9", "2 Reis 5:1-14", "Cântico dos Cânticos 8:6-7", "Mateus 25:14-30", "1 Coríntios 3:5-9", "Gênesis 37:12-28", "Salmo 42", "Ezequiel 37:1-14", "Lucas 16:19-31", "Colossenses 3:1-4", "Juízes 7:1-8", "Provérbios 16:1-9", "Mateus 5:3-12", "Atos 3:1-10", "Apocalipse 3:20-22", "Jó 3:1-10", "Isaías 40:28-31", "Marcos 6:30-44", "2 Coríntios 4:7-12", "Êxodo 17:8-13", "Salmo 100", "Amós 5:21-24", "João 3:1-8", "Filemom 1:8-16", "2 Samuel 6:12-16", "Eclesiastes 2:1-11", "Mateus 9:9-13", "Romanos 5:6-11", "Gênesis 6:9-22", "Salmo 15", "Jeremias 2:11-13", "Lucas 2:1-14", "Efésios 1:3-14", "Números 13:25-33", "Salmo 139:13-18", "Habacuque 3:17-19", "João 13:1-15", "Tiago 3:1-12", "1 Reis 19:9-13", "Eclesiastes 12:1-8", "Mateus 20:1-16", "Romanos 15:1-7", "Gênesis 25:27-34", "Salmo 37:1-11", "Ezequiel 18:25-32", "Lucas 14:25-33", "Filipenses 4:6-8", "Josué 24:14-18", "Provérbios 12:15-25", "Mateus 2:1-12", "Atos 1:6-11", "1 João 4:16-21", "Ester 4:10-17", "Isaías 26:3-4", "Marcos 4:26-32", "1 Coríntios 15:12-20", "Êxodo 12:21-28", "Salmo 90:10-12", "Oseias 11:1-9", "João 1:1-5", "2 Timóteo 3:14-17", "1 Samuel 16:1-13", "Provérbios 30:7-9", "Mateus 7:1-5", "Romanos 1:16-20", "Gênesis 2:15-25", "Salmo 4", "Isaías 61:1-4", "Marcos 16:1-8", "Gálatas 5:13-15", "Levítico 25:8-17", "Salmo 133", "Naum 1:7", "João 10:7-18", "Tiago 1:2-8", "1 Reis 17:8-16", "Eclesiastes 7:8-14", "Mateus 18:1-5", "Romanos 12:9-21", "Gênesis 19:15-26", "Salmo 30", "Lamentações 3:19-26", "Lucas 10:38-42", "Filipenses 2:1-11", "Deuteronômio 34:1-8", "Provérbios 8:22-31", "Eclesiástico 2:1-6", "João 20:1-18", "1 João 1:5-10", "Neemias 1:1-11", "Isaías 9:2-7", "Marcos 1:9-15", "1 Coríntios 13:1-3", "Êxodo 2:1-10", "Salmo 73:21-28", "Daniel 7:9-14", "Lucas 22:39-46", "1 Timóteo 4:12-16", "1 Samuel 1:9-20", "Provérbios 24:30-34", "Mateus 6:5-15", "Atos 16:25-34"];
+const SUGS=["Salmo 23","Gênesis 1:1-5","Daniel 7:9-14","Isaías 53:3-6","Eclesiastes 3:1-8","Jó 38:1-11","Mateus 5:3-12","Marcos 4:35-41","Lucas 15:11-32","João 1:1-5","Romanos 7:15-20","1 Coríntios 13:4-7","Filipenses 4:6-8","Tiago 1:19-27"];
+const TRACKS=[
+ ["Fundamentos: como ler a Bíblia",[["O que é a Bíblia: cânon, línguas e manuscritos",["Lucas 1:1-4","2 Timóteo 3:14-17","Neemias 8:1-8"]],["Gêneros literários: narrativa, poesia, profecia, carta",["Salmo 19:1-6","Isaías 55:8-11","Hebreus 1:1-2"]],["Contexto e interpretação",["Atos 8:26-35","Lucas 24:25-27"]],["A grande narrativa: criação, queda, redenção e restauração",["Gênesis 1:1-3","Gênesis 3:15","Apocalipse 21:1-5"]]]],
+ ["Origens",[["Criação e o ser humano como imagem",["Gênesis 1:26-31","Salmo 8","Colossenses 1:15-17"]],["A queda e a origem do mal",["Gênesis 3:1-19","Romanos 5:12-19"]],["Caim, o dilúvio e Babel",["Gênesis 4:1-12","Gênesis 6:5-8","Gênesis 11:1-9"]],["Sofrimento e justiça: o livro de Jó",["Jó 1:1-22","Jó 38:1-7","Jó 42:1-6"]]]],
+ ["Alianças",[["Abraão: promessa e fé",["Gênesis 12:1-3","Gênesis 15:1-6","Romanos 4:1-5","Gálatas 3:6-9"]],["O sacrifício de Isaque",["Gênesis 22:1-14","Hebreus 11:17-19"]],["Êxodo: libertação e identidade",["Êxodo 3:1-15","Êxodo 12:1-14","1 Coríntios 5:7"]],["Sinai: a Lei e a aliança",["Êxodo 19:3-6","Êxodo 20:1-17","Mateus 5:17-20"]],["Davi e a promessa de um reino",["2 Samuel 7:8-16","Salmo 89:3-4","Lucas 1:30-33"]],["A nova aliança",["Jeremias 31:31-34","Ezequiel 36:25-27","Lucas 22:19-20","Hebreus 8:6-13"]]]],
+ ["Sabedoria e poesia",[["Salmos: oração em todas as emoções",["Salmo 22:1-11","Salmo 51:1-12","Salmo 23"]],["Provérbios: sabedoria para a vida",["Provérbios 1:1-7","Provérbios 8:22-31"]],["Eclesiastes: sentido e vaidade",["Eclesiastes 1:2-11","Eclesiastes 12:1-14"]],["Cântico dos Cânticos: o amor",["Cântico dos Cânticos 2:8-13","Cântico dos Cânticos 8:6-7"]]]],
+ ["Profetas",[["O chamado e o papel do profeta",["Isaías 6:1-8","Jeremias 1:4-10","Amós 7:14-15"]],["Justiça social nos profetas",["Amós 5:21-24","Miqueias 6:6-8","Isaías 1:10-17"]],["Exílio e esperança",["Salmo 137:1-6","Jeremias 29:4-14","Ezequiel 37:1-14"]],["O Servo Sofredor",["Isaías 52:13-53:12","Atos 8:30-35"]],["Daniel e a literatura apocalíptica",["Daniel 7:9-14","Marcos 14:61-62"]]]],
+ ["Jesus nos Evangelhos",[["Os quatro Evangelhos e a questão sinótica",["Lucas 1:1-4","João 20:30-31","Marcos 1:1"]],["Encarnação: o Verbo se fez carne",["João 1:1-18","Filipenses 2:5-11"]],["O Reino de Deus",["Marcos 1:14-15","Mateus 13:31-33","Lucas 17:20-21"]],["O Sermão do Monte",["Mateus 5:1-12","Mateus 5:38-48","Mateus 6:9-13"]],["As parábolas",["Lucas 15:11-32","Lucas 10:25-37"]],["Milagres e sinais",["Marcos 4:35-41","João 2:1-11","João 11:38-44"]],["Paixão e morte",["Marcos 14:32-42","Marcos 15:33-39","Salmo 22:1"]],["Ressurreição",["1 Coríntios 15:3-8","Lucas 24:1-12","João 20:24-29"]]]],
+ ["A igreja primitiva",[["Pentecostes e o Espírito",["Atos 2:1-21","Joel 2:28-32"]],["Paulo: de perseguidor a apóstolo",["Atos 9:1-19","Gálatas 1:11-17"]],["Judeus e gentios: o Concílio de Jerusalém",["Atos 15:1-21","Efésios 2:11-22"]]]],
+ ["Grandes temas",[["Graça, fé e obras",["Romanos 3:21-28","Efésios 2:8-10","Tiago 2:14-26"]],["Pecado, lei e liberdade",["Romanos 7:7-25","Gálatas 5:1","Gálatas 5:13-14"]],["O amor como centro",["Deuteronômio 6:4-5","Levítico 19:18","1 Coríntios 13:1-13","1 João 4:7-12"]],["Sofrimento e esperança",["Romanos 8:18-28","2 Coríntios 4:7-18"]],["Ética e vida em comunidade",["Romanos 12:1-21","Colossenses 3:12-17"]],["Dinheiro, trabalho e justiça",["Mateus 6:19-24","1 Timóteo 6:6-10","Tiago 5:1-6"]]]],
+ ["Fim e esperança",[["Escatologia e suas interpretações",["Mateus 24:3-14","1 Tessalonicenses 4:13-18"]],["Como ler o Apocalipse",["Apocalipse 1:1-8","Apocalipse 13:1-10"]],["Novo céu e nova terra",["Isaías 65:17-25","Apocalipse 21:1-7"]]]],
+ ["Síntese",[["Exílio e retorno: o fio que atravessa a Bíblia",["Gênesis 3:23-24","Isaías 40:1-5","Apocalipse 22:1-5"]],["A Bíblia na cultura, na ética e no direito",["Êxodo 20:13-17","Mateus 22:15-22","Romanos 13:1-7"]]]]
+];
+const LESSONS=[]; TRACKS.forEach((t,ti)=>t[1].forEach((l,li)=>LESSONS.push({id:`t${ti+1}l${li+1}`,track:t[0],ti,title:l[0],refs:l[1]})));
+let cur=null, busy=false, mode="short";
+function doy(d=new Date()){return Math.floor((new Date(d.getFullYear(),d.getMonth(),d.getDate())-new Date(d.getFullYear(),0,0))/864e5);}
+function todayRef(){ const d=new Date(); return PASS[(doy(d)+(d.getFullYear()-2026)*366)%PASS.length]; }
+const BASE=`Você é um biblista com domínio de hebraico bíblico, aramaico e grego koiné, e escreve em português do Brasil.
+REGRAS GERAIS
+- Postura respeitosa e analítica, SEM puxar para nenhuma religião ou denominação, sem pregação e sem tentar convencer de nada.
+- Traduza diretamente da língua original: Antigo Testamento do hebraico do Texto Massorético (ou do aramaico, nos trechos em aramaico); Novo Testamento do grego koiné (texto crítico). NÃO copie nem adapte traduções em português já publicadas: faça uma tradução própria e fiel, com [colchetes] para palavras acrescentadas pelo sentido.
+- Onde estudiosos discordam, diga que há debate.
+- Se a referência não existir, responda apenas "REFERÊNCIA INVÁLIDA" e sugira a correta.`;
+function fbHint(){ const v=Object.entries(S.fb||{}).sort().slice(-10).map(x=>x[1]); const up=v.filter(x=>x>0).length, dn=v.filter(x=>x<0).length; return dn>up?"\nO leitor tem achado as reflexões pouco úteis: seja mais concreto, prático e próximo do dia a dia, sem perder a profundidade.":up>=3?"\nO leitor tem gostado do tom das reflexões: mantenha o mesmo estilo.":""; }
+function shortPrompt(ref){ return `${BASE}${fbHint()}
+
+Escreva a REFLEXÃO DO DIA sobre ${ref}: curta, profunda e filosófica, para ler em 2 minutos. No máximo 260 palavras no total.
+
+FORMATO
+## O texto
+Tradução do original, um versículo por linha começando com "> " e o número em negrito (ex.: "> **1** …"). Se a passagem tiver mais de 10 versículos, traduza só os 4 a 6 versículos centrais e indique quais. Depois, numa linha separada: "Tradução do [hebraico/aramaico/grego] original."
+## Reflexão
+Dois parágrafos curtos. Uma leitura filosófica e existencial do texto, que faça pensar: o que ele diz sobre a condição humana, o tempo, o sofrimento, a escolha, o sentido. Pode dialogar com um pensador (antigo ou moderno) se ajudar. Sem clichê e sem sermão.
+## Para levar hoje
+Uma frase de síntese e uma pergunta honesta.`; }
+function deepPrompt(ref){ return `${BASE}
+
+Faça um ESTUDO COMPLETO de ${ref}, como um professor sábio e honesto conversando com um adulto pensante. Títulos com "## ".
+
+FORMATO
+## O texto
+A tradução completa, versículo por versículo, cada linha começando com "> " e o número em negrito. Depois: "Tradução do [hebraico/aramaico/grego] original."
+## Notas de tradução
+De 3 a 5 palavras-chave: a palavra transliterada em itálico (com a grafia original entre parênteses), o sentido literal e por que a escolha importa. Variantes de manuscritos relevantes, se houver.
+## Contexto
+Época, autor provável, gênero literário, para quem foi escrito.
+## Leituras
+Tradição judaica (quando se aplica), tradições cristãs (católica, protestante, ortodoxa) e leitura acadêmica ou filosófica, mostrando as tensões entre elas.
+## Para a vida real
+Uma reflexão concreta.
+## Para pensar
+Uma pergunta honesta.`; }
+function lessonPrompt(L){ const all=LESSONS.map(x=>x.title); const idx=LESSONS.indexOf(L);
+  return `${BASE}
+
+Você é o professor de um ESTUDO DIRIGIDO da Bíblia inteira, organizado por temas (não livro por livro). Esta é a lição ${idx+1} de ${LESSONS.length}: "${L.title}" (trilha: ${L.track}).
+Textos da lição: ${L.refs.join("; ")}.
+Lições anteriores: ${all.slice(Math.max(0,idx-3),idx).join("; ")||"nenhuma"}. Próxima: ${all[idx+1]||"fim do curso"}.
+
+Escreva a lição com profundidade de curso de teologia, mas clara. Entre 900 e 1300 palavras. Títulos com "## ".
+
+FORMATO
+## Objetivo
+1 a 2 frases: o que a pessoa vai entender.
+## Os textos
+Para cada referência, um subtítulo "### Referência" e a tradução do original, um versículo por linha começando com "> " e o número em negrito. Se o total passar de 30 versículos, traduza integralmente os trechos centrais e resuma o restante entre colchetes. Depois de cada texto, uma linha: "Tradução do [hebraico/aramaico/grego] original."
+## Como os textos conversam
+Mostre como o tema nasce e se desenvolve ao longo da Bíblia (Antigo → Novo Testamento): ecos, citações, releituras, tensões.
+## Palavras-chave no original
+3 a 5 termos transliterados em itálico, com a grafia original entre parênteses, sentido e importância.
+## Contexto histórico
+## Como as tradições leem
+Judaica (quando se aplica), católica, protestante, ortodoxa e leitura acadêmica/crítica. Mostre concordâncias e divergências sem tomar partido.
+## Síntese
+3 a 5 tópicos curtos com o essencial.
+## Perguntas para você
+Exatamente 3 perguntas numeradas: uma de compreensão, uma de conexão entre os textos e uma de reflexão pessoal.`; }
+const WAIT=["Traduzindo do original…","Consultando o hebraico e o grego…","Preparando sua leitura…","Pegue seu café, já está quase…","Comparando as tradições…"];
+function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
+async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s) throw {code:"no_sample"}; skel(el);
+  const r=await s(prompt,Object.assign({modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }},opts));
+  let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “Gerar de novo” para completar.*"; toast("A resposta veio incompleta"); } return t; }
+function needClaude(id){ const n=$(id); n.textContent="Entre na sua conta para usar esta função."; n.hidden=false; }
+
+/* ---------- Hoje / passagem ---------- */
+function show(r, kind){
+  if(cur!==r&&SP.key==="hoje") stopSpeak(); cur=r; $("ref").textContent=r.ref; $("kind").textContent=kind||"Reflexão do dia";
+  const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("copy").hidden=!has; $("sayHoje").hidden=!has; $("qaWrap").hidden=!has;
+  $("saveBtn").hidden=!has || S.saved.some(x=>x.id===r.id);
+  $("gen").textContent = has?"Gerar de novo":(r.mode==="deep"?"Estudar":"Ler reflexão");
+  $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
+  $("deepBtn").hidden = !r.text || !!r.deep;
+  $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
+  const st=streak(); $("streak").hidden=st<2; $("streak").textContent=`🔥 ${st} dias seguidos`;
+  if(has) renderQA();
+  redecorateAll();
+}
+function renderQA(){ $("qa").innerHTML=(cur.qa||[]).map(x=>`<div class="q">${esc(x.q)}</div><div class="a md">${md(x.a)}</div>`).join(""); }
+function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||[]).filter(x=>x.date!==dstr()); S.dayIndex.unshift({date:dstr(),ref:cur.ref}); S.dayIndex=S.dayIndex.slice(0,180); kvSet("day_"+dstr(),{ref:cur.ref,text:cur.text,deep:cur.deep,date:dstr()}); } const sv=S.saved.find(x=>x.id===cur.id); if(sv) Object.assign(sv,clone(cur)); save(); }
+let regenArm=0;
+async function generate(){
+  if(busy||!cur) return;
+  if((cur.text||cur.deep) && Date.now()-regenArm>4000){ regenArm=Date.now(); const g=$("gen"); g.textContent="Toque de novo para confirmar"; setTimeout(()=>{ if(!busy) show(cur,$("kind").textContent); },4000); toast("Isso substitui o texto atual"); return; }
+  regenArm=0; busy=true; $("note").hidden=true; const b=$("gen"); b.disabled=true; b.innerHTML='<span class="spin"></span>Traduzindo do original…';
+  $("outCard").hidden=false; $("qaWrap").hidden=true; $("deepBtn").hidden=true;
+  const deepMode=cur.mode==="deep";
+  const target=deepMode?$("deep"):$("out"); if(deepMode) $("out").innerHTML=""; skel(target);
+  try{ const t=await stream(deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref),target);
+    if(/^\s*REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t)){ busy=false; b.disabled=false; b.textContent="Tentar de novo"; return; }
+    if(deepMode) cur.deep=t; else { cur.text=t; cur.deep=null; } cur.qa=[]; cur.date=dstr(); persist(); markVisit(); autoRead(t,cur.ref,"hoje"); }
+  catch(e){ console.warn(e); $("outCard").hidden=true; if(e&&e.code==="no_sample") needClaude("note"); else { $("note").textContent=errMsg(e); $("note").hidden=false; } }
+  busy=false; b.disabled=false; show(cur,$("kind").textContent);
+}
+async function deepen(){
+  if(busy||!cur) return; busy=true; const b=$("deepBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>Preparando o estudo completo…';
+  skel($("deep"),"Preparando o estudo completo…");
+  try{ cur.deep=await stream(deepPrompt(cur.ref),$("deep")); persist(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
+  catch(e){ $("deep").textContent=e&&e.code==="no_sample"?"Entre na sua conta para o estudo completo.":errMsg(e); }
+  busy=false; b.disabled=false; b.textContent="Aprofundar: estudo completo do texto"; show(cur,$("kind").textContent);
+}
+async function ask(){
+  const q=$("ask").value.trim(); if(!q||!cur) return; const s=await getSample(); if(!s) return;
+  $("ask").value=""; $("qa").insertAdjacentHTML("beforeend",`<div class="q">${esc(q)}</div><div class="a md" id="stream"><span class="spin"></span></div>`);
+  try{ const r=await s(`Você é um biblista com domínio de hebraico, aramaico e grego koiné. Responda à pergunta abaixo sobre ${cur.ref}, em português do Brasil, de forma direta, precisa e sem puxar para nenhuma religião. Até 220 palavras. Se citar o original, translitere e dê a grafia original.\n\nLEITURA FEITA ANTES:\n${cur.text||""}\n${cur.deep||""}\n\n${(cur.qa||[]).map(x=>`P: ${x.q}\nR: ${x.a}`).join("\n\n")}\n\nPERGUNTA: ${q}`,{cache:false,onText:({text})=>{const e=$("stream"); if(e) e.innerHTML=md(text);}});
+    (cur.qa=cur.qa||[]).push({q,a:r.text}); cur.qa=cur.qa.slice(-6); persist(); renderQA(); }
+  catch(e){ const el=$("stream"); if(el){ el.removeAttribute("id"); el.textContent=errMsg(e); } }
+}
+function renderList(){
+  $("list").innerHTML=S.saved.length?S.saved.map(x=>`<div class="li"><button style="flex:1;text-align:left" data-o="${x.id}"><div class="t">${esc(x.ref)}</div><div class="sm muted">${x.date?fdate(x.date):""}${x.deep?" · estudo completo":""}</div></button><button class="x" data-d="${x.id}" aria-label="Remover">×</button></div>`).join(""):`<div class="empty">Toque em Salvar numa leitura para guardá-la aqui.</div>`;
+  $("list").querySelectorAll("[data-o]").forEach(b=>b.onclick=()=>{ const x=S.saved.find(y=>y.id===b.dataset.o); if(x){ go("hoje"); show(x,"Leitura salva"); } });
+  $("list").querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{ S.saved=S.saved.filter(y=>y.id!==b.dataset.d); save(); renderList(); });
+}
+function openRef(ref){ ref=ref.trim(); if(!ref){ toast("Digite uma passagem"); return; } go("hoje"); show({id:rid(),ref,mode,text:null,deep:null,qa:[]},mode==="deep"?"Estudo de passagem":"Reflexão"); generate(); }
+
+/* ---------- Estudos ---------- */
+let curL=null, curLData=null, lBusy=false;
+function renderStudy(){
+  const done=Object.keys(S.study.done).length, pct=Math.round(done/LESSONS.length*100);
+  $("stProg").textContent=`${done} de ${LESSONS.length} lições`; $("stPct").textContent=`${pct}%`; $("stBar").style.width=pct+"%";
+  const next=LESSONS.find(l=>!S.study.done[l.id]); $("stCont").textContent = !done?"Começar pela lição 1":next?`Continuar: ${next.title}`:"Curso concluído · revisar";
+  $("stCont").onclick=()=>openLesson((next||LESSONS[0]).id);
+  const openT = next?next.ti:0;
+  $("tracks").innerHTML=TRACKS.map((t,ti)=>{ const ls=LESSONS.filter(l=>l.ti===ti), d=ls.filter(l=>S.study.done[l.id]).length;
+    return `<div class="track ${ti===openT?"open":""}"><button data-tr="${ti}"><div><div class="sm muted">Trilha ${ti+1}</div><div class="tt">${esc(t[0])}</div></div><span class="pill">${d}/${ls.length}</span></button>
+      <div class="lessons">${ls.map(l=>{ const n=LESSONS.indexOf(l)+1; return `<button class="lesson ${S.study.done[l.id]?"done":""}" data-l="${l.id}"><span class="n">${S.study.done[l.id]?"✓":n}</span><span><div class="lt">${esc(l.title)}</div><div class="lr">${esc(l.refs.join(" · "))}</div></span></button>`; }).join("")}</div></div>`; }).join("");
+  $("tracks").querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>b.parentElement.classList.toggle("open"));
+  $("tracks").querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>openLesson(b.dataset.l));
+}
+async function openLesson(id){
+  const L=LESSONS.find(l=>l.id===id); if(!L) return; if(SP.key==="lic"||SP.key==="fb") stopSpeak(); curL=L; S.study.last=id; save();
+  $("studyHome").hidden=true; $("lessonView").hidden=false; $("scroll").scrollTop=0; $("topTitle").textContent=`Lição ${LESSONS.indexOf(L)+1}`;
+  $("lTrack").textContent=`Trilha ${L.ti+1} · ${L.track}`; $("lTitle").textContent=L.title; $("lRefs").innerHTML=L.refs.map(r=>`<span class="chip">${esc(r)}</span>`).join("");
+  $("lNote").hidden=true; $("lDone").textContent=S.study.done[id]?"Lição concluída ✓":"Concluir lição";
+  $("lOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo a lição…</div>'; $("mentor").hidden=true; $("fb").innerHTML=""; $("ans").value="";
+  curLData=await kvGet("lesson_"+id);
+  if(curL!==L) return;
+  if(curLData&&curLData.text){ renderLesson(); } else genLesson(true);
+}
+function renderLesson(){ $("lOut").innerHTML=md(curLData.text); decorate($("lOut"),curL.refs[0]); sectionize($("lOut")); $("mentor").hidden=false; $("ans").value=curLData.answer||""; $("fb").innerHTML=curLData.feedback?md(curLData.feedback):"";
+  $("lNoteIn").value=curLData.note||""; $("lExtra").hidden=false; renderQuiz(); }
+function sectionize(el){ const kids=[...el.children]; let cur2=null, out=[]; kids.forEach(n=>{ if(n.tagName==="H3"){ const d=document.createElement("details"); const t=n.textContent.toLowerCase(); d.open=/objetivo|textos|perguntas|síntese|sintese/.test(t); const s=document.createElement("summary"); s.innerHTML=n.innerHTML; d.appendChild(s); cur2=d; out.push(d); } else if(cur2) cur2.appendChild(n); else out.push(n); }); el.innerHTML=""; out.forEach(n=>el.appendChild(n)); }
+let noteT=null;
+function lessonNote(){ clearTimeout(noteT); noteT=setTimeout(async()=>{ if(!curLData||!curL) return; curLData.note=$("lNoteIn").value; await kvSet("lesson_"+curL.id,curLData); },700); }
+function renderQuiz(){ const Q=curLData&&curLData.quiz, box=$("quizBox"); if(!Q){ box.innerHTML=`<button class="btn ghost full" id="quizGo">🧠 Teste rápido: 3 perguntas</button>`; $("quizGo").onclick=makeQuiz; return; }
+  box.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Teste rápido</div>`+Q.q.map((q,i)=>`<div class="qz"><div class="t" style="font-size:16px;margin-bottom:6px">${i+1}. ${esc(q.p)}</div>${q.o.map((o,j)=>{ const a=Q.ans&&Q.ans[i]; const cls=a==null?"":j===q.c?"ok":a===j?"bad":""; return `<button class="qopt ${cls}" data-q="${i}" data-o="${j}" ${a!=null?"disabled":""}>${esc(o)}</button>`; }).join("")}${Q.ans&&Q.ans[i]!=null?`<div class="sm muted" style="margin-top:6px">${esc(q.e||"")}</div>`:""}</div>`).join("")+(Q.ans&&Object.keys(Q.ans).length===Q.q.length?`<div class="note" style="color:var(--text);margin-top:10px">Você acertou ${Q.q.filter((q,i)=>Q.ans[i]===q.c).length} de ${Q.q.length}.</div>`:"");
+  box.querySelectorAll("[data-q]").forEach(b=>b.onclick=async()=>{ Q.ans=Q.ans||{}; Q.ans[+b.dataset.q]=+b.dataset.o; renderQuiz(); await kvSet("lesson_"+curL.id,curLData); }); }
+async function makeQuiz(){ const s=await getSample(); if(!s){ toast("Entre na sua conta para usar a IA"); return; } $("quizBox").innerHTML='<div class="row muted sm"><span class="spin"></span>Preparando o teste…</div>';
+  try{ const r=await askJSONb(`Com base nesta lição, crie 3 perguntas de múltipla escolha (4 opções cada, só uma correta) que testem compreensão real, não decoreba. Sem puxar para nenhuma religião: quando o tema for de fé, pergunte "segundo o texto" ou "segundo a tradição X". JSON: {"q":[{"p":"pergunta","o":["a","b","c","d"],"c":0,"e":"explicação de 1 frase"}]}
+
+LIÇÃO:
+${curLData.text}`);
+    curLData.quiz={q:(r.q||[]).slice(0,3).map(x=>({p:String(x.p),o:(x.o||[]).slice(0,4).map(String),c:+x.c||0,e:String(x.e||"")})),ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz(); }
+  catch(e){ $("quizBox").innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; } }
+function trackDone(ti){ return LESSONS.filter(l=>l.ti===ti).every(l=>S.study.done[l.id]); }
+async function certificate(ti){ const c=document.createElement("canvas"); c.width=1400; c.height=1000; const x=c.getContext("2d");
+  x.fillStyle="#fbf3e7"; x.fillRect(0,0,1400,1000); x.strokeStyle="#b26a24"; x.lineWidth=6; x.strokeRect(40,40,1320,920); x.lineWidth=1.5; x.strokeRect(62,62,1276,876);
+  x.textAlign="center"; x.fillStyle="#8c4f17"; x.font="bold 34px Manrope,Arial"; x.fillText("ESTUDO DIRIGIDO DA BÍBLIA",700,190);
+  x.fillStyle="#2a1c12"; x.font="bold 76px Fraunces,Georgia,serif"; x.fillText("Certificado de conclusão",700,300);
+  x.font="38px Literata,Georgia,serif"; x.fillStyle="#5c4635"; x.fillText("Certificamos que",700,400);
+  x.font="bold 64px Fraunces,Georgia,serif"; x.fillStyle="#2a1c12"; x.fillText(S.name||"Estudante",700,490);
+  x.font="38px Literata,Georgia,serif"; x.fillStyle="#5c4635"; x.fillText("concluiu a trilha",700,570);
+  x.font="bold 52px Fraunces,Georgia,serif"; x.fillStyle="#8c4f17"; x.fillText(TRACKS[ti][0],700,650);
+  x.font="32px Manrope,Arial"; x.fillStyle="#7b6553"; x.fillText(`${LESSONS.filter(l=>l.ti===ti).length} lições · ${new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"})}`,700,730);
+  x.font="30px Manrope,Arial"; x.fillText("☕ Reflexão Bíblica",700,860);
+  const blob=await new Promise(r=>c.toBlob(r,"image/png")), url=URL.createObjectURL(blob);
+  openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:22px;margin:0">🎉 Trilha concluída!</h2><button class="iconbtn" id="ctClose" aria-label="Fechar">✕</button></div><img src="${url}" alt="Certificado da trilha ${esc(TRACKS[ti][0])}" style="width:100%;border-radius:12px;margin:12px 0"><button class="btn full" id="ctSave">Baixar certificado</button><p class="sm muted" style="margin:8px 0 0">Ou toque e segure na imagem para salvar.</p>`);
+  $("ctClose").onclick=closeModal; $("ctSave").onclick=async()=>{ try{ const d=await window.claude.use("downloads"); if(!d) throw 0; await d.save({filename:"certificado-"+(ti+1)+".png",data:blob}); }catch(e){ toast("Toque e segure na imagem para salvar"); } }; }
+let lRegenArm=0;
+async function genLesson(force){
+  if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="Gerar de novo"; },4000); return; }
+  lRegenArm=0; $("lRegen").textContent="Gerar de novo"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
+  try{ const t=await stream(lessonPrompt(L),$("lOut")); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
+  catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
+  lBusy=false;
+}
+async function sendAnswer(){
+  const a=$("ans").value.trim(); if(a.length<10){ toast("Escreva suas respostas"); return; } if(!curLData) return;
+  const s=await getSample(); if(!s){ toast("Entre na sua conta para usar a IA"); return; }
+  const b=$("ansBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>O mentor está lendo…'; $("fb").innerHTML='<span class="spin"></span>';
+  try{ const r=await s(`Você é o mentor de um estudo dirigido da Bíblia: acolhedor, honesto e exigente, com domínio de hebraico, aramaico e grego koiné, sem puxar para nenhuma religião.
+O aluno estudou a lição "${curL.title}" (${curL.refs.join("; ")}) e respondeu às perguntas.
+
+LIÇÃO:
+${curLData.text}
+
+RESPOSTAS DO ALUNO:
+${a}
+
+Comente em português do Brasil, em no máximo 280 palavras, com títulos "### Pergunta 1", "### Pergunta 2", "### Pergunta 3": o que está bom, o que pode aprofundar, corrija com gentileza qualquer erro de fato ou de leitura do texto e faça uma pergunta de continuação. Termine com "### Próximo passo" em uma frase.`,{modelTier:"complex",cache:false,onText:({text})=>{ $("fb").innerHTML=md(text); }});
+    curLData.answer=a; curLData.feedback=r.text; await kvSet("lesson_"+curL.id,curLData); autoRead(r.text,"Comentário do mentor","fb"); }
+  catch(e){ $("fb").textContent=errMsg(e); }
+  b.disabled=false; b.textContent="Enviar ao mentor";
+}
+
+const BOOKS={
+ "Antigo Testamento":[["Gênesis",50],["Êxodo",40],["Levítico",27],["Números",36],["Deuteronômio",34],["Josué",24],["Juízes",21],["Rute",4],["1 Samuel",31],["2 Samuel",24],["1 Reis",22],["2 Reis",25],["1 Crônicas",29],["2 Crônicas",36],["Esdras",10],["Neemias",13],["Ester",10],["Jó",42],["Salmos",150],["Provérbios",31],["Eclesiastes",12],["Cântico dos Cânticos",8],["Isaías",66],["Jeremias",52],["Lamentações",5],["Ezequiel",48],["Daniel",12],["Oseias",14],["Joel",3],["Amós",9],["Obadias",1],["Jonas",4],["Miqueias",7],["Naum",3],["Habacuque",3],["Sofonias",3],["Ageu",2],["Zacarias",14],["Malaquias",4]],
+ "Novo Testamento":[["Mateus",28],["Marcos",16],["Lucas",24],["João",21],["Atos",28],["Romanos",16],["1 Coríntios",16],["2 Coríntios",13],["Gálatas",6],["Efésios",6],["Filipenses",4],["Colossenses",4],["1 Tessalonicenses",5],["2 Tessalonicenses",3],["1 Timóteo",6],["2 Timóteo",4],["Tito",3],["Filemom",1],["Hebreus",13],["Tiago",5],["1 Pedro",5],["2 Pedro",3],["1 João",5],["2 João",1],["3 João",1],["Judas",1],["Apocalipse",22]],
+ "Deuterocanônicos":[["Tobias",14],["Judite",16],["1 Macabeus",16],["2 Macabeus",15],["Sabedoria",19],["Eclesiástico",51],["Baruque",6]]
+};
+const ENC=[
+ ["Deus (YHWH, Elohim)","Seres espirituais","Os nomes e as formas como Deus é concebido ao longo da Bíblia."],
+ ["Espírito Santo","Seres espirituais","Do ruach hebraico ao pneuma do Novo Testamento."],
+ ["Anjo","Seres espirituais","Mensageiros divinos: mal'ak em hebraico, angelos em grego."],
+ ["Arcanjo","Seres espirituais","Termo raro na Bíblia; a hierarquia angélica vem depois."],
+ ["Miguel","Seres espirituais","Anjo protetor de Israel em Daniel; guerreiro no Apocalipse."],
+ ["Gabriel","Seres espirituais","O anjo que interpreta visões em Daniel e anuncia em Lucas."],
+ ["Rafael","Seres espirituais","Anjo do livro de Tobias, ligado à cura."],
+ ["Anjo do Senhor","Seres espirituais","Figura misteriosa que às vezes fala como o próprio Deus."],
+ ["Querubim","Seres espirituais","Guardiões do Éden e da Arca; nada a ver com bebês alados."],
+ ["Serafim","Seres espirituais","Seres flamejantes que aparecem só na visão de Isaías 6."],
+ ["Satanás","Seres espirituais","De 'o acusador' em Jó ao adversário cósmico do Novo Testamento."],
+ ["Diabo","Seres espirituais","Diabolos, o caluniador: a tradução grega de satan."],
+ ["Demônio","Seres espirituais","Espíritos impuros nos Evangelhos e a origem do conceito."],
+ ["Lúcifer","Seres espirituais","Palavra latina de Isaías 14:12; a ligação com Satanás é posterior."],
+ ["Belzebu","Seres espirituais","De Baal-Zebube, deus filisteu, a 'príncipe dos demônios'."],
+ ["Legião","Seres espirituais","O endemoninhado de Gerasa e a sombra do exército romano."],
+ ["Azazel","Seres espirituais","O bode do Dia da Expiação e as leituras em Enoque."],
+ ["Nefilim","Seres espirituais","Os 'gigantes' de Gênesis 6 e as interpretações que geraram."],
+ ["Leviatã","Seres espirituais","Monstro marinho do caos em Jó, Salmos e Isaías."],
+ ["Beemote","Seres espirituais","A grande criatura terrestre de Jó 40."],
+ ["Principados e potestades","Seres espirituais","Poderes espirituais e políticos nas cartas de Paulo."],
+ ["Céu","Seres espirituais","Shamayim, ouranos: céu físico, morada de Deus e destino final."],
+ ["Paraíso","Seres espirituais","Do jardim persa ao 'hoje estarás comigo'."],
+ ["Sheol","Seres espirituais","A morada dos mortos na Bíblia hebraica, sem céu ou inferno."],
+ ["Hades","Seres espirituais","O equivalente grego do Sheol no Novo Testamento."],
+ ["Geena (inferno)","Seres espirituais","Do vale de Hinom, em Jerusalém, à imagem do juízo."],
+ ["Abismo","Seres espirituais","Tehom, abyssos: as profundezas do caos e da prisão espiritual."],
+ ["Adão e Eva","Pessoas","Os primeiros humanos e as leituras literal, simbólica e teológica."],
+ ["Caim e Abel","Pessoas","O primeiro homicídio e a pergunta 'sou guarda do meu irmão?'."],
+ ["Noé","Pessoas","O dilúvio, a aliança com toda a criação e os paralelos mesopotâmicos."],
+ ["Abraão","Pessoas","Pai da fé para judeus, cristãos e muçulmanos."],
+ ["Sara","Pessoas","A matriarca da promessa e do riso."],
+ ["Isaque","Pessoas","O filho da promessa e o quase sacrifício."],
+ ["Jacó (Israel)","Pessoas","O enganador que luta com Deus e recebe novo nome."],
+ ["José do Egito","Pessoas","Da cisterna ao palácio: providência e perdão."],
+ ["Moisés","Pessoas","Libertador, legislador e profeta do Êxodo."],
+ ["Arão","Pessoas","Irmão de Moisés e primeiro sumo sacerdote."],
+ ["Josué","Pessoas","Sucessor de Moisés e a entrada em Canaã."],
+ ["Débora","Pessoas","Profetisa e juíza que liderou Israel."],
+ ["Sansão","Pessoas","Força, nazireado e queda."],
+ ["Rute","Pessoas","A estrangeira moabita na linhagem de Davi."],
+ ["Samuel","Pessoas","Último juiz, profeta que ungiu os primeiros reis."],
+ ["Saul","Pessoas","O primeiro rei de Israel e sua tragédia."],
+ ["Davi","Pessoas","Pastor, poeta, rei, adúltero e arrependido."],
+ ["Salomão","Pessoas","Sabedoria, templo, riqueza e desvio."],
+ ["Elias","Pessoas","O profeta do Carmelo, do fogo e da brisa suave."],
+ ["Eliseu","Pessoas","Sucessor de Elias, profeta dos milagres."],
+ ["Isaías","Pessoas","Profeta de Jerusalém; o livro tem fases e autores debatidos."],
+ ["Jeremias","Pessoas","O profeta das lágrimas e da nova aliança."],
+ ["Ezequiel","Pessoas","Visões do exílio: a glória que parte e os ossos secos."],
+ ["Daniel","Pessoas","Fidelidade na Babilônia e visões apocalípticas."],
+ ["Jonas","Pessoas","O profeta que fugiu e a misericórdia com Nínive."],
+ ["Jó","Pessoas","O justo que sofre e questiona Deus."],
+ ["Ester","Pessoas","Rainha que salva seu povo; o livro não cita Deus."],
+ ["Melquisedeque","Pessoas","Rei-sacerdote de Salém, figura enigmática de Gênesis e Hebreus."],
+ ["Jezabel","Pessoas","Rainha fenícia, inimiga de Elias e símbolo de idolatria."],
+ ["Ciro","Pessoas","Rei persa chamado de 'ungido' em Isaías."],
+ ["Jesus","Pessoas","O Jesus histórico, os Evangelhos e as leituras de fé."],
+ ["Maria, mãe de Jesus","Pessoas","O que os textos dizem e como as tradições a veem."],
+ ["José, pai de Jesus","Pessoas","O carpinteiro (tekton) de Nazaré."],
+ ["João Batista","Pessoas","O profeta do deserto, do batismo e da preparação."],
+ ["Pedro","Pessoas","Pescador, líder dos Doze, negação e restauração."],
+ ["João, o apóstolo","Pessoas","O discípulo amado e a questão da autoria joanina."],
+ ["Tiago","Pessoas","Os vários Tiagos do Novo Testamento."],
+ ["Tomé","Pessoas","O 'incrédulo' e a confissão mais alta dos Evangelhos."],
+ ["Judas Iscariotes","Pessoas","A traição e as tentativas de explicá-la."],
+ ["Maria Madalena","Pessoas","Primeira testemunha da ressurreição, não uma prostituta."],
+ ["Lázaro","Pessoas","O amigo ressuscitado em Betânia."],
+ ["Nicodemos","Pessoas","O fariseu que procura Jesus à noite."],
+ ["Pôncio Pilatos","Pessoas","O governador romano e o 'que é a verdade?'."],
+ ["Herodes","Pessoas","A dinastia herodiana: o Grande, Antipas e Agripa."],
+ ["Caifás","Pessoas","Sumo sacerdote no julgamento de Jesus."],
+ ["Paulo","Pessoas","De perseguidor a apóstolo dos gentios."],
+ ["Estêvão","Pessoas","O primeiro mártir cristão."],
+ ["Éden","Lugares","O jardim, seus rios e seu sentido simbólico."],
+ ["Babel","Lugares","A torre, a dispersão das línguas e os zigurates."],
+ ["Canaã","Lugares","A terra prometida e seus povos."],
+ ["Egito","Lugares","Lugar de refúgio e de escravidão na narrativa bíblica."],
+ ["Monte Sinai","Lugares","A montanha da Lei e o debate sobre sua localização."],
+ ["Jerusalém","Lugares","Cidade de Davi, do templo e da nova Jerusalém."],
+ ["Templo de Jerusalém","Lugares","O primeiro e o segundo templo e sua destruição."],
+ ["Belém","Lugares","Cidade de Davi e do nascimento de Jesus."],
+ ["Nazaré","Lugares","A aldeia pequena de onde 'pode vir algo bom?'."],
+ ["Galileia","Lugares","A região do ministério de Jesus."],
+ ["Rio Jordão","Lugares","Travessia de Israel e batismo de Jesus."],
+ ["Samaria","Lugares","A região dividida e o povo samaritano."],
+ ["Babilônia","Lugares","O império do exílio e o símbolo do Apocalipse."],
+ ["Gólgota","Lugares","O 'lugar da caveira', onde Jesus foi crucificado."],
+ ["Getsêmani","Lugares","O jardim da agonia antes da prisão."],
+ ["Armagedom","Lugares","Har Megiddo: de cidade real a símbolo da batalha final."],
+ ["Aliança","Conceitos","Berit: o pacto que estrutura toda a Bíblia."],
+ ["Lei (Torá)","Conceitos","Mais que lei: instrução, caminho e identidade."],
+ ["Pecado","Conceitos","Errar o alvo: hata', avon, hamartia."],
+ ["Graça","Conceitos","Hen e charis: favor imerecido."],
+ ["Fé","Conceitos","Emunah e pistis: confiança, fidelidade, crença."],
+ ["Salvação","Conceitos","Yeshu'ah, soteria: libertação física e espiritual."],
+ ["Expiação","Conceitos","Kippur e as teorias sobre o sentido da cruz."],
+ ["Sacrifício","Conceitos","Os tipos de oferta em Levítico e sua releitura."],
+ ["Messias (Cristo)","Conceitos","Mashiach, christos: o ungido e as expectativas judaicas."],
+ ["Filho do Homem","Conceitos","De Daniel 7 ao título preferido de Jesus."],
+ ["Reino de Deus","Conceitos","O centro da pregação de Jesus: já e ainda não."],
+ ["Ressurreição","Conceitos","Da esperança em Daniel 12 à Páscoa cristã."],
+ ["Juízo final","Conceitos","O julgamento das nações e de cada pessoa."],
+ ["Arrebatamento","Conceitos","1 Tessalonicenses 4 e as escolas de interpretação."],
+ ["Anticristo","Conceitos","Termo só das cartas de João; as figuras associadas."],
+ ["666","Conceitos","O número da besta, a gematria e Nero."],
+ ["Trindade","Conceitos","Os textos de base e a formulação nos concílios."],
+ ["Profeta","Conceitos","Nabi: porta-voz, não adivinho."],
+ ["Sábado (Shabat)","Conceitos","Descanso, criação, libertação e controvérsias."],
+ ["Circuncisão","Conceitos","Sinal da aliança e o debate na igreja primitiva."],
+ ["Batismo","Conceitos","Imersão, purificação e as práticas cristãs."],
+ ["Ceia do Senhor","Conceitos","A última ceia, a Páscoa e as diferentes compreensões."],
+ ["Páscoa (Pessach)","Conceitos","O cordeiro, o Êxodo e a releitura cristã."],
+ ["Pentecostes","Conceitos","Shavuot, a festa da colheita e o Espírito em Atos 2."],
+ ["Dízimo","Conceitos","Os dízimos de Israel e o debate atual."],
+ ["Shalom","Conceitos","Paz como plenitude, não só ausência de guerra."],
+ ["Hesed","Conceitos","Amor leal da aliança, difícil de traduzir."],
+ ["Ágape","Conceitos","O amor de doação no Novo Testamento."],
+ ["Logos","Conceitos","O Verbo de João 1 e seu pano de fundo grego e judaico."],
+ ["Evangelho","Conceitos","Euangelion: boa notícia, termo também imperial."],
+ ["Igreja (ekklesia)","Conceitos","A assembleia convocada, não um prédio."],
+ ["Fariseus","Grupos e instituições","Mestres da Lei populares, mais complexos que o estereótipo."],
+ ["Saduceus","Grupos e instituições","Elite sacerdotal que negava a ressurreição."],
+ ["Essênios","Grupos e instituições","Comunidade ligada a Qumran e aos manuscritos."],
+ ["Samaritanos","Grupos e instituições","Povo rival dos judeus, com seu próprio Pentateuco."],
+ ["Levitas","Grupos e instituições","A tribo do serviço no santuário."],
+ ["Sumo sacerdote","Grupos e instituições","O mediador do Dia da Expiação."],
+ ["Sinédrio","Grupos e instituições","O conselho judaico na época de Jesus."],
+ ["Arca da Aliança","Objetos e ritos","O cofre sagrado das tábuas e seu desaparecimento."],
+ ["Tabernáculo","Objetos e ritos","O santuário portátil do deserto."],
+ ["Menorá","Objetos e ritos","O candelabro de sete braços."],
+ ["Dia da Expiação (Yom Kippur)","Objetos e ritos","O rito anual de purificação de Levítico 16."],
+ ["Cânon bíblico","Livros e manuscritos","Como se definiu quais livros entram na Bíblia."],
+ ["Pentateuco","Livros e manuscritos","Os cinco livros da Torá e as teorias de composição."],
+ ["Texto Massorético","Livros e manuscritos","O texto hebraico padrão e os massoretas."],
+ ["Septuaginta","Livros e manuscritos","A tradução grega da Bíblia hebraica, usada pelos apóstolos."],
+ ["Vulgata","Livros e manuscritos","A tradução latina de Jerônimo."],
+ ["Manuscritos do Mar Morto","Livros e manuscritos","Os rolos de Qumran e o que mudaram nos estudos."],
+ ["Códice Sinaítico","Livros e manuscritos","Uma das Bíblias completas mais antigas, do século IV."],
+ ["Deuterocanônicos","Livros e manuscritos","Tobias, Judite, Macabeus e outros: por que alguns cânones os incluem."],
+ ["Apócrifos","Livros e manuscritos","Textos fora do cânon e o que eles revelam."],
+ ["Livro de Enoque","Livros e manuscritos","Anjos caídos, citado em Judas, canônico na Igreja Etíope."],
+ ["Evangelho de Tomé","Livros e manuscritos","Coleção de ditos encontrada em Nag Hammadi."],
+ ["Evangelhos sinóticos","Livros e manuscritos","Mateus, Marcos e Lucas e a 'fonte Q'."],
+ ["Cartas paulinas","Livros e manuscritos","As cartas de Paulo e o debate sobre autoria."],
+ ["Apocalipse (gênero)","Livros e manuscritos","Literatura de revelação: símbolos, números e visões."]
+];
+
+/* ---------- Leitor ---------- */
+function flashVerse(v){ if(!v) return; const q=[...$("chOut").querySelectorAll("blockquote.v")].find(x=>x.dataset.ref.endsWith(":"+v)); if(q){ q.scrollIntoView({behavior:"smooth",block:"center"}); q.classList.add("flash"); } }
+let testament="Antigo Testamento", bookSel=null, chCur=null, chBusy=false;
+function origLang(b,c){ if(testament==="Deuterocanônicos"||BOOKS["Deuterocanônicos"].some(x=>x[0]===b)) return "grego da Septuaginta (indique se existem fragmentos em hebraico ou aramaico)";
+  if(BOOKS["Novo Testamento"].some(x=>x[0]===b)) return "grego koiné (texto crítico)";
+  if(b==="Daniel"&&c>=2&&c<=7) return "aramaico (Daniel 2:4b–7:28) e hebraico onde for o caso";
+  if(b==="Esdras"&&(c>=4&&c<=7)) return "aramaico (Esdras 4:8–6:18 e 7:12-26) e hebraico onde for o caso";
+  return "hebraico do Texto Massorético"; }
+function renderBooks(){
+  $("testSeg").innerHTML=Object.keys(BOOKS).map(t=>`<button class="${t===testament?"on":""}" data-t="${t}">${t==="Antigo Testamento"?"Antigo":t==="Novo Testamento"?"Novo":"Deuterocan."}</button>`).join("");
+  $("testSeg").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ testament=b.dataset.t; bookSel=null; renderBooks(); });
+  $("books").innerHTML=BOOKS[testament].map(([b])=>`<button class="chip" data-b="${esc(b)}" style="${bookSel===b?"background:var(--gold);color:var(--onaccent)":""}">${esc(b)}</button>`).join("");
+  $("books").querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>{ bookSel=x.dataset.b; renderBooks(); $("chaps").scrollIntoView({behavior:"smooth",block:"nearest"}); });
+  if(bookSel){ const n=BOOKS[testament].find(x=>x[0]===bookSel)[1];
+    $("chaps").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="eyebrow">${esc(bookSel)} · capítulos</div><button class="link-btn" id="bkIntro">ℹ️ Sobre o livro</button></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px">${Array.from({length:n},(_,i)=>`<button class="chip" data-c="${i+1}" style="text-align:center;padding:9px 0;${S.read&&S.read[bookSel+" "+(i+1)]?"border-color:var(--gold)":""}">${i+1}</button>`).join("")}</div>`;
+    $("chaps").querySelectorAll("[data-c]").forEach(x=>x.onclick=()=>openChapter(bookSel,+x.dataset.c)); $("bkIntro").onclick=()=>bookIntro(bookSel); }
+  else $("chaps").innerHTML=testament==="Deuterocanônicos"?`<p class="sm muted" style="margin:0">Livros presentes nas Bíblias católica e ortodoxa, preservados em grego. As Bíblias protestantes não os incluem.</p>`:"";
+}
+function chKey(b,c){ return "ch_"+(b+"_"+c).normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^A-Za-z0-9_]/g,""); }
+function chapterPrompt(b,c){ return `${BASE}
+
+Traduza ${b} capítulo ${c} INTEIRO, versículo por versículo, diretamente do ${origLang(b,c)}. Use a numeração de capítulos e versículos das Bíblias em português.
+FORMATO
+- Primeira linha: "## ${b} ${c}".
+- Subtítulos curtos de seção com "### " quando o assunto mudar (como nas edições de estudo).
+- Cada versículo numa linha começando com "> " e o número em negrito: "> **1** …".
+- Sem comentários nem notas. Última linha: "Tradução do [língua] original."
+- Se o capítulo for muito longo, pare sempre ao final de um versículo.`; }
+async function openChapter(b,c,v){
+  if(SP.key==="cap"&&!seqNext) stopSpeak(); chCur={b,c}; S.lastRead={b,c,d:dstr()}; save(); $("bHome").hidden=true; $("chView").hidden=false; $("scroll").scrollTop=0; $("topTitle").textContent=`${b} ${c}`;
+  $("chNote").hidden=true; $("chMore").hidden=true; $("chOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo…</div>';
+  const n=BOOKS[Object.keys(BOOKS).find(t=>BOOKS[t].some(x=>x[0]===b))].find(x=>x[0]===b)[1];
+  $("chPrev").disabled=c<=1; $("chNext").disabled=c>=n;
+  const d=await kvGet(chKey(b,c)); if(chCur.b!==b||chCur.c!==c) return;
+  if(d&&d.text){ $("chOut").innerHTML=md(d.text); $("chMore").hidden=!!d.complete; decorate($("chOut"),`${b} ${c}`); flashVerse(v); chapterReady(); } else translateChapter(false);
+}
+let seqNext=false, preBusy=false;
+function chapterReady(){ if(seqNext){ seqNext=false; setTimeout(()=>speakFor("cap"),400); } setTimeout(prefetchNext,6000); }
+function nextOf(b,c){ const t=Object.keys(BOOKS).find(t=>BOOKS[t].some(x=>x[0]===b)), L=BOOKS[t], i=L.findIndex(x=>x[0]===b); if(c<L[i][1]) return [b,c+1]; if(i+1<L.length) return [L[i+1][0],1]; return null; }
+async function prefetchNext(){ if(preBusy||!chCur) return; const nx=nextOf(chCur.b,chCur.c); if(!nx) return; const k=chKey(nx[0],nx[1]); if(await kvGet(k)) return;
+  const s=await getSample(); if(!s) return; preBusy=true; try{ const r=await s(chapterPrompt(nx[0],nx[1]),{modelTier:"complex"}); await kvSet(k,{text:r.text,complete:!r.truncated&&/Tradução do .* original/i.test(r.text)}); }catch(e){} preBusy=false; }
+function renderCont(){ const L=S.lastRead, box=$("contBox"); if(!box) return; if(!L){ box.hidden=true; return; } box.hidden=false;
+  box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Continuar de onde parou</div><div class="t" style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(L.b)} ${L.c}</div></div><button class="btn" id="contGo">Continuar</button></div>`;
+  $("contGo").onclick=()=>openChapter(L.b,L.c); }
+async function bookIntro(b){
+  const k="intro_"+chKey(b,0); openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:24px;margin:0">Sobre ${esc(b)}</h2><button class="iconbtn" id="biClose" aria-label="Fechar">✕</button></div><div class="md" id="biOut" style="margin-top:12px;font-size:16px"></div><button class="btn ghost full" data-sayintro="1" style="margin-top:12px">🔊 Ouvir</button>`);
+  $("biClose").onclick=closeModal; const out=$("biOut");
+  $("setSheet").querySelector("[data-sayintro]").onclick=()=>startSpeech("intro",`Sobre o livro de ${b}.`,out.innerText,`Sobre ${b}`);
+  const c=await kvGet(k); if(c&&c.text){ out.innerHTML=md(c.text); return; }
+  try{ const t=await stream(`${BASE}
+
+Escreva uma introdução ao livro de ${b} para quem vai começar a ler. No máximo 280 palavras, títulos "## ": ## Em uma frase ## Autor e data (com os debates) ## Contexto ## Temas centrais ## Como ler (dicas práticas) ## Versículo-chave (traduzido do original, "> **v** …", com a referência).`,out); out.innerHTML=md(t); await kvSet(k,{text:t}); }
+  catch(e){ out.innerHTML=`<div class="note">${e&&e.code==="no_sample"?"Entre na sua conta para ver a introdução.":esc(errMsg(e))}</div>`; }
+}
+const autoCont={};
+async function translateChapter(cont){
+  if(chBusy||!chCur) return; chBusy=true; const {b,c}=chCur, k=chKey(b,c);
+  let prev=cont?((await kvGet(k))||{}).text||"":"";
+  const last=(prev.match(/\*\*(\d+)\*\*/g)||[]).map(x=>+x.replace(/\*/g,"")).pop()||0;
+  const el=$("chOut"); if(!cont){ skel(el,"Traduzindo "+b+" "+c+" do original…"); autoCont[k]=0; } $("chMore").hidden=true;
+  const p = cont ? `${BASE}\n\nContinue a tradução de ${b} ${c} a partir do versículo ${last+1} até o fim do capítulo, diretamente do ${origLang(b,c)}. Mesmo formato ("> **n** …", subtítulos "### " se necessário), SEM repetir o título nem versículos anteriores. Última linha: "Tradução do [língua] original." Se não couber, pare ao final de um versículo.` : chapterPrompt(b,c);
+  try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
+    const r=await s(p,{modelTier:"complex",onText:({text})=>{ el.innerHTML=md((prev?prev+"\n":"")+text); }});
+    const txt=(prev?prev.replace(/\n?Tradução do .*original\.?\s*$/i,"")+"\n":"")+r.text, complete=!r.truncated && /Tradução do .* original/i.test(r.text);
+    await kvSet(k,{text:txt,complete}); S.read=S.read||{}; S.read[b+" "+c]=1; save();
+    if(chCur.b===b&&chCur.c===c){ el.innerHTML=md(txt); decorate(el,`${b} ${c}`); $("chMore").hidden=complete;
+      if(!complete&&(autoCont[k]||0)<4){ autoCont[k]=(autoCont[k]||0)+1; chBusy=false; return translateChapter(true); }
+      if(!cont||complete){ if(seqNext) chapterReady(); else { autoRead(txt,`${b} ${c}`,"cap"); setTimeout(prefetchNext,6000); } } } }
+  catch(e){ console.warn(e); if(!cont) el.innerHTML=""; const n=$("chNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para traduzir este capítulo.":errMsg(e); n.hidden=false; }
+  chBusy=false;
+}
+
+/* ---------- Dicionário ---------- */
+let dCat="Todos", dCur=null, dBusy=false;
+const norm=s=>String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+function renderDic(){
+  if(dMode==="tema"){ $("dCats").hidden=true; return; } $("dCats").hidden=false;
+  const cats=["Todos",...new Set(ENC.map(e=>e[1]))], q=norm($("dSearch").value.trim());
+  $("dCats").innerHTML=cats.map(c=>`<button class="chip" data-cat="${esc(c)}" style="${c===dCat?"background:var(--gold);color:var(--onaccent)":""}">${esc(c)}</button>`).join("");
+  $("dCats").querySelectorAll("[data-cat]").forEach(b=>b.onclick=()=>{ dCat=b.dataset.cat; renderDic(); });
+  const L=ENC.filter(e=>(dCat==="Todos"||e[1]===dCat)&&(!q||norm(e[0]+" "+e[2]).includes(q)));
+  let h=q?`<button class="li" id="dFree" style="width:100%;text-align:left"><div style="flex:1"><div class="t">Pesquisar “${esc($("dSearch").value.trim())}”</div><div class="sm muted">Gerar um verbete sobre qualquer termo bíblico</div></div><span class="pill">›</span></button>`:"";
+  h+=L.map(e=>`<button class="li" data-e="${esc(e[0])}" style="width:100%;text-align:left"><div style="flex:1"><div class="t">${esc(e[0])}</div><div class="sm muted">${esc(e[2])}</div></div></button>`).join("");
+  $("dList").innerHTML=h||`<div class="empty">Nada encontrado.</div>`;
+  $("dList").querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ const e=ENC.find(x=>x[0]===b.dataset.e); openEntry(e[0],e[1],e[2]); });
+  const f=$("dFree"); if(f) f.onclick=()=>openEntry($("dSearch").value.trim(),"Pesquisa","");
+}
+function entKey(t){ return "ent_"+norm(t).replace(/[^a-z0-9]/g,"").slice(0,60); }
+function entryPrompt(t,deep){ return deep ? `${BASE}
+
+Aprofunde o verbete bíblico "${t}" para quem quer estudar a fundo (até 900 palavras, títulos "## "):
+## Textos principais
+Os 2 ou 3 trechos mais importantes, traduzidos do original ("> **v** …"), com a referência em "### ".
+## História da interpretação
+Da Bíblia hebraica ao período do Segundo Templo (Septuaginta, Qumran, Enoque, quando relevante), Novo Testamento, judaísmo rabínico, Pais da Igreja, Idade Média, Reforma e estudos modernos.
+## Na cultura
+Como o tema passou para a arte, a literatura e a imaginação popular, e onde ela se afasta do texto.
+## Bibliografia para ir além
+3 a 5 obras de referência reais e conhecidas (se não tiver certeza de uma obra, não cite).` : `${BASE}
+
+Escreva o verbete de enciclopédia bíblica "${t}". Até 550 palavras, títulos "## ".
+## Em resumo
+2 a 3 frases.
+## No original
+Termos em hebraico, aramaico ou grego: transliteração em itálico, grafia original entre parênteses e sentido.
+## Onde aparece
+5 a 8 referências principais, uma linha cada.
+## Ao longo da Bíblia
+Como o conceito ou a figura se desenvolve do Antigo ao Novo Testamento (e no período entre eles, quando relevante).
+## Como as tradições entendem
+Judaica, católica, protestante, ortodoxa e acadêmica, com concordâncias e divergências.
+## Mito × texto
+O que a imaginação popular diz e o que o texto realmente diz.
+Por fim, numa linha separada e sem título: "RELACIONADOS: termo1; termo2; termo3; termo4" (4 verbetes bíblicos relacionados).`; }
+function splitRel(t){ const m=(t||"").match(/^\s*RELACIONADOS:\s*(.+)$/mi); return m?{body:t.replace(m[0],"").trim(),rel:m[1].split(/[;,]/).map(x=>x.trim().replace(/[.*]/g,"")).filter(Boolean).slice(0,6)}:{body:t||"",rel:[]}; }
+function renderRel(rel){ const box=$("dRel"); if(!dCur) return; let R=rel&&rel.length?rel:ENC.filter(e=>e[1]===dCur.cat&&e[0]!==dCur.t).slice(0,4).map(e=>e[0]);
+  box.innerHTML=R.length?`<div class="eyebrow" style="margin:18px 0 8px">Verbetes relacionados</div><div class="chips">${R.map(r=>`<button class="chip" data-rel="${esc(r)}">${esc(r)}</button>`).join("")}</div>`:"";
+  box.querySelectorAll("[data-rel]").forEach(b=>b.onclick=()=>{ const e=ENC.find(x=>norm(x[0])===norm(b.dataset.rel))||ENC.find(x=>norm(x[0]).includes(norm(b.dataset.rel))); openEntry(e?e[0]:b.dataset.rel,e?e[1]:"Pesquisa",e?e[2]:""); }); }
+async function openEntry(t,cat,sub){
+  if(SP.key==="dic") stopSpeak(); dCur={t,cat,sub}; $("dHome").hidden=true; $("dView").hidden=false; $("scroll").scrollTop=0;
+  $("dCat").textContent=cat; $("dTitle").textContent=t; $("dSub").textContent=sub||""; $("dNote").hidden=true; $("dDeepOut").innerHTML=""; $("dDeep").hidden=true;
+  $("dOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo…</div>';
+  const d=await kvGet(entKey(t)); if(dCur.t!==t) return;
+  if(d&&d.text){ const sr=splitRel(d.text); $("dOut").innerHTML=md(sr.body); renderRel(sr.rel); if(d.deep) $("dDeepOut").innerHTML=md(d.deep); else $("dDeep").hidden=false; } else genEntry(false);
+}
+async function genEntry(deep){
+  if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
+  skel(el,deep?"Aprofundando o verbete…":"Escrevendo o verbete…"); $("dDeep").hidden=true; if(!deep) $("dRel").innerHTML="";
+  try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
+    const r=await s(entryPrompt(t,deep),{modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }});
+    const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
+    if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
+  catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para abrir o verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
+  dBusy=false;
+}
+
+/* ---------- Modal genérico ---------- */
+function openModal(html){ $("setSheet").innerHTML=html; $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button,textarea")?.focus(),60); }
+function closeModal(){ $("setBg").hidden=true; }
+/* ---------- Versículos interativos ---------- */
+const HLC={amarelo:"rgba(255,214,102,.28)",verde:"rgba(52,211,153,.24)",azul:"rgba(124,180,255,.26)",rosa:"rgba(255,120,170,.26)"};
+function parseRef(s){ const m=String(s||"").trim().match(/^(.+?)\s+(\d+)(?::(\d+))?/); if(!m) return null; let b=m[1].replace(/^Salmo$/,"Salmos"); return {book:b,chapter:+m[2],v:m[3]?+m[3]:null}; }
+function decorate(el, base){
+  if(!el) return; let ctx=parseRef(base);
+  [...el.querySelectorAll("h3,h4,summary,blockquote")].forEach(n=>{
+    if(n.tagName==="H4"||n.tagName==="H3"||n.tagName==="SUMMARY"){ const r=parseRef(n.textContent); if(r) ctx=r; return; }
+    if(n.tagName!=="BLOCKQUOTE"||!ctx) return; const b=n.querySelector("b"); if(!b) return; const v=parseInt(b.textContent,10); if(!v) return;
+    const ref=`${ctx.book} ${ctx.chapter}:${v}`; n.dataset.ref=ref; n.classList.add("v"); n.tabIndex=0; n.setAttribute("role","button"); n.setAttribute("aria-label",`Versículo ${v}. Toque para destacar, anotar ou estudar`);
+    const h=(S.hl||{})[ref]; n.style.background=h&&h.c?HLC[h.c]:""; n.classList.toggle("hasnote",!!(h&&h.n)); n.classList.toggle("fav",!!(h&&h.f));
+  });
+}
+function redecorateAll(){ if(cur) { decorate($("out"),cur.ref); decorate($("deep"),cur.ref); } if(chCur) decorate($("chOut"),`${chCur.b} ${chCur.c}`); if(curL) decorate($("lOut"),curL.refs[0]); }
+document.addEventListener("click",e=>{ const q=e.target.closest("blockquote.v"); if(q&&!e.target.closest("#setSheet")) openVerse(q.dataset.ref,q.textContent.replace(/^\s*\d+\s*/,"").trim()); });
+document.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&e.target.matches&&e.target.matches("blockquote.v")){ e.preventDefault(); e.target.click(); } });
+function vKey(ref){ return norm(ref).replace(/[^a-z0-9]/g,"_"); }
+function openVerse(ref,text){
+  S.hl=S.hl||{}; const h=S.hl[ref]||{};
+  const draw=(extra)=>{ const hh=S.hl[ref]||{};
+    openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--serif);font-size:22px;margin:0">${esc(ref)}</h2><button class="iconbtn" id="vClose" aria-label="Fechar">✕</button></div>
+    <p class="md" style="margin:10px 0 14px;font-size:18px">${esc(text)}</p>
+    <div class="row" style="gap:8px;margin-bottom:12px" role="group" aria-label="Cor do destaque">${Object.entries(HLC).map(([k,c])=>`<button class="dot ${hh.c===k?"on":""}" data-c="${k}" style="background:${c.replace(/[\d.]+\)$/,"0.9)")}" aria-label="Destacar em ${k}"></button>`).join("")}<button class="chip" data-c="" style="font-family:var(--ui)">Sem cor</button></div>
+    <div class="vgrid">
+      <button class="vbtn" id="vFav">${hh.f?"★ Favorito":"☆ Favoritar"}</button><button class="vbtn" id="vNote">✏️ ${hh.n?"Editar nota":"Anotar"}</button>
+      <button class="vbtn" id="vCopy">📋 Copiar</button><button class="vbtn" id="vCard">🖼️ Cartão</button>
+      <button class="vbtn" id="vIl">🔤 Original</button><button class="vbtn" id="vXr">🔗 Referências</button>
+      <button class="vbtn" id="vAlt">🔄 Outras traduções</button><button class="vbtn" id="vAsk">❓ Perguntar</button>
+    </div>
+    <div id="vOut" style="margin-top:14px">${extra||(hh.n?`<div class="note" style="color:var(--text)"><b>Sua nota:</b> ${esc(hh.n)}</div>`:"")}</div>`);
+    const set=(k,v)=>{ S.hl[ref]=Object.assign({},S.hl[ref]||{},{[k]:v,t:text,d:dstr()}); const o=S.hl[ref]; if(!o.c&&!o.n&&!o.f) delete S.hl[ref]; save(); redecorateAll(); };
+    $("vClose").onclick=closeModal;
+    $("setSheet").querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ set("c",b.dataset.c||null); draw(); });
+    $("vFav").onclick=()=>{ set("f",!hh.f); draw(); toast(hh.f?"Removido dos favoritos":"Favoritado ★"); };
+    $("vNote").onclick=()=>{ $("vOut").innerHTML=`<textarea id="vNoteIn" data-mic="fill" style="min-height:110px" placeholder="Sua anotação sobre este versículo">${esc(hh.n||"")}</textarea><button class="btn full" id="vNoteSave" style="margin-top:8px">Salvar nota</button>`; addMic($("vNoteIn")); $("vNoteIn").focus();
+      $("vNoteSave").onclick=()=>{ set("n",$("vNoteIn").value.trim()||null); draw(); toast("Nota salva"); }; };
+    $("vCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(`“${text}” (${ref})`); toast("Versículo copiado"); }catch(e){ toast("Não consegui copiar"); } };
+    $("vCard").onclick=()=>shareCard(text,ref);
+    $("vIl").onclick=()=>verseAI(ref,text,"il");
+    $("vXr").onclick=()=>verseAI(ref,text,"xr");
+    $("vAlt").onclick=()=>verseAI(ref,text,"alt");
+    $("vAsk").onclick=()=>{ $("vOut").innerHTML=`<div class="row" style="flex-wrap:nowrap"><input id="vQ" data-mic="send2" placeholder="Pergunte sobre este versículo"><button class="btn" id="vQGo">Enviar</button></div><div class="md" id="vQA" style="margin-top:12px"></div>`; addMic($("vQ")); $("vQ").focus();
+      const go=()=>verseAI(ref,text,"ask",$("vQ").value.trim()); $("vQGo").onclick=go; $("vQ").addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); };
+  };
+  draw();
+}
+async function verseAI(ref,text,kind,q){
+  const out=kind==="ask"?$("vQA"):$("vOut"); if(!out) return; const k=`${kind}_${vKey(ref)}`;
+  if(kind!=="ask"){ const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireRefLinks(out); return; } }
+  const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para usar esta função.</div>`; return; }
+  out.innerHTML='<div class="row muted sm"><span class="spin"></span>Consultando o original…</div>';
+  try{
+    if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`);
+      const W=(r.palavras||[]).slice(0,60);
+      const html=`<div class="eyebrow" style="margin-bottom:8px">Interlinear · ${esc(r.lingua||"")}</div><div class="ilgrid" ${/heb|aram/i.test(r.lingua||"")?'dir="rtl"':""}>${W.map(w=>`<div class="ilw" dir="ltr"><div class="ilo">${esc(w.orig)}</div><div class="ilt">${esc(w.translit)}</div><div class="ils">${esc(w.sentido)}</div><div class="ilm">${esc(w.morf)}${w.strong?" · "+esc(w.strong):""}</div></div>`).join("")}</div>${r.nota?`<p class="sm muted" style="margin:10px 0 0">${esc(r.nota)}</p>`:""}<p class="sm muted" style="margin:8px 0 0">Gerado por IA como apoio ao estudo. Para citação acadêmica, confira num léxico (BDB, BDAG) ou numa edição crítica.</p>`;
+      out.innerHTML=html; await kvSet(k,{html}); return; }
+    if(kind==="xr"){ const r=await askJSONb(`Liste de 6 a 10 referências cruzadas importantes para ${ref} ("${text}"): citações diretas, alusões, paralelos e textos com o mesmo tema ou palavra-chave. JSON: {"refs":[{"ref":"Livro C:V","tipo":"citação|alusão|paralelo|tema","porque":"no máximo 15 palavras"}]}`);
+      const html=`<div class="eyebrow" style="margin-bottom:6px">Referências cruzadas</div>${(r.refs||[]).slice(0,12).map(x=>`<button class="li xref" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)} <span class="pill">${esc(x.tipo||"")}</span></div><div class="sm muted">${esc(x.porque||"")}</div></div><span class="pill">›</span></button>`).join("")}`;
+      out.innerHTML=html; wireRefLinks(out); await kvSet(k,{html}); return; }
+    const prompt = kind==="alt" ? `Mostre formas diferentes e fiéis de traduzir ${ref} do original para o português, sem copiar nenhuma tradução publicada: 1) tradução bem literal (palavra por palavra), 2) tradução formal equilibrada, 3) tradução dinâmica (ideia por ideia). Depois, em até 60 palavras, explique onde as traduções costumam divergir e por quê. Use "### " para cada tipo.`
+      : `Você é um biblista com domínio de hebraico, aramaico e grego koiné, sem puxar para nenhuma religião. Sobre ${ref} ("${text}"), responda em português do Brasil, em até 180 palavras, de forma direta: ${q}`;
+    const r=await s(prompt,{modelTier:"complex",cache:false,onText:({text})=>{ out.innerHTML=`<div class="md" style="font-size:16px">${md(text)}</div>`; }});
+    const html=`<div class="md" style="font-size:16px">${md(r.text)}</div>`; out.innerHTML=html; if(kind==="alt") await kvSet(k,{html});
+  }catch(e){ console.warn(e); out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }
+}
+async function askJSONb(p){ const s=await getSample(); if(typeof s.json==="function"){ try{ return await s.json(p,{modelTier:"complex"}); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
+  const r=await s(p+"\n\nResponda APENAS com o JSON válido.",{modelTier:"complex"}); const a=r.text.indexOf("{"),b=r.text.lastIndexOf("}"); return JSON.parse(r.text.slice(a,b+1)); }
+function wireRefLinks(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeModal(); mode="short"; openRef(b.dataset.go); }); }
+/* ---------- Cartão para compartilhar ---------- */
+async function shareCard(text,ref){
+  const c=document.createElement("canvas"); c.width=1080; c.height=1350; const x=c.getContext("2d");
+  const g=x.createLinearGradient(0,0,1080,1350); g.addColorStop(0,"#2a1a10"); g.addColorStop(1,"#5a3416"); x.fillStyle=g; x.fillRect(0,0,1080,1350);
+  x.fillStyle="rgba(242,200,143,.12)"; x.beginPath(); x.arc(980,120,320,0,7); x.fill();
+  x.fillStyle="#e2a35d"; x.font="bold 220px Georgia,serif"; x.fillText("“",80,330);
+  x.fillStyle="#fbf1e4"; let fs=64; const maxW=900; const wrap=(f)=>{ x.font=`${f}px Literata,Georgia,serif`; const words=text.split(/\s+/), lines=[]; let l=""; words.forEach(w=>{ const t=l?l+" "+w:w; if(x.measureText(t).width>maxW){ lines.push(l); l=w; } else l=t; }); if(l) lines.push(l); return lines; };
+  let L=wrap(fs); while(L.length*fs*1.35>720&&fs>34){ fs-=4; L=wrap(fs); }
+  const y0=420; L.forEach((l,i)=>x.fillText(l,90,y0+i*fs*1.35));
+  x.fillStyle="#f0d28f"; x.font="bold 46px Manrope,Arial,sans-serif"; x.fillText(ref,90,y0+L.length*fs*1.35+70);
+  x.fillStyle="#d8bfa3"; x.font="32px Manrope,Arial,sans-serif"; x.fillText("☕ Tradução do original · Reflexão Bíblica",90,1270);
+  const blob=await new Promise(r=>c.toBlob(r,"image/png")); const url=URL.createObjectURL(blob);
+  openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--serif);font-size:20px;margin:0">Cartão do versículo</h2><button class="iconbtn" id="cClose" aria-label="Fechar">✕</button></div>
+    <img src="${url}" alt="Cartão com o versículo ${esc(ref)}" style="width:100%;border-radius:16px;margin:12px 0">
+    <div class="row"><button class="btn" id="cSave" style="flex:1">Baixar imagem</button><button class="btn ghost" id="cCopy" style="flex:1">Copiar texto</button></div>
+    <p class="sm muted" style="margin:10px 0 0">Se o botão não funcionar, toque e segure na imagem para salvar.</p>`);
+  $("cClose").onclick=closeModal;
+  $("cCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(`“${text}” (${ref})`); toast("Texto copiado"); }catch(e){} };
+  $("cSave").onclick=async()=>{ try{ const d=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(!d) throw 0; await d.save({filename:`${ref.replace(/[^\w]+/g,"-")}.png`,data:blob}); toast("Imagem salva"); }catch(e){ toast("Toque e segure na imagem para salvar"); } };
+}
+/* ---------- Meus: destaques, notas, favoritos ---------- */
+let myTab="leituras";
+async function exportMine(){ const H=Object.entries(S.hl||{}).filter(([,v])=>myTab==="destaques"?v.c:myTab==="notas"?v.n:v.f);
+  if(!H.length){ toast("Nada para exportar"); return; }
+  const txt=`Reflexão Bíblica · ${myTab} · ${new Date().toLocaleDateString("pt-BR")}\n\n`+H.map(([r,v])=>`${r}\n“${v.t||""}”${v.n?`\nNota: ${v.n}`:""}`).join("\n\n");
+  try{ const d=window.claude&&window.claude.use?await window.claude.use("downloads"):null; if(d){ await d.save({filename:`minhas-${myTab}.txt`,data:new Blob([txt],{type:"text/plain"})}); return; } }catch(e){}
+  try{ await navigator.clipboard.writeText(txt); toast("Copiado para a área de transferência"); }catch(e){ toast("Não consegui exportar"); } }
+function renderMine(){
+  const H=Object.entries(S.hl||{}).sort((a,b)=>(b[1].d||"").localeCompare(a[1].d||""));
+  const tabs=[["leituras","Leituras"],["destaques","Destaques"],["notas","Notas"],["favoritos","Favoritos"]];
+  $("mySeg").innerHTML=tabs.map(([k,l])=>`<button class="${k===myTab?"on":""}" data-my="${k}">${l}</button>`).join("");
+  $("mySeg").querySelectorAll("[data-my]").forEach(b=>b.onclick=()=>{ myTab=b.dataset.my; renderMine(); });
+  if(myTab==="leituras"){ renderList(); $("list").hidden=false; $("myList").hidden=true; $("myTools").hidden=true; return; }
+  $("list").hidden=true; $("myList").hidden=false; $("myTools").hidden=false; const q=norm($("mySearch").value.trim());
+  const L=H.filter(([r,v])=>(myTab==="destaques"?v.c:myTab==="notas"?v.n:v.f)&&(!q||norm(r+" "+(v.t||"")+" "+(v.n||"")).includes(q)));
+  $("myList").innerHTML=L.length?L.map(([r,v])=>`<div class="li"><button style="flex:1;text-align:left" data-open="${esc(r)}"><div class="t" style="font-size:16px">${v.c?`<span class="cdot" style="background:${HLC[v.c].replace(/[\d.]+\)$/,"0.9)")}"></span>`:""}${esc(r)}</div><div class="sm" style="margin-top:2px">${esc((v.t||"").slice(0,140))}</div>${v.n?`<div class="sm muted" style="margin-top:4px">✏️ ${esc(v.n)}</div>`:""}</button></div>`).join(""):`<div class="empty">Toque em qualquer versículo para ${myTab==="notas"?"anotar":myTab==="favoritos"?"favoritar":"destacar"}.</div>`;
+  $("myList").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{ const p=parseRef(b.dataset.open); if(p){ go("biblia"); openChapter(p.book,p.chapter,p.v); } });
+}
+/* ---------- Planos de leitura ---------- */
+const PLANS={ano:"Bíblia em 1 ano",nt90:"Novo Testamento em 90 dias",ev30:"Evangelhos em 30 dias",sp31:"Salmos e Provérbios em 31 dias"};
+function chList(testaments){ const out=[]; testaments.forEach(t=>BOOKS[t].forEach(([b,n])=>{ for(let i=1;i<=n;i++) out.push([b,i]); })); return out; }
+function planDays(id){
+  if(id==="sp31") return Array.from({length:31},(_,d)=>[["Provérbios",d+1],...[0,30,60,90,120].map(o=>d+1+o).filter(n=>n<=150).map(n=>["Salmos",n])]);
+  const list=id==="ano"?chList(["Antigo Testamento","Novo Testamento"]):id==="nt90"?chList(["Novo Testamento"]):chList(["Novo Testamento"]).filter(([b])=>["Mateus","Marcos","Lucas","João"].includes(b));
+  const days=id==="ano"?365:id==="nt90"?90:30, out=[]; for(let d=0;d<days;d++) out.push(list.slice(Math.round(d*list.length/days),Math.round((d+1)*list.length/days))); return out;
+}
+function planToday(){ const P=S.rplan; if(!P) return null; const days=planDays(P.id); const idx=Math.min(days.length-1,Math.max(0,Math.floor((pday(dstr())-pday(P.start))/864e5)));
+  const firstUndone=days.findIndex((_,i)=>!P.done[i]); return {P,days,idx,next:firstUndone<0?null:firstUndone}; }
+function rangeLabel(chs){ if(!chs.length) return ""; const g=[]; chs.forEach(([b,c])=>{ const l=g[g.length-1]; if(l&&l.b===b&&l.e===c-1) l.e=c; else g.push({b,s:c,e:c}); }); return g.map(x=>`${x.b} ${x.s}${x.e>x.s?"–"+x.e:""}`).join(", "); }
+function renderPlan(){
+  const box=$("planBox"); if(!box) return; const t=planToday();
+  if(!t){ box.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Plano de leitura</div><p class="sm muted" style="margin:0 0 10px">Leia a Bíblia com constância. Escolha um plano:</p>${Object.entries(PLANS).map(([k,l])=>`<button class="li" data-plan="${k}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${l}</div></div><span class="pill">Começar</span></button>`).join("")}`;
+    box.querySelectorAll("[data-plan]").forEach(b=>b.onclick=()=>{ S.rplan={id:b.dataset.plan,start:dstr(),done:{}}; save(); renderPlan(); renderDailyPlan(); toast("Plano iniciado"); }); return; }
+  const {P,days}=t, i=t.next??t.idx, chs=days[i]||[], done=Object.keys(P.done).length, pct=Math.round(done/days.length*100);
+  box.innerHTML=`<div class="row" style="justify-content:space-between"><div class="eyebrow">${esc(PLANS[P.id])}</div><span class="pill">${pct}%</span></div>
+    <div class="bar" style="margin:8px 0 12px"><i style="width:${pct}%"></i></div>
+    <div class="t" style="font-family:var(--serif);font-size:18px">Dia ${i+1} de ${days.length}${t.next!=null&&t.next<t.idx?` <span class="pill">atrasado ${t.idx-t.next} dia${t.idx-t.next>1?"s":""}</span>`:""}</div>
+    <div class="chips" style="margin:10px 0 12px">${chs.map(([b,c])=>`<button class="chip" data-rc="${esc(b)}|${c}" style="${S.read&&S.read[b+" "+c]?"border-color:var(--gold)":""}">${S.read&&S.read[b+" "+c]?"✓ ":""}${esc(b)} ${c}</button>`).join("")}</div>
+    <div class="row"><button class="btn" id="planDone" style="flex:1">${P.done[i]?"Lido ✓":"Marcar dia como lido"}</button><button class="btn ghost" id="planChange">Trocar</button></div>`;
+  box.querySelectorAll("[data-rc]").forEach(b=>b.onclick=()=>{ const [bk,c]=b.dataset.rc.split("|"); openChapter(bk,+c); });
+  $("planDone").onclick=()=>{ P.done[i]=dstr(); save(); renderPlan(); renderDailyPlan(); toast("Leitura do dia concluída ✓"); };
+  $("planChange").onclick=()=>{ if(confirmInline("planChange","Trocar de plano? O progresso atual será perdido.")){ S.rplan=null; save(); renderPlan(); renderDailyPlan(); } };
+}
+function confirmInline(id,msg){ const b=$(id); if(b.dataset.c==="1") return true; b.dataset.c="1"; b.textContent="Confirmar"; toast(msg); setTimeout(()=>{ if(b){ b.dataset.c=""; b.textContent="Trocar"; } },4000); return false; }
+function renderDailyPlan(){ const box=$("dailyPlan"); if(!box) return; const t=planToday();
+  if(!t||t.next==null){ box.hidden=true; return; } const chs=t.days[t.next]; box.hidden=false;
+  box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Leitura de hoje · ${esc(PLANS[t.P.id])}</div><div class="t" style="font-family:var(--serif);font-size:18px;margin-top:4px">${esc(rangeLabel(chs))}</div></div><button class="btn" id="dpGo">Ler</button></div>`;
+  $("dpGo").onclick=()=>{ go("biblia"); const f=chs.find(([b,c])=>!(S.read&&S.read[b+" "+c]))||chs[0]; openChapter(f[0],f[1]); }; }
+/* ---------- O que a Bíblia diz sobre ---------- */
+let dMode="verbetes";
+function renderThemeHist(){ const H=S.themeHist||[]; return H.length?`<div class="eyebrow" style="margin:4px 0 8px">Pesquisas recentes</div><div class="chips" style="margin-bottom:10px">${H.map(t=>`<button class="chip" data-th2="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:`<div class="empty">Digite um tema e toque em Buscar passagens.</div>`; }
+function wireThemeHist(){ $("dList").querySelectorAll("[data-th2]").forEach(b=>b.onclick=()=>{ $("dSearch").value=b.dataset.th2; themeSearch(); }); }
+async function themeSearch(){
+  const q=$("dSearch").value.trim(); if(q.length<3){ toast("Digite um tema, ex.: perdão"); return; }
+  S.themeHist=[q,...(S.themeHist||[]).filter(x=>norm(x)!==norm(q))].slice(0,10); save();
+  const out=$("dList"), k="tema_"+norm(q).replace(/[^a-z0-9]/g,"").slice(0,50);
+  const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireTheme(out); return; }
+  const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para buscar.</div>`; return; }
+  out.innerHTML='<div class="row muted sm"><span class="spin"></span>Procurando em toda a Bíblia…</div>';
+  try{ const r=await askJSONb(`Onde a Bíblia fala sobre "${q}"? Organize as passagens mais importantes em 3 a 5 grupos temáticos, cobrindo Antigo e Novo Testamento (e deuterocanônicos se relevante), de 3 a 5 passagens por grupo. Sem puxar para nenhuma religião. JSON: {"resumo":"2 frases sobre como o tema aparece ao longo da Bíblia","grupos":[{"titulo":"","refs":[{"ref":"Livro C:V-V","resumo":"no máximo 14 palavras"}]}]}`);
+    const html=`${r.resumo?`<p class="md" style="font-size:16px;margin:0 0 10px">${esc(r.resumo)}</p>`:""}${(r.grupos||[]).map(g=>`<div class="eyebrow" style="margin:14px 0 4px;color:var(--gold)">${esc(g.titulo)}</div>${(g.refs||[]).map(x=>`<button class="li" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)}</div><div class="sm muted">${esc(x.resumo||"")}</div></div><span class="pill">›</span></button>`).join("")}`).join("")}`;
+    out.innerHTML=html; wireTheme(out); await kvSet(k,{html}); }
+  catch(e){ out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }
+}
+function wireTheme(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ mode="short"; openRef(b.dataset.go); }); }
+/* ---------- Linha do tempo ---------- */
+const TIMELINE=[
+ ["Patriarcas","c. 2000–1700 a.C. (datação debatida)","Abraão, Isaque, Jacó e José. Narrativas sem registro arqueológico direto.","Abraão"],
+ ["Êxodo e Sinai","séc. XV ou XIII a.C. (debatido)","Moisés, a saída do Egito e a aliança no Sinai.","Moisés"],
+ ["Conquista e juízes","c. 1250–1050 a.C.","Josué, Débora, Gideão, Sansão. Israel como confederação de tribos.","Josué"],
+ ["Monarquia unida","c. 1050–930 a.C.","Saul, Davi (c. 1010–970) e Salomão (c. 970–930). Primeiro Templo.","Davi"],
+ ["Reino dividido","930 a.C.","Israel (norte) e Judá (sul). Profetas Elias, Eliseu, Amós, Oseias, Isaías.","Elias"],
+ ["Queda de Samaria","722 a.C.","A Assíria destrói o reino do norte e deporta sua população.","Samaria"],
+ ["Reforma de Josias","c. 622 a.C.","Descoberta do 'livro da Lei' no Templo; profeta Jeremias.","Jeremias"],
+ ["Exílio na Babilônia","587/586 a.C.","Queda de Jerusalém e do Templo. Ezequiel e Daniel no exílio.","Babilônia"],
+ ["Retorno e Segundo Templo","538–515 a.C.","Edito de Ciro, volta a Judá e reconstrução do Templo.","Ciro"],
+ ["Esdras e Neemias","séc. V a.C.","Reconstrução dos muros e leitura pública da Lei.","Lei (Torá)"],
+ ["Período grego","332 a.C.","Alexandre conquista a região. Surge a Septuaginta (séc. III–II a.C.).","Septuaginta"],
+ ["Revolta dos Macabeus","167–164 a.C.","Resistência contra Antíoco IV e rededicação do Templo (Hanucá).","Deuterocanônicos"],
+ ["Domínio romano","63 a.C.","Pompeu toma Jerusalém. Herodes, o Grande, reina de 37 a 4 a.C.","Herodes"],
+ ["Nascimento de Jesus","c. 6–4 a.C.","Em Belém, segundo Mateus e Lucas, no fim do reinado de Herodes.","Jesus"],
+ ["Ministério e morte de Jesus","c. 27–30/33 d.C.","Pregação do Reino na Galileia; crucificação sob Pôncio Pilatos.","Reino de Deus"],
+ ["Igreja primitiva e Paulo","c. 33–64 d.C.","Pentecostes, conversão de Paulo, viagens missionárias e cartas.","Paulo"],
+ ["Concílio de Jerusalém","c. 49 d.C.","Gentios aceitos sem circuncisão (Atos 15).","Circuncisão"],
+ ["Escrita dos Evangelhos","c. 65–100 d.C.","Marcos geralmente visto como o primeiro; João o último.","Evangelhos sinóticos"],
+ ["Destruição do Templo","70 d.C.","Roma destrói Jerusalém e o Segundo Templo.","Templo de Jerusalém"],
+ ["Apocalipse","c. 95 d.C. (debatido)","Escrito na ilha de Patmos, em tempo de pressão imperial.","Apocalipse (gênero)"],
+ ["Formação do cânon","séc. II–IV d.C.","Listas de livros reconhecidos; Códice Sinaítico no séc. IV.","Cânon bíblico"]
+];
+function openTimeline(){ $("studyHome").hidden=true; $("lessonView").hidden=true; $("tlView").hidden=false; $("topTitle").textContent="Linha do tempo"; $("scroll").scrollTop=0;
+  $("tlList").innerHTML=TIMELINE.map(([t,d,s,e])=>`<button class="tl" data-ent="${esc(e)}"><span class="tld" aria-hidden="true"></span><div><div class="sm" style="color:var(--gold);font-weight:700">${esc(d)}</div><div class="t" style="font-family:var(--serif);font-size:18px;font-weight:700">${esc(t)}</div><div class="sm muted">${esc(s)}</div></div></button>`).join("");
+  $("tlList").querySelectorAll("[data-ent]").forEach(b=>b.onclick=()=>{ const e=ENC.find(x=>x[0]===b.dataset.ent); go("dic"); openEntry(b.dataset.ent,e?e[1]:"Pesquisa",e?e[2]:""); }); }
+
+async function openHistory(){ const H=(S.dayIndex||[]).filter(x=>x.date!==dstr());
+  openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:22px;margin:0">Reflexões anteriores</h2><button class="iconbtn" id="hClose" aria-label="Fechar">✕</button></div>
+    <div style="margin-top:10px">${H.length?H.map(x=>`<button class="li" data-hd="${x.date}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)}</div><div class="sm muted">${fdate(x.date)}</div></div><span class="pill">›</span></button>`).join(""):`<div class="empty">Suas reflexões dos próximos dias aparecem aqui.</div>`}</div>`);
+  $("hClose").onclick=closeModal;
+  $("setSheet").querySelectorAll("[data-hd]").forEach(b=>b.onclick=async()=>{ const d=await kvGet("day_"+b.dataset.hd); closeModal(); if(d&&d.text){ go("hoje"); show({id:"h-"+b.dataset.hd,ref:d.ref,text:d.text,deep:d.deep,qa:[],date:d.date,mode:"short"},`Reflexão de ${fdate(d.date)}`); } else toast("Não encontrei essa reflexão"); }); }
+async function shareApp(){ const t="Conheça o Reflexão Bíblica: um café, um texto, uma reflexão. A Bíblia traduzida do original, com estudo e reflexão diária. "+location.origin+"";
+  try{ await navigator.clipboard.writeText(t); toast("Convite copiado. Cole no WhatsApp!"); }catch(e){ openModal(`<h2 style="font-family:var(--display);font-size:20px">Indicar o app</h2><textarea style="min-height:120px">${esc(t)}</textarea><button class="btn full" onclick="closeModal()" style="margin-top:10px">Fechar</button>`); } }
+/* ---------- navegação ---------- */
+const TT={hoje:"Reflexão Bíblica",biblia:"Bíblia",estudos:"Estudos",dic:"Dicionário",salvas:"Meus"};
+function go(v){ document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v)); document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); $("topTitle").textContent=TT[v]; $("scroll").scrollTop=0; stopSpeakSoft(); setTimeout(()=>$("topTitle").focus({preventScroll:true}),30);
+  if(v==="salvas") renderMine(); if(v==="biblia"){ $("bHome").hidden=false; $("chView").hidden=true; renderBooks(); renderPlan(); renderCont(); } if(v==="hoje") renderDailyPlan(); if(v==="dic"){ $("dHome").hidden=false; $("dView").hidden=true; renderDic(); } if(v==="estudos"){ $("studyHome").hidden=false; $("lessonView").hidden=true; $("tlView").hidden=true; renderStudy(); } }
+document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.v==="hoje"&&cur&&!cur.daily&&$("v-hoje").classList.contains("on")) loadDaily(); go(b.dataset.v); });
+$("gen").onclick=generate; $("deepBtn").onclick=deepen; $("askBtn").onclick=ask;
+$("ask").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask(); } });
+$("goRef").onclick=()=>openRef($("refIn").value);
+$("refIn").addEventListener("keydown",e=>{ if(e.key==="Enter") openRef($("refIn").value); });
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ mode=b.dataset.mode; document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("on",x===b)); });
+$("sugs").innerHTML=SUGS.map(s=>`<button class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join("");
+$("sugs").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>openRef(b.dataset.s));
+$("copy").onclick=async()=>{ try{ const t=[cur.text,cur.deep].filter(Boolean).join("\n\n"); await navigator.clipboard.writeText(`${cur.ref}\n\n${t.replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*/g,"")}`); toast("Copiado"); }catch(e){ toast("Não consegui copiar"); } };
+$("saveBtn").onclick=()=>{ if(!cur) return; const c=clone(cur); c.id=cur.daily?rid():cur.id; delete c.daily; cur.id=c.id; S.saved.unshift(c); save(); $("saveBtn").hidden=true; toast("Leitura salva"); };
+$("lessonBack").onclick=()=>go("estudos");
+$("mySearch").addEventListener("input",renderMine); $("myExport").onclick=exportMine;
+$("chIntro").onclick=()=>chCur&&bookIntro(chCur.b);
+$("histBtn").onclick=openHistory;
+$("fbUp").onclick=()=>{ S.fb=S.fb||{}; S.fb[cur.date||dstr()]=1; save(); show(cur,$("kind").textContent); toast("Obrigado! Vou manter esse tom."); };
+$("fbDn").onclick=()=>{ S.fb=S.fb||{}; S.fb[cur.date||dstr()]=-1; save(); show(cur,$("kind").textContent); toast("Anotado. As próximas serão mais práticas."); };
+$("welcomeGo").onclick=()=>{ const nm=$("wName").value.trim(); if(nm) S.name=nm.slice(0,30); greet(); S.welcomed=1; try{ localStorage.setItem("biblia_welcomed","1"); }catch(e){} save(); $("welcome").hidden=true; };
+setInterval(()=>{ if((S.a11y||{}).theme==="auto") applyA11y(); },10*60*1000);
+$("chBack").onclick=()=>go("biblia"); $("chMore").onclick=()=>translateChapter(true); $("chRegen").onclick=()=>translateChapter(false);
+$("chPrev").onclick=()=>{ if(chCur&&chCur.c>1) openChapter(chCur.b,chCur.c-1); }; $("chNext").onclick=()=>{ if(chCur) openChapter(chCur.b,chCur.c+1); };
+$("chStudy").onclick=()=>{ if(!chCur) return; mode="deep"; openRef(`${chCur.b} ${chCur.c}`); };
+$("dSearch").addEventListener("input",renderDic);
+document.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{ dMode=b.dataset.dm; document.querySelectorAll("[data-dm]").forEach(x=>x.classList.toggle("on",x===b)); $("dThemeGo").hidden=dMode!=="tema"; $("dSearch").placeholder=dMode==="tema"?"Tema: perdão, ansiedade, justiça, morte…":"Pesquisar: anjo, Satanás, Gabriel, aliança…"; $("dList").innerHTML=dMode==="tema"?renderThemeHist():""; if(dMode==="tema") wireThemeHist(); renderDic(); });
+$("dThemeGo").onclick=themeSearch; $("dSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"&&dMode==="tema") themeSearch(); });
+$("tlOpen").onclick=openTimeline; $("tlBack").onclick=()=>go("estudos"); $("dBack").onclick=()=>go("dic"); $("dDeep").onclick=()=>genEntry(true); $("dRegen").onclick=()=>genEntry(false);
+$("lRegen").onclick=()=>genLesson(false); $("ansBtn").onclick=sendAnswer;
+$("lNoteIn").addEventListener("input",lessonNote);
+$("scroll").addEventListener("scroll",()=>{ if($("lessonView").hidden) return; const s=$("scroll"), p=s.scrollTop/Math.max(1,s.scrollHeight-s.clientHeight); $("rprog").style.width=Math.round(p*100)+"%"; },{passive:true});
+$("lDone").onclick=()=>{ if(!curL) return; const was=trackDone(curL.ti); S.study.done[curL.id]=dstr(); save(); toast("Lição concluída ✓"); if(!was&&trackDone(curL.ti)){ certificate(curL.ti); return; } const nx=LESSONS[LESSONS.indexOf(curL)+1]; if(nx) openLesson(nx.id); else go("estudos"); };
+$("topDate").textContent=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"});
+/* ---------- Acessibilidade e voz ---------- */
+S.a11y=Object.assign({fs:1,contrast:false,auto:false,rate:1,theme:"auto"},S.a11y||{});
+function applyA11y(){ const a=S.a11y||{}; document.documentElement.dataset.fs=a.fs||1; document.documentElement.dataset.contrast=a.contrast?"1":"0";
+  const hr=new Date().getHours(), th=a.theme||"auto", dark=th==="dark"||(th==="auto"&&(hr<6||hr>=19)); document.documentElement.dataset.theme=dark?"dark":"light";
+  const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=dark?"#16100c":"#f5ede1"; greet(); }
+function markVisit(){ S.visits=S.visits||{}; S.visits[dstr()]=1; const k=Object.keys(S.visits).sort(); while(k.length>400) delete S.visits[k.shift()]; save(); }
+function streak(){ const v=S.visits||{}; let n=0; const d=new Date(); if(!v[dstr(d)]) d.setDate(d.getDate()-1); while(v[dstr(d)]){ n++; d.setDate(d.getDate()-1); } return n; }
+function greet(){ const hr=new Date().getHours(), e=$("hello"); if(!e) return;
+  const [g,s]= hr<5?["Boa madrugada 🌙","Silêncio, um chá e um texto para pensar."]: hr<12?["Bom dia ☕","Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você."]: hr<18?["Boa tarde ☕","Uma pausa no meio do dia: um texto, uma reflexão."]:["Boa noite 🌙","Desacelere. Um texto curto para fechar o dia."];
+  const nm=(S.name||"").split(" ")[0]; e.textContent=nm?g.replace(/ ([☕🌙])$/,`, ${nm} $1`):g; const sb=$("heroSub"); if(sb) sb.textContent=s; }
+function announce(t){ const r=$("sr"); r.textContent=""; setTimeout(()=>r.textContent=t,60); }
+function plain(md){ return String(md||"").replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*(\d+)\*\*/g,"versículo $1:").replace(/[*_`]/g,"").replace(/\[|\]/g,"").replace(/\n{2,}/g,"\n").trim(); }
+function chunks(t){ const out=[]; let cur=""; t.split(/\n/).forEach(p=>{ if((cur+"\n"+p).length>1700){ if(cur) out.push(cur); cur=p.slice(0,1700); } else cur=cur?cur+"\n"+p:p; }); if(cur) out.push(cur); return out; }
+let ttsP=null, ttsReady=false;
+const SP={key:null,parts:[],idx:0,state:"idle",mode:null,token:0,label:""};
+async function getTTS(){ if(!ttsP) ttsP=(window.claude&&typeof window.claude.use==="function")?window.claude.use("tts"):Promise.resolve(null); let t=null; try{ t=await ttsP; }catch(e){}
+  if(t&&!ttsReady){ ttsReady=true;
+    t.onLine&&t.onLine(({id})=>{ if(SP.mode==="tts"&&id!=null) SP.idx=+id; });
+    t.onState&&t.onState(({state,reason})=>{ if(SP.mode!=="tts") return;
+      if(state==="paused"){ SP.state="paused"; } else if(state==="speaking"){ SP.state="playing"; }
+      else if(state==="idle"){ if(reason==="time_limit"){ SP.state="paused"; } else if(SP.state!=="paused"){ SP.state="idle"; SP.key=null; } }
+      syncSay(); }); }
+  return t; }
+function spokenRef(r){ const m=String(r).trim().match(/^(.+?)\s+(\d+)(?::(\d+)(?:-(\d+))?)?(?:-(\d+):(\d+))?$/); if(!m) return String(r).replace(/:/g,", versículo ").replace(/-/g," a ");
+  const [,b,c,v1,v2,c2,v3]=m; let s=`${b}, capítulo ${c}`; if(v1) s+= v2?`, versículos ${v1} a ${v2}`:c2?`, versículo ${v1}, até o capítulo ${c2}, versículo ${v3}`:`, versículo ${v1}`; return s; }
+function plain(md){ return String(md||"").replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*(\d+)\*\*/g,"Versículo $1.").replace(/[*_`]/g,"").replace(/\[|\]/g,"").replace(/\(([^)]*[֐-׿Ͱ-Ͽ][^)]*)\)/g,"").replace(/\n{2,}/g,"\n").trim(); }
+function splitParts(t){ const out=[]; t.split(/\n/).forEach(p=>{ p=p.trim(); if(!p) return; while(p.length>900){ let cut=p.lastIndexOf(". ",900); if(cut<200) cut=900; out.push(p.slice(0,cut+1)); p=p.slice(cut+1).trim(); } if(p) out.push(p); }); return out; }
+function syncSay(){ document.querySelectorAll("[data-say]").forEach(b=>{ const on=SP.key===b.dataset.say; b.textContent = on&&SP.state==="playing"?"⏸ Pausar":on&&SP.state==="paused"?"▶ Continuar":(b.dataset.lab||"🔊 Ouvir"); b.setAttribute("aria-pressed",on&&SP.state==="playing"?"true":"false"); });
+  if(SP.state==="idle"){ $("player").hidden=true; } else { $("player").hidden=false; $("plLabel").textContent=SP.label; $("plPause").textContent=SP.state==="paused"?"Continuar":"Pausar"; } }
+async function playFrom(i){
+  SP.idx=i; SP.state="playing"; const tok=++SP.token, rate=(S.a11y&&S.a11y.rate)||1, t=await getTTS(); syncSay();
+  if(t){ SP.mode="tts"; try{ await t.speak(SP.parts.slice(i).map((x,k)=>({text:x,language:"pt-BR",rate,id:String(i+k)}))); if(tok===SP.token&&SP.state==="playing"){ const k=SP.key; SP.state="idle"; SP.key=null; syncSay(); onSpeechEnd(k); } }
+    catch(e){ if(tok!==SP.token) return; if(e&&(e.code==="viewer_stopped"||e.code==="busy")){ if(SP.state!=="paused"){ SP.state="idle"; SP.key=null; } syncSay(); return; } SP.mode="native"; nativeFrom(SP.idx,tok); } return; }
+  SP.mode="native"; nativeFrom(i,tok);
+}
+function nativeFrom(i,tok){ try{ if(!window.speechSynthesis){ SP.state="idle"; syncSay(); toast("Leitura em voz alta indisponível neste navegador"); return; } speechSynthesis.cancel();
+  const rate=(S.a11y&&S.a11y.rate)||1; const step=k=>{ if(tok!==SP.token||SP.state!=="playing") return; if(k>=SP.parts.length){ const kk=SP.key; SP.state="idle"; SP.key=null; syncSay(); onSpeechEnd(kk); return; }
+    SP.idx=k; if(false) return; const u=new SpeechSynthesisUtterance(SP.parts[k]); u.lang="pt-BR"; u.rate=rate; u.onend=()=>step(k+1); u.onerror=()=>{}; speechSynthesis.speak(u); };
+  step(i); }catch(e){ SP.state="idle"; syncSay(); } }
+async function pauseSpeech(){ if(SP.state!=="playing") return; SP.state="paused"; const t=SP.mode==="tts"?await getTTS():null;
+  if(t&&t.pause){ try{ t.pause(); }catch(e){} } else { SP.token++; try{ speechSynthesis.cancel(); }catch(e){} } syncSay(); }
+async function resumeSpeech(){ if(SP.state!=="paused") return; const t=SP.mode==="tts"?await getTTS():null;
+  if(t&&t.resume){ try{ SP.state="playing"; t.resume(); syncSay(); return; }catch(e){} } playFrom(SP.idx); }
+async function stopSpeak(){ SP.token++; SP.state="idle"; SP.key=null; try{ const t=await getTTS(); t&&t.stop&&t.stop(); }catch(e){} try{ window.speechSynthesis&&speechSynthesis.cancel(); }catch(e){} syncSay(); }
+function startSpeech(key,intro,md,label){ const body=plain(md); if(!body&&!intro) return; SP.token++; try{ window.speechSynthesis&&speechSynthesis.cancel(); }catch(e){}
+  SP.key=key; SP.label=label||intro; SP.parts=[intro,...splitParts(body)].filter(Boolean); playFrom(0); }
+function toggleSay(key){ if(SP.key===key&&SP.state==="playing") return pauseSpeech(); if(SP.key===key&&SP.state==="paused") return resumeSpeech(); speakFor(key); }
+async function speakFor(key){
+  if(key==="hoje"&&cur){ const k=$("kind").textContent||"Reflexão"; return startSpeech("hoje",`${k}. ${spokenRef(cur.ref)}.`,[cur.text,cur.deep].filter(Boolean).join("\n"),cur.ref); }
+  if(key==="cap"&&chCur){ const d=await kvGet(chKey(chCur.b,chCur.c)); return startSpeech("cap",`${spokenRef(chCur.b+" "+chCur.c)}.`,((d&&d.text)||"").replace(/^##\s.*$/m,""),`${chCur.b} ${chCur.c}`); }
+  if(key==="lic"&&curLData){ const n=LESSONS.indexOf(curL)+1; return startSpeech("lic",`Lição ${n}: ${curL.title}. Textos: ${curL.refs.map(spokenRef).join("; ")}.`,curLData.text,`Lição ${n}`); }
+  if(key==="dic"&&dCur){ const d=await kvGet(entKey(dCur.t)); return startSpeech("dic",`Verbete: ${dCur.t}.`,[(d&&d.text)||"",(d&&d.deep)||""].join("\n"),dCur.t); }
+  if(key==="fb"&&curLData&&curLData.feedback) return startSpeech("fb","Comentário do mentor.",curLData.feedback,"Mentor");
+}
+function onSpeechEnd(k){ if(k==="cap"&&S.a11y&&S.a11y.seq&&chCur){ const nx=nextOf(chCur.b,chCur.c); if(nx){ seqNext=true; toast(`Próximo: ${nx[0]} ${nx[1]}`); openChapter(nx[0],nx[1]); } } }
+function speakText(md,label){ startSpeech("misc",label?label+".":"",md,label); }
+$("plStop").onclick=stopSpeak; $("plPause").onclick=()=>SP.state==="paused"?resumeSpeech():pauseSpeech();
+function autoRead(md,label,key){ if(S.a11y&&S.a11y.auto){ if(key) speakFor(key); else speakText(md,label); } else announce((label||"Texto")+" pronto. Toque em Ouvir para ouvir em voz alta."); }
+/* ditado */
+let dict=null, dictTarget=null, dictBase="", dictCb=null, dictOn=false, silT=null, dictCancel=false;
+async function initDictation(){
+  try{ if(!(window.claude&&typeof window.claude.use==="function")) return; dict=await window.claude.use("dictation"); }catch(e){ dict=null; }
+  if(!dict) return;
+  const upd=t=>{ if(dictTarget) dictTarget.value=t; $("lsText").textContent=t||"…"; };
+  const arm=ms=>{ clearTimeout(silT); silT=setTimeout(()=>{ if(dictOn) dict.stop().catch(()=>{}); },ms); };
+  dict.onPartial(({text})=>{ upd((dictBase+" "+text).trim()); arm(2200); });
+  dict.onFinal(({text})=>{ dictBase=(dictBase+" "+text).trim(); upd(dictBase); arm(1300); });
+  dict.onState(({state})=>{ dictOn=state==="listening";
+    document.querySelectorAll(".mic").forEach(m=>m.classList.toggle("on",dictOn&&m._t===dictTarget)); $("vcBtn").classList.toggle("on",dictOn&&dictTarget===$("vcIn"));
+    $("listenUI").hidden=!dictOn;
+    if(dictOn){ arm(8000); return; }
+    clearTimeout(silT); const t=dictTarget, cb=dictCb; dictCb=null;
+    if(dictCancel){ dictCancel=false; return; }
+    if(t){ t.dispatchEvent(new Event("input",{bubbles:true})); if(cb&&t.value.trim()) cb(t.value.trim()); else if(!t.value.trim()) toast("Não ouvi nada. Tente de novo, mais perto do microfone."); } });
+  document.querySelectorAll("[data-mic]").forEach(el=>addMic(el)); $("vcBtn").hidden=false;
+}
+const MIC_ACT={send:i=>{ const s=i.closest(".composer")?.querySelector(".send"); s&&s.click(); },go:()=>openRef($("refIn").value),search:()=>{ if(dMode==="tema") themeSearch(); },fill:null};
+MIC_ACT.send2=()=>$("vQGo")&&$("vQGo").click();
+function addMic(input){ if(!dict||input._mic) return; input._mic=true; const b=document.createElement("button"); b.className="mic"; b.type="button"; b.setAttribute("aria-label","Falar em vez de digitar"); b._t=input;
+  b.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>';
+  const act=MIC_ACT[input.dataset.mic]; b.onclick=()=>listen(input, act?()=>act(input):null);
+  const par=input.parentElement; if(getComputedStyle(par).display!=="flex"){ const w=document.createElement("div"); w.className="row"; w.style.flexWrap="nowrap"; par.insertBefore(w,input); w.appendChild(input); w.appendChild(b); } else input.insertAdjacentElement("afterend",b); }
+function listen(input,cb){ if(!dict) return; if(dictOn){ dict.stop().catch(()=>{}); return; }
+  stopSpeakSoft(); dictTarget=input; dictBase=input.type==="hidden"?"":input.value.trim(); dictCb=cb; $("lsText").textContent="…"; $("listenUI").hidden=false;
+  dict.start().catch(e=>{ $("listenUI").hidden=true; const c=e&&e.code;
+    if(c==="not_granted"){ toast("Microfone bloqueado. Libere o microfone para claude.ai nas configurações do navegador."); }
+    else if(c==="dismissed"){ toast("Toque de novo e permita o uso do microfone."); }
+    else toast("Não consegui usar o microfone agora"+(c?` (${c})`:"")+". Use o microfone do teclado."); }); }
+$("lsDone").onclick=()=>{ if(dictOn) dict.stop().catch(()=>{}); };
+$("lsCancel").onclick=()=>{ dictCancel=true; if(dictTarget&&dictTarget.type!=="hidden") dictTarget.value=dictBase; if(dictOn) dict.stop().catch(()=>{}); $("listenUI").hidden=true; };
+/* comandos de voz */
+function bookMatch(s){ const n=' '+norm(s)+' '; let best=null; Object.keys(BOOKS).forEach(t=>BOOKS[t].forEach(([b])=>{ const nb=norm(b); if(new RegExp('[\\s]'+nb.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=[\\s\\d:])').test(n)) if(!best||nb.length>norm(best).length) best=b; })); return best; }
+function wordsToNum(s){ const m={um:1,uma:1,primeiro:1,dois:2,duas:2,segundo:2,tres:3,terceiro:3,quatro:4,cinco:5,seis:6,sete:7,oito:8,nove:9,dez:10,onze:11,doze:12,treze:13,catorze:14,quatorze:14,quinze:15,dezesseis:16,dezessete:17,dezoito:18,dezenove:19,vinte:20,trinta:30,quarenta:40,cinquenta:50};
+  return norm(s).replace(/\b(salmo)\b/g,"salmos").split(/\s+/).map(w=>m[w]!=null?m[w]:w).join(" ").replace(/(\d+) e (\d)\b/g,(a,x,y)=>String(+x+ +y)); }
+function runVoice(raw){
+  const s=wordsToNum(raw).trim(); announce("Você disse: "+raw);
+  if(/\b(parar|pare|silencio|chega)\b/.test(s)){ stopSpeak(); return; }
+  if(/\b(ler|leia|ouvir|fale|falar)\b/.test(s)&&!bookMatch(s)){ readCurrent(); return; }
+  if(/proximo capitulo|proximo/.test(s)&&chCur){ $("chNext").click(); return; }
+  if(/capitulo anterior|anterior|voltar capitulo/.test(s)&&chCur){ $("chPrev").click(); return; }
+  if(/reflexao( do dia)?|hoje/.test(s)&&!bookMatch(s)){ go("hoje"); loadDaily(); return; }
+  let m=s.match(/(licao|aula)\s*(\d+)/); if(m){ const L=LESSONS[+m[2]-1]; if(L){ go("estudos"); openLesson(L.id); } else toast("Lição não encontrada"); return; }
+  if(/\b(estudo|estudos|curso)\b/.test(s)&&!bookMatch(s)){ go("estudos"); return; }
+  if(/\b(salvas|salvos)\b/.test(s)){ go("salvas"); return; }
+  m=s.match(/^(o que (e|sao|significa)|quem (e|foi|era)|dicionario|pesquisar|procurar|significado de)\s*(de |do |da )?(.+)$/); if(m&&!bookMatch(m[5])){ const term=m[5].replace(/\?$/,""); go("dic"); $("dSearch").value=term; renderDic(); const e=ENC.find(x=>norm(x[0]).includes(norm(term))); openEntry(e?e[0]:cap1(term),e?e[1]:"Pesquisa",e?e[2]:""); return; }
+  const b=bookMatch(s); if(b){ const rest=norm(s).slice(norm(s).indexOf(norm(b))+norm(b).length); const nums=(rest.match(/\d+/g)||[]).map(Number);
+    if(/estud|reflex/.test(s)&&nums.length){ mode=/estud/.test(s)?"deep":"short"; openRef(`${b==="Salmos"?"Salmo":b} ${nums[0]}${nums[1]?":"+nums[1]+(nums[2]?"-"+nums[2]:""):""}`); return; }
+    go("biblia"); openChapter(b,nums[0]||1); return; }
+  if(cur&&(cur.text||cur.deep)){ go("hoje"); $("ask").value=raw; ask(); return; }
+  toast("Não entendi. Tente: “abrir Salmo 23” ou “o que é arcanjo”");
+}
+const cap1=s=>s?s[0].toUpperCase()+s.slice(1):s;
+function readCurrent(){ const v=document.querySelector(".view.on").id; speakFor(v==="v-hoje"?"hoje":v==="v-biblia"?"cap":v==="v-estudos"?"lic":v==="v-dic"?"dic":""); }
+$("vcBtn").onclick=()=>{ if(!dict) return; $("vcIn").value=""; listen($("vcIn"),runVoice); toast("Pode falar"); };
+/* ajustes */
+$("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHTML=`<h2 style="font-family:var(--display);font-size:24px;margin:0 0 14px">Aparência e acessibilidade</h2>
+  <div class="eyebrow" style="margin-bottom:8px">Tamanho do texto</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[[1,"Normal"],[2,"Grande"],[3,"Muito grande"]].map(([v,l])=>`<button class="${a.fs===v?"on":""}" data-fs="${v}">${l}</button>`).join("")}</div>
+  <div class="eyebrow" style="margin:14px 0 8px">Aparência</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[["auto","Automática"],["light","Dia"],["dark","Noite"]].map(([v,l])=>`<button class="${(a.theme||"auto")===v?"on":""}" data-th="${v}">${l}</button>`).join("")}</div>
+  <div class="eyebrow" style="margin:14px 0 8px">Velocidade da voz</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[[0.8,"Devagar"],[1,"Normal"],[1.25,"Rápida"]].map(([v,l])=>`<button class="${a.rate===v?"on":""}" data-rate="${v}">${l}</button>`).join("")}</div>
+  <button class="btn ghost full" id="tgC" style="margin-top:14px" aria-pressed="${a.contrast}">Alto contraste: ${a.contrast?"ligado":"desligado"}</button>
+  <button class="btn ghost full" id="tgA" style="margin-top:8px" aria-pressed="${a.auto}">Ler em voz alta automaticamente: ${a.auto?"ligado":"desligado"}</button>
+  <button class="btn ghost full" id="tgS" style="margin-top:8px" aria-pressed="${!!a.seq}">Ouvir capítulos em sequência: ${a.seq?"ligado":"desligado"}</button>
+  <div class="eyebrow" style="margin:14px 0 8px">Seu nome</div><div class="row" style="flex-wrap:nowrap"><input id="setName" value="${esc(S.name||"")}" placeholder="Como podemos te chamar?"><button class="btn" id="setNameOk">OK</button></div>
+  <button class="btn ghost full" id="shareApp" style="margin-top:14px">💌 Indicar o app para alguém</button>
+  <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
+  <div class="sm muted">${esc((window.RB&&RB.user&&RB.user.email)||"")} · Plano ${window.RB&&RB.plan==="pro"?"Pro ✨":"Grátis"}</div>
+  <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ghost" id="signOut">Sair</button></div>
+  <button class="link-btn" id="delAcc" style="margin-top:10px;color:#c0392b">Excluir minha conta e meus dados</button>
+  <p class="sm" style="margin:12px 0 0"><a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a> · <a href="/termos.html" style="color:var(--gold2)">Termos de uso</a></p>
+  <p class="sm muted" style="margin:14px 0 0">Comandos de voz (botão 🎤 redondo, quando disponível): “abrir Salmo 23”, “Gênesis capítulo 1”, “próximo capítulo”, “reflexão do dia”, “ler”, “parar”, “o que é arcanjo”, “lição 3”, “estudar João 3:16”. Funciona também com leitores de tela como o TalkBack.</p>
+  <button class="btn full" id="setClose" style="margin-top:16px">Fechar</button>`;
+  $("setSheet").querySelectorAll("[data-fs]").forEach(b=>b.onclick=()=>{ a.fs=+b.dataset.fs; applyA11y(); save(); draw(); });
+  $("setSheet").querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ a.theme=b.dataset.th; applyA11y(); save(); draw(); });
+  $("setSheet").querySelectorAll("[data-rate]").forEach(b=>b.onclick=()=>{ a.rate=+b.dataset.rate; save(); draw(); speakText("Velocidade da voz ajustada.","Teste"); });
+  $("tgC").onclick=()=>{ a.contrast=!a.contrast; applyA11y(); save(); draw(); }; $("tgA").onclick=()=>{ a.auto=!a.auto; save(); draw(); if(a.auto) speakText("Leitura automática ligada.","Teste"); };
+  $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); };
+  $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
+  $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>RB.signOut(); $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
+  $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
+  draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button")?.focus(),50); };
+$("setBg").onclick=e=>{ if(e.target===$("setBg")) $("setBg").hidden=true; };
+document.querySelectorAll("[data-say]").forEach(b=>{ b.dataset.lab=b.textContent; b.onclick=()=>toggleSay(b.dataset.say); });
+applyA11y(); initDictation();
+
+function stopSpeakSoft(){ if(SP.state!=="idle") stopSpeak(); }
+let autoDone=false;
+function loadDaily(){ const t=dstr(), ref=todayRef(), d=S.daily[t]; show(d&&d.ref===ref&&d.v===3?d:{id:"d-"+t,ref,daily:true,v:3,mode:"short",text:null,deep:null,qa:[]},"Seu café com a Palavra");
+  if(cur.text) markVisit();
+  if(!cur.text && !autoDone){ autoDone=true; getSample().then(s=>{ if(s) generate(); }); } }
+initStore("biblia_v1",normalize,()=>{ applyA11y(); if(!S.welcomed&&!localStorage.getItem("biblia_welcomed")) $("welcome").hidden=false; if(!cur||cur.daily) loadDaily(); renderList(); renderStudy(); renderPlan(); renderDailyPlan(); renderCont(); });
+
+/* ---------- App independente: login, Pro, offline ---------- */
+async function openPro(why){ $("proWhy").textContent=why||"Sem limites para estudar a Palavra."; $("proBg").hidden=false;
+  const can=await RB.billingAvailable(); const price=can?await RB.proPrice():(RB.priceLabel||"");
+  $("proBuy").textContent=price?`Assinar Pro · ${price}`:"Assinar Pro"; $("proNote").textContent=can?"Cobrança mensal pela Google Play. Cancele quando quiser na Play Store.":"A assinatura está disponível no app instalado pela Google Play."; $("proBuy").disabled=!can; }
+$("proClose").onclick=()=>{ $("proBg").hidden=true; };
+$("proBuy").onclick=async()=>{ try{ const ok=await RB.buyPro(); if(ok){ $("proBg").hidden=true; toast("Bem-vindo ao Pro ✨"); } else toast("Não foi possível confirmar a compra"); }catch(e){ toast("Compra cancelada"); } };
+$("proRestore").onclick=async()=>{ const p=await RB.restorePurchases(); toast(p==="pro"?"Pro restaurado ✨":"Nenhuma assinatura encontrada"); if(p==="pro") $("proBg").hidden=true; };
+window.addEventListener("rb-quota",e=>openPro((e.detail&&e.detail.message)||"Você usou o limite grátis de hoje."));
+$("gGoogle").onclick=()=>RB.signInGoogle();
+$("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ $("gMsg").textContent="Não consegui enviar o link. Tente de novo."; } };
+RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } if(!RB.user) $("gate").hidden=false; });
+{ const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+</script>
+</body>
+</html>
