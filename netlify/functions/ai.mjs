@@ -3,6 +3,10 @@ import { CFG, json, getUser, getPlan, takeQuota } from "./_lib.mjs";
 const MAX = { quick: 1500, default: 4000, complex: 8000 };
 
 export default async (req) => {
+  try { return await handle(req); } catch (e) { console.error("ai crash", e); return json(500, { error: "server", detail: String(e && e.message || e).slice(0, 200) }); }
+};
+
+async function handle(req) {
   if (req.method !== "POST") return json(405, { error: "method" });
   const user = await getUser(req);
   if (!user) return json(401, { error: "login" });
@@ -32,7 +36,9 @@ export default async (req) => {
   if (!upstream.ok || !upstream.body) {
     const t = await upstream.text().catch(() => "");
     console.error("anthropic", upstream.status, t.slice(0, 500));
-    return json(upstream.status === 429 ? 429 : 502, { error: "ia" });
+    let detail = ""; try { detail = JSON.parse(t).error?.message || ""; } catch {}
+    if (!CFG.ANTHROPIC_KEY()) detail = "ANTHROPIC_API_KEY não configurada";
+    return json(upstream.status === 429 ? 429 : 502, { error: "ia", status: upstream.status, detail: ("Anthropic " + upstream.status + ": " + detail).slice(0, 240) });
   }
 
   // Converte o SSE da Anthropic em texto puro; no fim, envia \u0000STOP:<motivo>.
@@ -58,5 +64,5 @@ export default async (req) => {
     },
   });
   return new Response(stream, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
-};
+}
 export const config = { path: "/api/ai" };

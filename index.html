@@ -391,7 +391,7 @@
       body:JSON.stringify({messages,tier:opts.modelTier||"default",images}),signal:opts.signal});
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
-    if(!r.ok||!r.body) throw {code:"unavailable"};
+    if(!r.ok||!r.body){ const j=await r.json().catch(()=>({})); throw {code:"unavailable",detail:j.detail||("HTTP "+r.status+(j.error?" "+j.error:""))}; }
     const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="";
     for(;;){ const {done,value}=await rd.read(); if(done) break; text+=dec.decode(value,{stream:true});
       const i=text.indexOf("\u0000"); const visible=i>=0?text.slice(0,i):text; if(opts.onText) opts.onText({text:visible}); }
@@ -485,7 +485,7 @@ async function initStore(key,normalize,onLoad){
 }
 let _sample=null;
 function getSample(){if(!_sample)_sample=(window.claude&&typeof window.claude.use==="function")?window.claude.use("sample"):Promise.resolve(null);return _sample;}
-function errMsg(e){const c=e&&e.code; if(c==="quota") return "Você usou o limite grátis de hoje. Assine o Pro para continuar sem limites."; if(c==="no_sample") return "Entre na sua conta para usar a IA."; if(c==="not_granted") return "Entre na sua conta para usar a IA."; if(c==="rate_limited") return "Muitos pedidos seguidos. Espere um minuto e tente de novo."; return "Não consegui falar com o servidor agora. Verifique a internet e tente de novo.";}
+function errMsg(e){const c=e&&e.code; if(c==="quota") return "Você usou o limite grátis de hoje. Assine o Pro para continuar sem limites."; if(c==="no_sample") return "Entre na sua conta para usar a IA."; if(c==="not_granted") return "Entre na sua conta para usar a IA."; if(c==="rate_limited") return "Muitos pedidos seguidos. Espere um minuto e tente de novo."; return "Não consegui falar com o servidor agora. Verifique a internet e tente de novo."+(e&&e.detail?" ("+e.detail+")":"");}
 function md(src){
   const L=esc(src).split("\n"); let h="",list=null;
   const inl=s=>s.replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/(^|[^*])\*(?!\s)([^*]+?)\*/g,"$1<i>$2</i>");
