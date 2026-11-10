@@ -1,4 +1,4 @@
-import { CFG, json, getUser, getPlan, takeQuota } from "./_lib.mjs";
+import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota } from "./_lib.mjs";
 
 /* Custo: grátis usa o Haiku (barato); Pro usa o modelo do nível pedido (Sonnet).
    Conteúdo compartilhado (tradução de capítulos, introduções, dicionário, interlinear...)
@@ -26,7 +26,11 @@ async function handle(req) {
   const size = JSON.stringify(messages).length; if (size > 120000) return json(413, { error: "grande demais" });
 
   const plan = await getPlan(user.id);
-  if (!(await takeQuota(user.id, plan))) {
+  const shared = body.shared === true;
+  if (shared && !(await takeSharedQuota(user.id, plan))) {
+    return json(402, { message: "Você abriu muitos conteúdos novos hoje. Volte amanhã ou assine o Pro." });
+  }
+  if (!shared && !(await takeQuota(user.id, plan))) {
     return json(402, { message: plan === "pro" ? "Você atingiu o limite de segurança de hoje. Volte amanhã." : `Você usou as ${CFG.FREE_DAILY()} consultas grátis de hoje. Assine o Pro para continuar sem limites.` });
   }
 
@@ -37,10 +41,13 @@ async function handle(req) {
     last.content = [...body.images.slice(0, 2).map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type || "image/jpeg", data: im.data } })), { type: "text", text: last.content }];
   }
 
+  // Grátis: respostas mais enxutas (exceto conteúdo compartilhado, que serve a todos).
+  const concise = !shared && plan !== "pro";
+  const maxTokens = concise ? Math.min(MAX[tier], 2200) : MAX[tier];
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": CFG.ANTHROPIC_KEY(), "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: pickModel(tier, plan, body.shared === true), max_tokens: MAX[tier], stream: true, messages: msgs }),
+    body: JSON.stringify({ model: pickModel(tier, plan, shared), max_tokens: maxTokens, stream: true, messages: msgs, ...(concise ? { system: "Responda de forma enxuta e direta: vá ao essencial, sem perder a precisão. Se o pedido exigir um formato fixo, siga o formato." } : {}) }),
   });
   if (!upstream.ok || !upstream.body) {
     const t = await upstream.text().catch(() => "");

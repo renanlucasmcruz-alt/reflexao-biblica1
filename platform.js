@@ -41,7 +41,7 @@
 
   /* ---- Banco (substitui "db") ---- */
   function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
-  const SHARED=k=>/^(ch_|intro_|ent_|tema_|rf_)/.test(k);
+  const SHARED=k=>/^(ch_|intro_|ent_|tema_|rf_|ls_|qz_)/.test(k);
   const db={ doc(path){ const key=keyOf(path); return {
     async get(){ await CFG.ready;
       if(SHARED(key)){ const { data } = await CFG.sb.from("shared_content").select("value").eq("key",key).maybeSingle(); return {exists:!!data,data:()=>data&&data.value}; }

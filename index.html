@@ -403,7 +403,7 @@
 
   /* ---- Banco (substitui "db") ---- */
   function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
-  const SHARED=k=>/^(ch_|intro_|ent_|tema_|rf_)/.test(k);
+  const SHARED=k=>/^(ch_|intro_|ent_|tema_|rf_|ls_|qz_)/.test(k);
   const db={ doc(path){ const key=keyOf(path); return {
     async get(){ await CFG.ready;
       if(SHARED(key)){ const { data } = await CFG.sb.from("shared_content").select("value").eq("key",key).maybeSingle(); return {exists:!!data,data:()=>data&&data.value}; }
@@ -612,8 +612,8 @@ function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||
 /* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
    "Gerar de novo" continua pessoal (leva em conta o feedback do leitor) e não sobrescreve a versão compartilhada. */
 function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
-async function sharedReflection(ref,kind,prompt,target){
-  const key=rfKey(ref,kind);
+async function sharedReflection(ref,kind,prompt,target){ return sharedText(rfKey(ref,kind),prompt,target); }
+async function sharedText(key,prompt,target){
   try{ const c=await kvGet(key); if(c&&c.text){ target.innerHTML=md(c.text); return c.text; } }catch(e){}
   const t=await stream(prompt,target,{shared:true});
   if(!/REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t) && t.indexOf("veio incompleto")<0){ try{ await kvSet(key,{text:t}); }catch(e){} }
@@ -689,11 +689,14 @@ function renderQuiz(){ const Q=curLData&&curLData.quiz, box=$("quizBox"); if(!Q)
   box.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Teste rápido</div>`+Q.q.map((q,i)=>`<div class="qz"><div class="t" style="font-size:16px;margin-bottom:6px">${i+1}. ${esc(q.p)}</div>${q.o.map((o,j)=>{ const a=Q.ans&&Q.ans[i]; const cls=a==null?"":j===q.c?"ok":a===j?"bad":""; return `<button class="qopt ${cls}" data-q="${i}" data-o="${j}" ${a!=null?"disabled":""}>${esc(o)}</button>`; }).join("")}${Q.ans&&Q.ans[i]!=null?`<div class="sm muted" style="margin-top:6px">${esc(q.e||"")}</div>`:""}</div>`).join("")+(Q.ans&&Object.keys(Q.ans).length===Q.q.length?`<div class="note" style="color:var(--text);margin-top:10px">Você acertou ${Q.q.filter((q,i)=>Q.ans[i]===q.c).length} de ${Q.q.length}.</div>`:"");
   box.querySelectorAll("[data-q]").forEach(b=>b.onclick=async()=>{ Q.ans=Q.ans||{}; Q.ans[+b.dataset.q]=+b.dataset.o; renderQuiz(); await kvSet("lesson_"+curL.id,curLData); }); }
 async function makeQuiz(){ const s=await getSample(); if(!s){ toast("Entre na sua conta para usar a IA"); return; } $("quizBox").innerHTML='<div class="row muted sm"><span class="spin"></span>Preparando o teste…</div>';
-  try{ const r=await askJSONb(`Com base nesta lição, crie 3 perguntas de múltipla escolha (4 opções cada, só uma correta) que testem compreensão real, não decoreba. Sem puxar para nenhuma religião: quando o tema for de fé, pergunte "segundo o texto" ou "segundo a tradição X". JSON: {"q":[{"p":"pergunta","o":["a","b","c","d"],"c":0,"e":"explicação de 1 frase"}]}
+  try{ const qk="qz_"+curL.id; let cached=null; if(curLData.shared){ try{ cached=await kvGet(qk); }catch(e){} }
+    if(cached&&cached.q){ curLData.quiz={q:cached.q,ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz(); return; }
+    const r=await askJSONb(`Com base nesta lição, crie 3 perguntas de múltipla escolha (4 opções cada, só uma correta) que testem compreensão real, não decoreba. Sem puxar para nenhuma religião: quando o tema for de fé, pergunte "segundo o texto" ou "segundo a tradição X". JSON: {"q":[{"p":"pergunta","o":["a","b","c","d"],"c":0,"e":"explicação de 1 frase"}]}
 
 LIÇÃO:
-${curLData.text}`);
-    curLData.quiz={q:(r.q||[]).slice(0,3).map(x=>({p:String(x.p),o:(x.o||[]).slice(0,4).map(String),c:+x.c||0,e:String(x.e||"")})),ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz(); }
+${curLData.text}`,curLData.shared?{shared:true}:{});
+    curLData.quiz={q:(r.q||[]).slice(0,3).map(x=>({p:String(x.p),o:(x.o||[]).slice(0,4).map(String),c:+x.c||0,e:String(x.e||"")})),ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz();
+    if(curLData.shared&&curLData.quiz.q.length===3){ try{ await kvSet(qk,{q:curLData.quiz.q}); }catch(e){} } }
   catch(e){ $("quizBox").innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; } }
 function trackDone(ti){ return LESSONS.filter(l=>l.ti===ti).every(l=>S.study.done[l.id]); }
 async function certificate(ti){ const c=document.createElement("canvas"); c.width=1400; c.height=1000; const x=c.getContext("2d");
@@ -713,7 +716,8 @@ let lRegenArm=0;
 async function genLesson(force){
   if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="Gerar de novo"; },4000); return; }
   lRegenArm=0; $("lRegen").textContent="Gerar de novo"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
-  try{ const t=await stream(lessonPrompt(L),$("lOut")); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
+  const first=!(keep&&keep.text);
+  try{ const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut")) : await stream(lessonPrompt(L),$("lOut")); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
   catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
   lBusy=false;
 }

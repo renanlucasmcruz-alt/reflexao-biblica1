@@ -4,7 +4,8 @@ export const CFG = {
   SUPABASE_ANON_KEY: () => env("SUPABASE_ANON_KEY"),
   SUPABASE_SERVICE_KEY: () => env("SUPABASE_SERVICE_ROLE_KEY"),
   ANTHROPIC_KEY: () => env("ANTHROPIC_API_KEY"),
-  FREE_DAILY: () => parseInt(env("FREE_DAILY_LIMIT", "12"), 10),
+  FREE_DAILY: () => parseInt(env("FREE_DAILY_LIMIT", "5"), 10),
+  SHARED_DAILY: (plan) => parseInt(env(plan === "pro" ? "PRO_SHARED_LIMIT" : "FREE_SHARED_LIMIT", plan === "pro" ? "200" : "40"), 10),
   PRO_DAILY: () => parseInt(env("PRO_DAILY_LIMIT", "60"), 10),
   MODEL: (tier) => tier === "quick" ? env("MODEL_QUICK", "claude-haiku-5-5") : tier === "complex" ? env("MODEL_COMPLEX", "claude-sonnet-5-5") : env("MODEL_DEFAULT", "claude-sonnet-5-5"),
   PACKAGE: () => env("ANDROID_PACKAGE_NAME"),
@@ -40,3 +41,16 @@ export async function takeQuota(userId, plan) {
 
 // chaves novas (sb_secret_...) vão só no apikey; chaves antigas (JWT) também no Authorization
 export function svcHeaders() { const k = CFG.SUPABASE_SERVICE_KEY(); return k.startsWith("sb_") ? { apikey: k } : { apikey: k, authorization: `Bearer ${k}` }; }
+
+/* Contador separado para conteúdo compartilhado (capítulos, lições, reflexões...): abrir o que ainda
+   não foi gerado não consome as perguntas do dia. Fica na tabela usage, numa "data" deslocada 200 anos. */
+export async function takeSharedQuota(userId, plan) {
+  const d = new Date(); const day = `${d.getUTCFullYear() + 200}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
+  try {
+    const r = await sb(`usage?user_id=eq.${userId}&day=eq.${day}&select=count`);
+    const [row] = r.ok ? await r.json() : []; const n = row ? row.count : 0;
+    if (n >= CFG.SHARED_DAILY(plan)) return false;
+    await sb("usage", { method: "POST", headers: { prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ user_id: userId, day, count: n + 1 }) });
+  } catch (e) { /* se o contador falhar, não bloqueia */ }
+  return true;
+}

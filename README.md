@@ -23,8 +23,9 @@ Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexã
 | `SUPABASE_ANON_KEY` | chave pública (anon) do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta (service_role) do Supabase |
 | `ANTHROPIC_API_KEY` | chave da API da Anthropic |
-| `FREE_DAILY_LIMIT` | consultas grátis por dia (padrão 12) |
-| `PRO_DAILY_LIMIT` | limite de segurança do Pro (padrão 300) |
+| `FREE_DAILY_LIMIT` | perguntas grátis por dia (padrão 5) |
+| `FREE_SHARED_LIMIT` | conteúdos novos (capítulos, lições) por dia no grátis (padrão 40) |
+| `PRO_DAILY_LIMIT` | perguntas por dia no Pro (padrão 60) |
 | `MODEL_QUICK`, `MODEL_DEFAULT`, `MODEL_COMPLEX` | modelos (padrões: claude-haiku-5-5, claude-sonnet-5-5, claude-sonnet-5-5) |
 | `ANDROID_PACKAGE_NAME` | nome do pacote Android (ex.: app.reflexaobiblica.twa) |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON da conta de serviço do Google Play (para validar o Pro) |
