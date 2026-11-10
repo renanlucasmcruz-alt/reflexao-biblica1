@@ -388,7 +388,7 @@
     const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
     const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
     const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
-      body:JSON.stringify({messages,tier:opts.modelTier||"default",images}),signal:opts.signal});
+      body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared}),signal:opts.signal});
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body){ const j=await r.json().catch(()=>({})); throw {code:"unavailable",detail:j.detail||("HTTP "+r.status+(j.error?" "+j.error:""))}; }
@@ -918,7 +918,7 @@ let seqNext=false, preBusy=false;
 function chapterReady(){ if(seqNext){ seqNext=false; setTimeout(()=>speakFor("cap"),400); } setTimeout(prefetchNext,6000); }
 function nextOf(b,c){ const t=Object.keys(BOOKS).find(t=>BOOKS[t].some(x=>x[0]===b)), L=BOOKS[t], i=L.findIndex(x=>x[0]===b); if(c<L[i][1]) return [b,c+1]; if(i+1<L.length) return [L[i+1][0],1]; return null; }
 async function prefetchNext(){ if(preBusy||!chCur) return; const nx=nextOf(chCur.b,chCur.c); if(!nx) return; const k=chKey(nx[0],nx[1]); if(await kvGet(k)) return;
-  const s=await getSample(); if(!s) return; preBusy=true; try{ const r=await s(chapterPrompt(nx[0],nx[1]),{modelTier:"complex"}); await kvSet(k,{text:r.text,complete:!r.truncated&&/Tradução do .* original/i.test(r.text)}); }catch(e){} preBusy=false; }
+  const s=await getSample(); if(!s) return; preBusy=true; try{ const r=await s(chapterPrompt(nx[0],nx[1]),{modelTier:"complex",shared:true}); await kvSet(k,{text:r.text,complete:!r.truncated&&/Tradução do .* original/i.test(r.text)}); }catch(e){} preBusy=false; }
 function renderCont(){ const L=S.lastRead, box=$("contBox"); if(!box) return; if(!L){ box.hidden=true; return; } box.hidden=false;
   box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Continuar de onde parou</div><div class="t" style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(L.b)} ${L.c}</div></div><button class="btn" id="contGo">Continuar</button></div>`;
   $("contGo").onclick=()=>openChapter(L.b,L.c); }
@@ -929,7 +929,7 @@ async function bookIntro(b){
   const c=await kvGet(k); if(c&&c.text){ out.innerHTML=md(c.text); return; }
   try{ const t=await stream(`${BASE}
 
-Escreva uma introdução ao livro de ${b} para quem vai começar a ler. No máximo 280 palavras, títulos "## ": ## Em uma frase ## Autor e data (com os debates) ## Contexto ## Temas centrais ## Como ler (dicas práticas) ## Versículo-chave (traduzido do original, "> **v** …", com a referência).`,out); out.innerHTML=md(t); await kvSet(k,{text:t}); }
+Escreva uma introdução ao livro de ${b} para quem vai começar a ler. No máximo 280 palavras, títulos "## ": ## Em uma frase ## Autor e data (com os debates) ## Contexto ## Temas centrais ## Como ler (dicas práticas) ## Versículo-chave (traduzido do original, "> **v** …", com a referência).`,out,{shared:true}); out.innerHTML=md(t); await kvSet(k,{text:t}); }
   catch(e){ out.innerHTML=`<div class="note">${e&&e.code==="no_sample"?"Entre na sua conta para ver a introdução.":esc(errMsg(e))}</div>`; }
 }
 const autoCont={};
@@ -940,7 +940,7 @@ async function translateChapter(cont){
   const el=$("chOut"); if(!cont){ skel(el,"Traduzindo "+b+" "+c+" do original…"); autoCont[k]=0; } $("chMore").hidden=true;
   const p = cont ? `${BASE}\n\nContinue a tradução de ${b} ${c} a partir do versículo ${last+1} até o fim do capítulo, diretamente do ${origLang(b,c)}. Mesmo formato ("> **n** …", subtítulos "### " se necessário), SEM repetir o título nem versículos anteriores. Última linha: "Tradução do [língua] original." Se não couber, pare ao final de um versículo.` : chapterPrompt(b,c);
   try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
-    const r=await s(p,{modelTier:"complex",onText:({text})=>{ el.innerHTML=md((prev?prev+"\n":"")+text); }});
+    const r=await s(p,{modelTier:"complex",shared:true,onText:({text})=>{ el.innerHTML=md((prev?prev+"\n":"")+text); }});
     const txt=(prev?prev.replace(/\n?Tradução do .*original\.?\s*$/i,"")+"\n":"")+r.text, complete=!r.truncated && /Tradução do .* original/i.test(r.text);
     await kvSet(k,{text:txt,complete}); S.read=S.read||{}; S.read[b+" "+c]=1; save();
     if(chCur.b===b&&chCur.c===c){ el.innerHTML=md(txt); decorate(el,`${b} ${c}`); $("chMore").hidden=complete;
@@ -1007,7 +1007,7 @@ async function genEntry(deep){
   if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
   skel(el,deep?"Aprofundando o verbete…":"Escrevendo o verbete…"); $("dDeep").hidden=true; if(!deep) $("dRel").innerHTML="";
   try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
-    const r=await s(entryPrompt(t,deep),{modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }});
+    const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,onText:({text})=>{ el.innerHTML=md(text); }});
     const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
     if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
   catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para abrir o verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
@@ -1068,21 +1068,21 @@ async function verseAI(ref,text,kind,q){
   const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para usar esta função.</div>`; return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Consultando o original…</div>';
   try{
-    if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`);
+    if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`,{shared:true});
       const W=(r.palavras||[]).slice(0,60);
       const html=`<div class="eyebrow" style="margin-bottom:8px">Interlinear · ${esc(r.lingua||"")}</div><div class="ilgrid" ${/heb|aram/i.test(r.lingua||"")?'dir="rtl"':""}>${W.map(w=>`<div class="ilw" dir="ltr"><div class="ilo">${esc(w.orig)}</div><div class="ilt">${esc(w.translit)}</div><div class="ils">${esc(w.sentido)}</div><div class="ilm">${esc(w.morf)}${w.strong?" · "+esc(w.strong):""}</div></div>`).join("")}</div>${r.nota?`<p class="sm muted" style="margin:10px 0 0">${esc(r.nota)}</p>`:""}<p class="sm muted" style="margin:8px 0 0">Gerado por IA como apoio ao estudo. Para citação acadêmica, confira num léxico (BDB, BDAG) ou numa edição crítica.</p>`;
       out.innerHTML=html; await kvSet(k,{html}); return; }
-    if(kind==="xr"){ const r=await askJSONb(`Liste de 6 a 10 referências cruzadas importantes para ${ref} ("${text}"): citações diretas, alusões, paralelos e textos com o mesmo tema ou palavra-chave. JSON: {"refs":[{"ref":"Livro C:V","tipo":"citação|alusão|paralelo|tema","porque":"no máximo 15 palavras"}]}`);
+    if(kind==="xr"){ const r=await askJSONb(`Liste de 6 a 10 referências cruzadas importantes para ${ref} ("${text}"): citações diretas, alusões, paralelos e textos com o mesmo tema ou palavra-chave. JSON: {"refs":[{"ref":"Livro C:V","tipo":"citação|alusão|paralelo|tema","porque":"no máximo 15 palavras"}]}`,{shared:true});
       const html=`<div class="eyebrow" style="margin-bottom:6px">Referências cruzadas</div>${(r.refs||[]).slice(0,12).map(x=>`<button class="li xref" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)} <span class="pill">${esc(x.tipo||"")}</span></div><div class="sm muted">${esc(x.porque||"")}</div></div><span class="pill">›</span></button>`).join("")}`;
       out.innerHTML=html; wireRefLinks(out); await kvSet(k,{html}); return; }
     const prompt = kind==="alt" ? `Mostre formas diferentes e fiéis de traduzir ${ref} do original para o português, sem copiar nenhuma tradução publicada: 1) tradução bem literal (palavra por palavra), 2) tradução formal equilibrada, 3) tradução dinâmica (ideia por ideia). Depois, em até 60 palavras, explique onde as traduções costumam divergir e por quê. Use "### " para cada tipo.`
       : `Você é um biblista com domínio de hebraico, aramaico e grego koiné, sem puxar para nenhuma religião. Sobre ${ref} ("${text}"), responda em português do Brasil, em até 180 palavras, de forma direta: ${q}`;
-    const r=await s(prompt,{modelTier:"complex",cache:false,onText:({text})=>{ out.innerHTML=`<div class="md" style="font-size:16px">${md(text)}</div>`; }});
+    const r=await s(prompt,{modelTier:"complex",shared:kind==="alt",cache:false,onText:({text})=>{ out.innerHTML=`<div class="md" style="font-size:16px">${md(text)}</div>`; }});
     const html=`<div class="md" style="font-size:16px">${md(r.text)}</div>`; out.innerHTML=html; if(kind==="alt") await kvSet(k,{html});
   }catch(e){ console.warn(e); out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }
 }
-async function askJSONb(p){ const s=await getSample(); if(typeof s.json==="function"){ try{ return await s.json(p,{modelTier:"complex"}); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
-  const r=await s(p+"\n\nResponda APENAS com o JSON válido.",{modelTier:"complex"}); const a=r.text.indexOf("{"),b=r.text.lastIndexOf("}"); return JSON.parse(r.text.slice(a,b+1)); }
+async function askJSONb(p,xo={}){ const s=await getSample(); if(typeof s.json==="function"){ try{ return await s.json(p,Object.assign({modelTier:"complex"},xo)); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
+  const r=await s(p+"\n\nResponda APENAS com o JSON válido.",Object.assign({modelTier:"complex"},xo)); const a=r.text.indexOf("{"),b=r.text.lastIndexOf("}"); return JSON.parse(r.text.slice(a,b+1)); }
 function wireRefLinks(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeModal(); mode="short"; openRef(b.dataset.go); }); }
 /* ---------- Cartão para compartilhar ---------- */
 async function shareCard(text,ref){
@@ -1163,7 +1163,7 @@ async function themeSearch(){
   const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireTheme(out); return; }
   const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para buscar.</div>`; return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Procurando em toda a Bíblia…</div>';
-  try{ const r=await askJSONb(`Onde a Bíblia fala sobre "${q}"? Organize as passagens mais importantes em 3 a 5 grupos temáticos, cobrindo Antigo e Novo Testamento (e deuterocanônicos se relevante), de 3 a 5 passagens por grupo. Sem puxar para nenhuma religião. JSON: {"resumo":"2 frases sobre como o tema aparece ao longo da Bíblia","grupos":[{"titulo":"","refs":[{"ref":"Livro C:V-V","resumo":"no máximo 14 palavras"}]}]}`);
+  try{ const r=await askJSONb(`Onde a Bíblia fala sobre "${q}"? Organize as passagens mais importantes em 3 a 5 grupos temáticos, cobrindo Antigo e Novo Testamento (e deuterocanônicos se relevante), de 3 a 5 passagens por grupo. Sem puxar para nenhuma religião. JSON: {"resumo":"2 frases sobre como o tema aparece ao longo da Bíblia","grupos":[{"titulo":"","refs":[{"ref":"Livro C:V-V","resumo":"no máximo 14 palavras"}]}]}`,{shared:true});
     const html=`${r.resumo?`<p class="md" style="font-size:16px;margin:0 0 10px">${esc(r.resumo)}</p>`:""}${(r.grupos||[]).map(g=>`<div class="eyebrow" style="margin:14px 0 4px;color:var(--gold)">${esc(g.titulo)}</div>${(g.refs||[]).map(x=>`<button class="li" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)}</div><div class="sm muted">${esc(x.resumo||"")}</div></div><span class="pill">›</span></button>`).join("")}`).join("")}`;
     out.innerHTML=html; wireTheme(out); await kvSet(k,{html}); }
   catch(e){ out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }

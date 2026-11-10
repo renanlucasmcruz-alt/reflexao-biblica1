@@ -1,5 +1,14 @@
 import { CFG, json, getUser, getPlan, takeQuota } from "./_lib.mjs";
 
+/* Custo: grátis usa o Haiku (barato); Pro usa o modelo do nível pedido (Sonnet).
+   Conteúdo compartilhado (tradução de capítulos, introduções, dicionário, interlinear...)
+   é gerado uma vez e servido a todos, então sempre vai no modelo de maior qualidade. */
+function pickModel(tier, plan, shared) {
+  if (shared) return CFG.MODEL("complex");
+  if (plan === "pro") return CFG.MODEL(tier);
+  return CFG.MODEL("quick");
+}
+
 const MAX = { quick: 1500, default: 4000, complex: 8000 };
 
 export default async (req) => {
@@ -31,7 +40,7 @@ async function handle(req) {
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": CFG.ANTHROPIC_KEY(), "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: CFG.MODEL(tier), max_tokens: MAX[tier], stream: true, messages: msgs }),
+    body: JSON.stringify({ model: pickModel(tier, plan, body.shared === true), max_tokens: MAX[tier], stream: true, messages: msgs }),
   });
   if (!upstream.ok || !upstream.body) {
     const t = await upstream.text().catch(() => "");

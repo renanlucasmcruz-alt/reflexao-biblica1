@@ -5,7 +5,7 @@ export const CFG = {
   SUPABASE_SERVICE_KEY: () => env("SUPABASE_SERVICE_ROLE_KEY"),
   ANTHROPIC_KEY: () => env("ANTHROPIC_API_KEY"),
   FREE_DAILY: () => parseInt(env("FREE_DAILY_LIMIT", "12"), 10),
-  PRO_DAILY: () => parseInt(env("PRO_DAILY_LIMIT", "300"), 10),
+  PRO_DAILY: () => parseInt(env("PRO_DAILY_LIMIT", "60"), 10),
   MODEL: (tier) => tier === "quick" ? env("MODEL_QUICK", "claude-haiku-5-5") : tier === "complex" ? env("MODEL_COMPLEX", "claude-sonnet-5-5") : env("MODEL_DEFAULT", "claude-sonnet-5-5"),
   PACKAGE: () => env("ANDROID_PACKAGE_NAME"),
   GOOGLE_SA: () => env("GOOGLE_SERVICE_ACCOUNT_JSON"),
