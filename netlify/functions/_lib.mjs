@@ -23,7 +23,7 @@ export async function getUser(req) {
 export async function sb(path, init = {}) {
   return fetch(`${CFG.SUPABASE_URL()}/rest/v1/${path}`, {
     ...init,
-    headers: { apikey: CFG.SUPABASE_SERVICE_KEY(), authorization: `Bearer ${CFG.SUPABASE_SERVICE_KEY()}`, "content-type": "application/json", ...(init.headers || {}) },
+    headers: { ...svcHeaders(), "content-type": "application/json", ...(init.headers || {}) },
   });
 }
 export async function getPlan(userId) {
@@ -37,3 +37,6 @@ export async function takeQuota(userId, plan) {
   if (!r.ok) return true; // se o contador falhar, não bloqueia o usuário
   return (await r.json()) === true;
 }
+
+// chaves novas (sb_secret_...) vão só no apikey; chaves antigas (JWT) também no Authorization
+export function svcHeaders() { const k = CFG.SUPABASE_SERVICE_KEY(); return k.startsWith("sb_") ? { apikey: k } : { apikey: k, authorization: `Bearer ${k}` }; }
