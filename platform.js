@@ -7,7 +7,7 @@
     const r=await fetch("/api/config"); if(!r.ok) throw new Error("config"); const c=await r.json();
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
     CFG.sb=createClient(c.supabaseUrl,c.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    CFG.priceLabel=c.priceLabel||"";
+    CFG.priceLabel=c.priceLabel||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
     const { data } = await CFG.sb.auth.getSession(); CFG.session=data.session; CFG.user=data.session?.user||null;
     CFG.sb.auth.onAuthStateChange((_e,s)=>{ const was=!!CFG.user; CFG.session=s; CFG.user=s?.user||null; if(!was&&CFG.user) location.reload(); });
     if(CFG.user) await refreshPlan();

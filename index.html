@@ -369,7 +369,7 @@
     const r=await fetch("/api/config"); if(!r.ok) throw new Error("config"); const c=await r.json();
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
     CFG.sb=createClient(c.supabaseUrl,c.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    CFG.priceLabel=c.priceLabel||"";
+    CFG.priceLabel=c.priceLabel||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
     const { data } = await CFG.sb.auth.getSession(); CFG.session=data.session; CFG.user=data.session?.user||null;
     CFG.sb.auth.onAuthStateChange((_e,s)=>{ const was=!!CFG.user; CFG.session=s; CFG.user=s?.user||null; if(!was&&CFG.user) location.reload(); });
     if(CFG.user) await refreshPlan();
@@ -1398,7 +1398,7 @@ $("proBuy").onclick=async()=>{ try{ const ok=await RB.buyPro(); if(ok){ $("proBg
 $("proRestore").onclick=async()=>{ const p=await RB.restorePurchases(); toast(p==="pro"?"Pro restaurado ✨":"Nenhuma assinatura encontrada"); if(p==="pro") $("proBg").hidden=true; };
 window.addEventListener("rb-quota",e=>openPro((e.detail&&e.detail.message)||"Você usou o limite grátis de hoje."));
 $("gGoogle").onclick=()=>RB.signInGoogle();
-$("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ $("gMsg").textContent="Não consegui enviar o link. Tente de novo."; } };
+$("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ const m=String(err&&err.message||err); $("gMsg").textContent=/rate limit|security purposes|seconds/i.test(m)?"Muitos pedidos de link em pouco tempo. Espere alguns minutos e tente de novo.":("Não consegui enviar o link: "+m); } };
 RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } if(!RB.user) $("gate").hidden=false; });
 { const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
