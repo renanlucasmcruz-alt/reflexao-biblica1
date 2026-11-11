@@ -121,6 +121,14 @@
   .sk-msg{font-family:var(--display);color:var(--gold2);font-size:15px;margin-bottom:4px}
   @keyframes sh{to{background-position:-200% 0}}
   .link-btn{color:var(--gold2);font-weight:700;font-size:13.5px;padding:4px 0}
+  .planline{display:flex;align-items:center;gap:12px;padding:14px 18px;border:1px solid var(--line);border-radius:18px;background:var(--surface);color:var(--text);text-align:left;width:100%;cursor:pointer}
+  .planline svg{flex:none;width:22px;height:22px;color:var(--gold2)}
+  .planline .pl-t{flex:1;min-width:0;font-size:14px;line-height:1.35}
+  .planline .pl-t b{font-family:var(--serif);font-size:16px;font-weight:600}
+  .planline .pl-go{color:var(--gold2);font-weight:700;font-size:14px}
+  .streakbox{display:flex;align-items:center;gap:12px;padding:14px 18px}
+  .streakbox .n{font-family:var(--display);font-size:22px;color:var(--gold2);font-weight:700}
+  #topTitle:focus{outline:none}
   .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
   .act{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:14px;color:var(--text);font-size:12px;font-weight:600}
   .act svg{width:22px;height:22px;color:var(--gold2)}
@@ -195,10 +203,9 @@
   <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ghost" id="proChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px" aria-label="Conhecer o Reflexão Bíblica Pro">✨ Pro</button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
   <div class="scroll" id="scroll">
     <section class="view on" id="v-hoje">
-      <div class="card" id="dailyPlan" hidden></div>
       <div class="card hero cafe">
         <svg class="cup" viewBox="0 0 120 120" aria-hidden="true"><g class="steam" fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"><path d="M48 40c-6-8 6-12 0-20"/><path d="M62 42c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g><path d="M34 52h56v22a24 24 0 0 1-24 24h-8a24 24 0 0 1-24-24z" fill="var(--surface2)" stroke="var(--gold)" stroke-width="3"/><path d="M90 58h6a10 10 0 0 1 0 20h-7" fill="none" stroke="var(--gold)" stroke-width="3"/><path d="M38 60h48" stroke="var(--gold)" stroke-width="2" opacity=".35"/><ellipse cx="62" cy="106" rx="38" ry="5" fill="var(--gold)" opacity=".18"/></svg>
-        <div class="row" style="gap:8px"><div class="hello" id="hello">Bom dia</div><span class="pill" id="streak" hidden></span></div>
+        <div class="row" style="gap:8px"><div class="hello" id="hello">Bom dia</div></div>
         <div class="eyebrow" id="kind">Reflexão do dia</div>
         <div class="ref" id="ref" style="padding-right:78px;font-size:clamp(26px,7.4vw,36px)"></div>
         <p class="sm muted" id="heroSub" style="margin:0 0 4px;padding-right:70px">Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você.</p>
@@ -218,6 +225,7 @@
         </div>
         <button class="report" id="repBtn" hidden>Encontrou algo errado neste texto? Avisar</button>
       </div>
+      <div class="planline" id="dailyPlan" hidden></div>
     </section>
 
     <section class="view" id="v-estudos">
@@ -315,6 +323,7 @@
     </section>
 
     <section class="view" id="v-salvas">
+      <div class="card streakbox" id="streakBox" hidden></div>
       <div class="card"><div class="seg" id="mySeg" style="grid-template-columns:repeat(4,1fr)"></div>
         <div class="row" id="myTools" hidden style="flex-wrap:nowrap;margin-bottom:10px"><input id="mySearch" placeholder="Buscar nas suas anotações"><button class="btn ghost" id="myExport" aria-label="Exportar">⤓</button></div>
         <div id="list"></div><div id="myList" hidden></div></div>
@@ -627,7 +636,7 @@ function show(r, kind){
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
   $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").innerHTML = "Aprofundar o estudo"+(isPro()?"":freeDeepLeft()>0?'<small style="display:block;font-weight:600;opacity:.85;font-size:12px;margin-top:2px">1 estudo grátis por semana</small>':" 🔒");
   $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
-  const st=streak(); $("streak").hidden=st<2; $("streak").textContent=`🔥 ${st} dias seguidos`;
+  renderStreak();
   if(has) renderQA();
   redecorateAll();
 }
@@ -1257,8 +1266,8 @@ function renderPlan(){
 function confirmInline(id,msg){ const b=$(id); if(b.dataset.c==="1") return true; b.dataset.c="1"; b.textContent="Confirmar"; toast(msg); setTimeout(()=>{ if(b){ b.dataset.c=""; b.textContent="Trocar"; } },4000); return false; }
 function renderDailyPlan(){ const box=$("dailyPlan"); if(!box) return; const t=planToday();
   if(!t||t.next==null){ box.hidden=true; return; } const chs=t.days[t.next]; box.hidden=false;
-  box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Leitura de hoje · ${esc(PLANS[t.P.id])}</div><div class="t" style="font-family:var(--serif);font-size:18px;margin-top:4px">${esc(rangeLabel(chs))}</div></div><button class="btn" id="dpGo">Ler</button></div>`;
-  $("dpGo").onclick=()=>{ go("biblia"); const f=chs.find(([b,c])=>!(S.read&&S.read[b+" "+c]))||chs[0]; openChapter(f[0],f[1]); }; }
+  box.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5c3-1 6-1 10 1 4-2 7-2 10-1v14c-3-1-6-1-10 1-4-2-7-2-10-1z"/><path d="M12 6v14"/></svg><div class="pl-t"><span class="muted sm">Leitura de hoje · ${esc(PLANS[t.P.id])}</span><br><b>${esc(rangeLabel(chs))}</b></div><span class="pl-go">Ler →</span>`; box.setAttribute("role","button"); box.tabIndex=0;
+  box.onclick=()=>{ go("biblia"); const f=chs.find(([b,c])=>!(S.read&&S.read[b+" "+c]))||chs[0]; openChapter(f[0],f[1]); }; }
 /* ---------- O que a Bíblia diz sobre ---------- */
 let dMode="verbetes";
 function renderThemeHist(){ const H=S.themeHist||[]; return H.length?`<div class="eyebrow" style="margin:4px 0 8px">Pesquisas recentes</div><div class="chips" style="margin-bottom:10px">${H.map(t=>`<button class="chip" data-th2="${esc(t)}">${esc(t)}</button>`).join("")}</div>`:`<div class="empty">Digite um tema e toque em Buscar passagens.</div>`; }
@@ -1352,6 +1361,7 @@ function applyA11y(){ const a=S.a11y||{}; document.documentElement.dataset.fs=a.
   const hr=new Date().getHours(), th=a.theme||"auto", dark=th==="dark"||(th==="auto"&&(hr<6||hr>=19)); document.documentElement.dataset.theme=dark?"dark":"light";
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=dark?"#16100c":"#f5ede1"; greet(); }
 function markVisit(){ S.visits=S.visits||{}; S.visits[dstr()]=1; const k=Object.keys(S.visits).sort(); while(k.length>400) delete S.visits[k.shift()]; save(); }
+function renderStreak(){ const st=streak(), b=$("streakBox"); if(!b) return; b.hidden=st<1; b.innerHTML=`<span style="font-size:26px" aria-hidden="true">🔥</span><div><div class="n">${st} ${st===1?"dia de leitura":"dias seguidos"}</div><div class="sm muted">${st<2?"Volte amanhã para começar sua sequência.":"Continue assim: um texto por dia."}</div></div>`; }
 function streak(){ const v=S.visits||{}; let n=0; const d=new Date(); if(!v[dstr(d)]) d.setDate(d.getDate()-1); while(v[dstr(d)]){ n++; d.setDate(d.getDate()-1); } return n; }
 function greet(){ const hr=new Date().getHours(), e=$("hello"); if(!e) return;
   const [g,s]= hr<5?["Boa madrugada 🌙","Silêncio, um chá e um texto para pensar."]: hr<12?["Bom dia ☕","Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você."]: hr<18?["Boa tarde ☕","Uma pausa no meio do dia: um texto, uma reflexão."]:["Boa noite 🌙","Desacelere. Um texto curto para fechar o dia."];
