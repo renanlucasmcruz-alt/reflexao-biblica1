@@ -202,6 +202,7 @@
       <div class="card" id="outCard" hidden>
         <div class="md" id="out"></div>
         <div class="row" id="fbRow" hidden style="margin-top:18px;justify-content:space-between;flex-wrap:nowrap"><span class="sm muted">Essa reflexão te ajudou?</span><span class="row" style="gap:6px"><button class="chip" id="fbUp" aria-label="Sim, ajudou">👍</button><button class="chip" id="fbDn" aria-label="Não ajudou">👎</button></span></div>
+        <button class="btn ghost full" id="storyBtn2" hidden style="margin-top:16px">📲 Postar no status (Instagram / WhatsApp)</button>
         <button class="btn full" id="deepBtn" hidden style="margin-top:20px">Aprofundar: estudo completo do texto</button>
         <div class="md" id="deep" style="margin-top:22px"></div>
         <div id="qaWrap" hidden>
@@ -597,7 +598,7 @@ function needClaude(id){ const n=$(id); n.textContent="Entre na sua conta para u
 /* ---------- Hoje / passagem ---------- */
 function show(r, kind){
   if(cur!==r&&SP.key==="hoje") stopSpeak(); cur=r; $("ref").textContent=r.ref; $("kind").textContent=kind||"Reflexão do dia";
-  const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("copy").hidden=!has; $("storyBtn").hidden=!r.text; $("sayHoje").hidden=!has; $("qaWrap").hidden=!has;
+  const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("copy").hidden=!has; $("storyBtn").hidden=!r.text; $("storyBtn2").hidden=!r.text; $("sayHoje").hidden=!has; $("qaWrap").hidden=!has;
   $("saveBtn").hidden=!has || S.saved.some(x=>x.id===r.id);
   $("gen").textContent = has?"Gerar de novo":(r.mode==="deep"?"Estudar":"Ler reflexão");
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
@@ -1276,7 +1277,7 @@ $("refIn").addEventListener("keydown",e=>{ if(e.key==="Enter") openRef($("refIn"
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ mode=b.dataset.mode; document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("on",x===b)); });
 $("sugs").innerHTML=SUGS.map(s=>`<button class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join("");
 $("sugs").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>openRef(b.dataset.s));
-$("storyBtn").onclick=()=>{ if(cur&&cur.text) storyCard(cur).catch(e=>{ console.warn(e); toast("Não consegui gerar a imagem"); }); };
+$("storyBtn").onclick=$("storyBtn2").onclick=()=>{ if(cur&&cur.text) storyCard(cur).catch(e=>{ console.warn(e); toast("Não consegui gerar a imagem"); }); };
 $("copy").onclick=async()=>{ try{ const t=[cur.text,cur.deep].filter(Boolean).join("\n\n"); await navigator.clipboard.writeText(`${cur.ref}\n\n${t.replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*/g,"")}`); toast("Copiado"); }catch(e){ toast("Não consegui copiar"); } };
 $("saveBtn").onclick=()=>{ if(!cur) return; const c=clone(cur); c.id=cur.daily?rid():cur.id; delete c.daily; cur.id=c.id; S.saved.unshift(c); save(); $("saveBtn").hidden=true; toast("Leitura salva"); };
 $("lessonBack").onclick=()=>go("estudos");
