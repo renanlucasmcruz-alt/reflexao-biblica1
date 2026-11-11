@@ -1,4 +1,4 @@
-const env = (k, d = "") => (globalThis.Netlify?.env?.get?.(k)) ?? process.env[k] ?? d;
+const env = (k, d = "") => (globalThis.Netlify?.env?.get?.(k)) ?? globalThis.process?.env?.[k] ?? d;
 export const CFG = {
   SUPABASE_URL: () => env("SUPABASE_URL"),
   SUPABASE_ANON_KEY: () => env("SUPABASE_ANON_KEY"),

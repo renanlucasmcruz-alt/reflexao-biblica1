@@ -393,12 +393,14 @@
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body){ const j=await r.json().catch(()=>({})); throw {code:"unavailable",detail:j.detail||("HTTP "+r.status+(j.error?" "+j.error:""))}; }
-    const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="";
-    for(;;){ const {done,value}=await rd.read(); if(done) break; text+=dec.decode(value,{stream:true});
-      const i=text.indexOf("\u0000"); const visible=i>=0?text.slice(0,i):text; if(opts.onText) opts.onText({text:visible}); }
-    const i=text.indexOf("\u0000"); if(i>=0){ stop=text.slice(i+1).replace("STOP:",""); text=text.slice(0,i); }
-    if(stop==="error") throw {code:"unavailable"};
-    return {text,truncated:stop==="max_tokens"};
+    const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="", stall=null;
+    const arm=()=>{ clearTimeout(stall); stall=setTimeout(()=>{ rd.cancel().catch(()=>{}); },text?45000:60000); }; arm();
+    try{ for(;;){ const {done,value}=await rd.read(); if(done) break; arm(); text+=dec.decode(value,{stream:true});
+      const i=text.indexOf("\u0000"); const visible=i>=0?text.slice(0,i):text; if(opts.onText) opts.onText({text:visible}); } }
+    catch(e){} finally{ clearTimeout(stall); }
+    const i=text.indexOf("\u0000"); if(i>=0){ stop=text.slice(i+1).replace("STOP:",""); text=text.slice(0,i); } else stop=text?"cut":"error";
+    if(stop==="error") throw {code:"unavailable",detail:"a conexão caiu antes da resposta"};
+    return {text,truncated:stop==="max_tokens"||stop==="cut"};
   }
   sample.limits=async()=>({images:true});
 

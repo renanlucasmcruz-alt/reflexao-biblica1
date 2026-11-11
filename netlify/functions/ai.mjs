@@ -11,9 +11,9 @@ function pickModel(tier, plan, shared) {
 
 const MAX = { quick: 1500, default: 4000, complex: 8000 };
 
-export default async (req) => {
+export default async function aiHandler(req) {
   try { return await handle(req); } catch (e) { console.error("ai crash", e); return json(500, { error: "server", detail: String(e && e.message || e).slice(0, 200) }); }
-};
+}
 
 async function handle(req) {
   if (req.method !== "POST") return json(405, { error: "method" });
@@ -81,4 +81,4 @@ async function handle(req) {
   });
   return new Response(stream, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
 }
-export const config = { path: "/api/ai" };
+export const config = { path: "/api/ai-fn" }; // a rota /api/ai é atendida pela Edge Function (sem o limite de 10 s)
