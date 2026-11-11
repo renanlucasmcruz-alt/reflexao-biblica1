@@ -42,7 +42,7 @@
   .top{flex:none;padding:calc(14px + env(safe-area-inset-top)) 20px 10px;display:flex;justify-content:space-between;align-items:flex-end}
   .top .eyebrow{color:var(--gold2)}
   .top h1{font-family:var(--display);font-size:26px;font-weight:700;letter-spacing:-.01em}
-  .scroll{flex:1;overflow-y:auto;padding:6px 18px 28px}
+  .scroll{flex:1;overflow-y:auto;padding:6px 18px 96px}
   .view{display:none;max-width:640px;margin:0 auto;flex-direction:column;gap:16px}
   .view.on{display:flex}
   nav{flex:none;display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:var(--nav);backdrop-filter:blur(10px);padding:6px 6px calc(8px + env(safe-area-inset-bottom))}
@@ -121,6 +121,13 @@
   .sk-msg{font-family:var(--display);color:var(--gold2);font-size:15px;margin-bottom:4px}
   @keyframes sh{to{background-position:-200% 0}}
   .link-btn{color:var(--gold2);font-weight:700;font-size:13.5px;padding:4px 0}
+  .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
+  .act{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:14px;color:var(--text);font-size:12px;font-weight:600}
+  .act svg{width:22px;height:22px;color:var(--gold2)}
+  .act:active{background:var(--surface2)}
+  .act.on svg{fill:var(--gold2)} #sayHoje.on svg{fill:none;color:var(--gold)}
+  .report{display:block;margin:22px auto 0;font-size:12.5px;font-weight:600;color:var(--muted);text-decoration:underline;text-underline-offset:3px;padding:6px 10px}
+  .report:disabled{opacity:.5}
   .chip.on{background:var(--gold);color:var(--onaccent);border-color:var(--gold)}
   details{border-top:1px solid var(--line);padding:4px 0}
   details>summary{cursor:pointer;list-style:none;font-family:var(--ui);font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);padding:14px 0 10px;display:flex;justify-content:space-between}
@@ -195,21 +202,21 @@
         <div class="eyebrow" id="kind">Reflexão do dia</div>
         <div class="ref" id="ref" style="padding-right:78px;font-size:clamp(26px,7.4vw,36px)"></div>
         <p class="sm muted" id="heroSub" style="margin:0 0 4px;padding-right:70px">Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você.</p>
-        <div class="row" style="margin-top:6px"><button class="btn" id="gen">Ler reflexão</button><button class="btn ghost" id="sayHoje" data-say="hoje" hidden aria-label="Ouvir em voz alta">🔊 Ouvir</button><button class="btn ghost" id="storyBtn" hidden aria-label="Compartilhar no status">📲 Status</button><button class="btn ghost" id="copy" hidden>Copiar</button><button class="btn ghost" id="saveBtn" hidden>Salvar</button></div>
+        <div class="row" style="margin-top:6px"><button class="btn" id="gen">Ler reflexão</button></div><div class="acts" id="acts" hidden><button class="act" id="sayHoje" data-say="hoje" aria-label="Ouvir em voz alta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7M18.5 5.5a9 9 0 0 1 0 13"/></svg><span>Ouvir</span></button><button class="act" id="storyBtn" aria-label="Compartilhar no status"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>Status</span></button><button class="act" id="copy" aria-label="Copiar texto"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg><span>Copiar</span></button><button class="act" id="saveBtn" aria-label="Salvar leitura"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg><span>Salvar</span></button></div>
         <div class="note" id="note" hidden style="margin-top:12px"></div>
-        <button class="link-btn" id="histBtn" style="margin-top:10px">📅 Reflexões anteriores</button>
+        <button class="link-btn" id="histBtn" style="margin-top:8px">Reflexões anteriores →</button>
       </div>
       <div class="card" id="outCard" hidden>
         <div class="md" id="out"></div>
         <div class="row" id="fbRow" hidden style="margin-top:18px;justify-content:space-between;flex-wrap:nowrap"><span class="sm muted">Essa reflexão te ajudou?</span><span class="row" style="gap:6px"><button class="chip" id="fbUp" aria-label="Sim, ajudou">👍</button><button class="chip" id="fbDn" aria-label="Não ajudou">👎</button></span></div>
-        <button class="btn ghost full" id="storyBtn2" hidden style="margin-top:16px">📲 Postar no status (Instagram / WhatsApp)</button>
-        <button class="btn full" id="deepBtn" hidden style="margin-top:20px">Aprofundar: estudo completo do texto</button>
+                <button class="btn full" id="deepBtn" hidden style="margin-top:20px;flex-direction:column;gap:0">Aprofundar o estudo</button>
         <div class="md" id="deep" style="margin-top:22px"></div>
         <div id="qaWrap" hidden>
           <div class="eyebrow" style="margin-top:26px">Pergunte sobre esta passagem</div>
           <div class="qa" id="qa"></div>
-          <div class="composer"><textarea id="ask" data-mic="send" rows="1" placeholder="Ex.: o que significa essa palavra no original?"></textarea><button class="send" id="askBtn" aria-label="Perguntar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+          <div class="composer"><textarea id="ask" data-mic="send" rows="1" placeholder="Faça uma pergunta"></textarea><button class="send" id="askBtn" aria-label="Perguntar"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
         </div>
+        <button class="report" id="repBtn" hidden>Encontrou algo errado neste texto? Avisar</button>
       </div>
     </section>
 
@@ -250,7 +257,7 @@
             <div class="eyebrow" style="margin:18px 0 6px">Minhas anotações da lição</div>
             <textarea id="lNoteIn" data-mic="fill" style="min-height:90px" placeholder="O que você quer guardar desta lição?"></textarea>
           </div>
-          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="lRegen">⚠️ Avisar problema</button><button class="btn" id="lDone">Concluir lição</button></div>
+          <button class="btn full" id="lDone" style="margin-top:18px">Concluir lição</button><button class="report" id="lRegen">Encontrou algo errado? Avisar</button>
         </div>
       </div>
     </section>
@@ -280,7 +287,7 @@
           <div class="note" id="chNote" hidden style="margin-top:12px"></div>
           <button class="btn ghost full" id="chMore" hidden style="margin-top:14px">Continuar a tradução</button>
           <button class="btn ghost full" data-say="cap" style="margin-top:14px">🔊 Ouvir capítulo</button>
-          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="chRegen">⚠️ Avisar problema</button><button class="btn" id="chStudy">Estudar este capítulo</button></div>
+          <button class="btn full" id="chStudy" style="margin-top:18px">Estudar este capítulo</button><button class="report" id="chRegen">Encontrou algo errado? Avisar</button>
         </div>
       </div>
     </section>
@@ -302,7 +309,7 @@
           <button class="btn full" id="dDeep" hidden style="margin-top:20px">Aprofundar este verbete</button>
           <div id="dRel"></div>
           <div class="md" id="dDeepOut" style="margin-top:22px"></div>
-          <button class="btn ghost" id="dRegen" style="margin-top:16px">⚠️ Avisar problema neste verbete</button>
+          <button class="report" id="dRegen">Encontrou algo errado? Avisar</button>
         </div>
       </div>
     </section>
@@ -608,17 +615,17 @@ const WAIT=["Traduzindo do original…","Consultando o hebraico e o grego…","P
 function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
 async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s) throw {code:"no_sample"}; skel(el);
   const r=await s(prompt,Object.assign({modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }},opts));
-  let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “⚠️ Avisar problema” para refazer.*"; toast("A resposta veio incompleta"); } return t; }
+  let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “Avisar” no fim do texto para refazer.*"; toast("A resposta veio incompleta"); } return t; }
 function needClaude(id){ const n=$(id); n.textContent="Entre na sua conta para usar esta função."; n.hidden=false; }
 
 /* ---------- Hoje / passagem ---------- */
 function show(r, kind){
   if(cur!==r&&SP.key==="hoje") stopSpeak(); cur=r; $("ref").textContent=r.ref; $("kind").textContent=kind||"Reflexão do dia";
-  const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("copy").hidden=!has; $("storyBtn").hidden=!r.text; $("storyBtn2").hidden=!r.text; $("sayHoje").hidden=!has; $("qaWrap").hidden=!has;
-  $("saveBtn").hidden=!has || S.saved.some(x=>x.id===r.id);
-  $("gen").textContent = has?"⚠️ Avisar problema neste texto":(r.mode==="deep"?"Estudar":"Ler reflexão"); $("gen").classList.toggle("ghost",has);
+  const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("acts").hidden=!has; $("storyBtn").hidden=!r.text; $("repBtn").hidden=!has; $("repBtn").textContent="Encontrou algo errado neste texto? Avisar"; $("gen").parentElement.hidden=has; $("heroSub").hidden=has; $("qaWrap").hidden=!has;
+  { const sv=S.saved.some(x=>x.id===r.id); $("saveBtn").classList.toggle("on",sv); $("saveBtn").querySelector("span").textContent=sv?"Salvo":"Salvar"; $("saveBtn").disabled=sv; }
+  $("gen").textContent = r.mode==="deep"?"Estudar":"Ler reflexão"; $("gen").classList.remove("ghost");
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
-  $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").textContent = isPro()?"Aprofundar: estudo completo do texto":(freeDeepLeft()>0?"Aprofundar: estudo completo (1 grátis por semana)":"Aprofundar: estudo completo 🔒 Pro");
+  $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").innerHTML = "Aprofundar o estudo"+(isPro()?"":freeDeepLeft()>0?'<small style="display:block;font-weight:600;opacity:.85;font-size:12px;margin-top:2px">1 estudo grátis por semana</small>':" 🔒");
   $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
   const st=streak(); $("streak").hidden=st<2; $("streak").textContent=`🔥 ${st} dias seguidos`;
   if(has) renderQA();
@@ -648,7 +655,7 @@ const LOCK=()=>isPro()?"":" 🔒";
 /* ---------- Avisar problema (substitui "gerar de novo" no conteúdo que é igual para todos) ---------- */
 const repArm={};
 async function reportShared(btn,keys,onReplaced){
-  const id=btn.id; if(!repArm[id]||Date.now()-repArm[id]>4000){ repArm[id]=Date.now(); const old=btn.textContent; btn.textContent="Tem algo errado? Toque de novo para avisar"; setTimeout(()=>{ if(btn.textContent.startsWith("Tem algo")) btn.textContent=old; },4000); return; }
+  const id=btn.id; if(!repArm[id]||Date.now()-repArm[id]>4000){ repArm[id]=Date.now(); const old=btn.textContent; btn.textContent="Toque de novo para confirmar o aviso"; setTimeout(()=>{ if(btn.textContent.startsWith("Toque de novo")) btn.textContent=old; },4000); return; }
   repArm[id]=0; btn.disabled=true;
   try{ const r=await RB.api("/api/report",{keys:keys.filter(Boolean)});
     if(r.replaced){ toast("Obrigado! Preparando uma versão nova…"); await onReplaced(); }
@@ -659,7 +666,7 @@ async function reportShared(btn,keys,onReplaced){
 let regenArm=0;
 async function generate(){
   if(busy||!cur) return;
-  if(cur&&(cur.text||cur.deep)){ return reportShared($("gen"),[rfKey(cur.ref,"s"),rfKey(cur.ref,"d")],async()=>{ cur.text=""; cur.deep=""; persist(); show(cur,$("kind").textContent); await generate(); }); }
+  if(cur&&(cur.text||cur.deep)){ return reportShared($("repBtn"),[rfKey(cur.ref,"s"),rfKey(cur.ref,"d")],async()=>{ cur.text=""; cur.deep=""; persist(); show(cur,$("kind").textContent); await generate(); }); }
   if((cur.text||cur.deep) && Date.now()-regenArm>4000){ regenArm=Date.now(); const g=$("gen"); g.textContent="Toque de novo para confirmar"; setTimeout(()=>{ if(!busy) show(cur,$("kind").textContent); },4000); toast("Isso substitui o texto atual"); return; }
   const isRegen=!!(cur.text||cur.deep);
   regenArm=0; busy=true; $("note").hidden=true; const b=$("gen"); b.disabled=true; b.innerHTML='<span class="spin"></span>Traduzindo do original…';
@@ -754,8 +761,8 @@ async function certificate(ti){ const c=document.createElement("canvas"); c.widt
   $("ctClose").onclick=closeModal; $("ctSave").onclick=async()=>{ try{ const d=await window.claude.use("downloads"); if(!d) throw 0; await d.save({filename:"certificado-"+(ti+1)+".png",data:blob}); }catch(e){ toast("Toque e segure na imagem para salvar"); } }; }
 let lRegenArm=0;
 async function genLesson(force){
-  if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="⚠️ Avisar problema"; },4000); return; }
-  lRegenArm=0; $("lRegen").textContent="⚠️ Avisar problema"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
+  if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="Encontrou algo errado? Avisar"; },4000); return; }
+  lRegenArm=0; $("lRegen").textContent="Encontrou algo errado? Avisar"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
   const first=!(keep&&keep.text);
   try{ const lf={feature:L.ti>0?"lesson_pro":""}; const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut"),lf) : await stream(lessonPrompt(L),$("lOut"),lf); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
   catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
@@ -1309,16 +1316,16 @@ const TT={hoje:"Reflexão Bíblica",biblia:"Bíblia",estudos:"Estudos",dic:"Dici
 function go(v){ document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v)); document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); $("topTitle").textContent=TT[v]; $("scroll").scrollTop=0; stopSpeakSoft(); setTimeout(()=>$("topTitle").focus({preventScroll:true}),30);
   if(v==="salvas") renderMine(); if(v==="biblia"){ $("bHome").hidden=false; $("chView").hidden=true; renderBooks(); renderPlan(); renderCont(); } if(v==="hoje") renderDailyPlan(); if(v==="dic"){ $("dHome").hidden=false; $("dView").hidden=true; renderDic(); } if(v==="estudos"){ $("studyHome").hidden=false; $("lessonView").hidden=true; $("tlView").hidden=true; renderStudy(); } }
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.v==="hoje"&&cur&&!cur.daily&&$("v-hoje").classList.contains("on")) loadDaily(); go(b.dataset.v); });
-$("gen").onclick=generate; $("deepBtn").onclick=deepen; $("askBtn").onclick=ask;
+$("gen").onclick=generate; $("repBtn").onclick=generate; $("deepBtn").onclick=deepen; $("askBtn").onclick=ask;
 $("ask").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask(); } });
 $("goRef").onclick=()=>openRef($("refIn").value);
 $("refIn").addEventListener("keydown",e=>{ if(e.key==="Enter") openRef($("refIn").value); });
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{ mode=b.dataset.mode; document.querySelectorAll("[data-mode]").forEach(x=>x.classList.toggle("on",x===b)); });
 $("sugs").innerHTML=SUGS.map(s=>`<button class="chip" data-s="${esc(s)}">${esc(s)}</button>`).join("");
 $("sugs").querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>openRef(b.dataset.s));
-$("storyBtn").onclick=$("storyBtn2").onclick=()=>{ if(cur&&cur.text) storyCard(cur).catch(e=>{ console.warn(e); toast("Não consegui gerar a imagem"); }); };
+$("storyBtn").onclick=()=>{ if(cur&&cur.text) storyCard(cur).catch(e=>{ console.warn(e); toast("Não consegui gerar a imagem"); }); };
 $("copy").onclick=async()=>{ try{ const t=[cur.text,cur.deep].filter(Boolean).join("\n\n"); await navigator.clipboard.writeText(`${cur.ref}\n\n${t.replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*/g,"")}`); toast("Copiado"); }catch(e){ toast("Não consegui copiar"); } };
-$("saveBtn").onclick=()=>{ if(!cur) return; const c=clone(cur); c.id=cur.daily?rid():cur.id; delete c.daily; cur.id=c.id; S.saved.unshift(c); save(); $("saveBtn").hidden=true; toast("Leitura salva"); };
+$("saveBtn").onclick=()=>{ if(!cur) return; const c=clone(cur); c.id=cur.daily?rid():cur.id; delete c.daily; cur.id=c.id; S.saved.unshift(c); save(); show(cur,$("kind").textContent); toast("Leitura salva"); };
 $("lessonBack").onclick=()=>go("estudos");
 $("mySearch").addEventListener("input",renderMine); $("myExport").onclick=exportMine;
 $("chIntro").onclick=()=>chCur&&bookIntro(chCur.b);
@@ -1366,7 +1373,7 @@ function spokenRef(r){ const m=String(r).trim().match(/^(.+?)\s+(\d+)(?::(\d+)(?
   const [,b,c,v1,v2,c2,v3]=m; let s=`${b}, capítulo ${c}`; if(v1) s+= v2?`, versículos ${v1} a ${v2}`:c2?`, versículo ${v1}, até o capítulo ${c2}, versículo ${v3}`:`, versículo ${v1}`; return s; }
 function plain(md){ return String(md||"").replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*(\d+)\*\*/g,"Versículo $1.").replace(/[*_`]/g,"").replace(/\[|\]/g,"").replace(/\(([^)]*[֐-׿Ͱ-Ͽ][^)]*)\)/g,"").replace(/\n{2,}/g,"\n").trim(); }
 function splitParts(t){ const out=[]; t.split(/\n/).forEach(p=>{ p=p.trim(); if(!p) return; while(p.length>900){ let cut=p.lastIndexOf(". ",900); if(cut<200) cut=900; out.push(p.slice(0,cut+1)); p=p.slice(cut+1).trim(); } if(p) out.push(p); }); return out; }
-function syncSay(){ document.querySelectorAll("[data-say]").forEach(b=>{ const on=SP.key===b.dataset.say; b.textContent = on&&SP.state==="playing"?"⏸ Pausar":on&&SP.state==="paused"?"▶ Continuar":(b.dataset.lab||"🔊 Ouvir"); b.setAttribute("aria-pressed",on&&SP.state==="playing"?"true":"false"); });
+function syncSay(){ document.querySelectorAll("[data-say]").forEach(b=>{ const on=SP.key===b.dataset.say; const sp=b.classList.contains("act")&&b.querySelector("span"); if(sp){ sp.textContent= on&&SP.state==="playing"?"Pausar":on&&SP.state==="paused"?"Continuar":"Ouvir"; b.classList.toggle("on",on&&SP.state==="playing"); } else b.textContent = on&&SP.state==="playing"?"⏸ Pausar":on&&SP.state==="paused"?"▶ Continuar":(b.dataset.lab||"🔊 Ouvir"); b.setAttribute("aria-pressed",on&&SP.state==="playing"?"true":"false"); });
   if(SP.state==="idle"){ $("player").hidden=true; } else { $("player").hidden=false; $("plLabel").textContent=SP.label; $("plPause").textContent=SP.state==="paused"?"Continuar":"Pausar"; } }
 async function playFrom(i){
   SP.idx=i; SP.state="playing"; const tok=++SP.token, rate=(S.a11y&&S.a11y.rate)||1, t=await getTTS(); syncSay();
