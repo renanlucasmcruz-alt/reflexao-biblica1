@@ -333,11 +333,14 @@
 </div>
 <div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
   <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:26px;margin:0">Reflexão Bíblica <span style="color:var(--gold)">Pro</span></h2><button class="iconbtn" id="proClose" aria-label="Fechar">✕</button></div>
-  <p class="muted" id="proWhy" style="margin:8px 0 14px">Sem limites para estudar a Palavra.</p>
-  <div class="feat"><span>☕</span><span>Reflexões, estudos completos e perguntas <b>sem limite diário</b></span></div>
-  <div class="feat" style="margin-top:10px"><span>🎓</span><span>Estudo dirigido com mentor, teste e certificado, <b>no seu ritmo</b></span></div>
-  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Interlinear</b>, referências cruzadas e outras traduções</span></div>
-  <div class="feat" style="margin-top:10px"><span>🔎</span><span>Dicionário e busca por tema <b>ilimitados</b></span></div>
+  <p class="muted" id="proWhy" style="margin:8px 0 14px">Mais fôlego para quem estuda a fundo.</p>
+  <div class="feat"><span>💬</span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 5), com respostas completas</span></div>
+  <div class="feat" style="margin-top:10px"><span>🎓</span><span>Correções do mentor nos estudos dirigidos <b>sem esbarrar no limite</b> do dia</span></div>
+  <div class="feat" style="margin-top:10px"><span>🔎</span><span>Mais conteúdos novos por dia: capítulos, interlinear, dicionário e buscas</span></div>
+  <div class="purpose" style="margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--card2,rgba(176,108,40,.08));border:1px solid var(--line,rgba(176,108,40,.18))">
+    <div style="font-weight:800;margin-bottom:4px">Por que existe o Pro?</div>
+    <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Bíblia, a reflexão do dia, as lições e o dicionário <b>continuam gratuitos para todos</b>. O Pro não vende fé nem tranca conteúdo: ele paga a inteligência artificial e os servidores, e mantém o app evoluindo. Quem assina ajuda a manter tudo aberto para quem não pode.</div>
+  </div>
   <button class="btn full" id="proBuy" style="margin-top:18px">Assinar Pro</button>
   <button class="btn ghost full" id="proRestore" style="margin-top:8px">Já assinei: restaurar</button>
   <p class="sm muted" id="proNote" style="margin:10px 0 0"></p>
@@ -1434,6 +1437,8 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   <button class="btn ghost full" id="tgS" style="margin-top:8px" aria-pressed="${!!a.seq}">Ouvir capítulos em sequência: ${a.seq?"ligado":"desligado"}</button>
   <div class="eyebrow" style="margin:14px 0 8px">Seu nome</div><div class="row" style="flex-wrap:nowrap"><input id="setName" value="${esc(S.name||"")}" placeholder="Como podemos te chamar?"><button class="btn" id="setNameOk">OK</button></div>
   <button class="btn ghost full" id="shareApp" style="margin-top:14px">💌 Indicar o app para alguém</button>
+  <div class="eyebrow" style="margin:18px 0 8px">Nosso propósito</div>
+  <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. O essencial é e continuará gratuito. A assinatura Pro existe só para manter a plataforma de pé e evoluindo.</p>
   <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
   <div class="sm muted">${esc((window.RB&&RB.user&&RB.user.email)||"")} · Plano ${window.RB&&RB.plan==="pro"?"Pro ✨":"Grátis"}</div>
   <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ghost" id="signOut">Sair</button></div>
