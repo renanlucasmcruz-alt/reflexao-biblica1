@@ -362,12 +362,12 @@
   <p class="muted" id="proWhy" style="margin:8px 0 14px">Mais fôlego para quem estuda a fundo.</p>
   <div class="feat"><span>📚</span><span><b>Todas as trilhas</b> de estudo dirigido, com mentor, teste e certificado (a trilha 1 é grátis)</span></div>
   <div class="feat" style="margin-top:10px"><span>🔍</span><span><b>Estudo aprofundado</b> de cada reflexão, sempre que quiser (no grátis: 1 por semana)</span></div>
-  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Original palavra por palavra</b> no hebraico e no grego, referências cruzadas e outras traduções</span></div>
+  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Texto original palavra por palavra</b> em hebraico e grego, referências cruzadas e outras traduções</span></div>
   <div class="feat" style="margin-top:10px"><span>📖</span><span><b>Verbetes aprofundados</b> no dicionário</span></div>
   <div class="feat" style="margin-top:10px"><span>💬</span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 3)</span></div>
   <div class="purpose" style="margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--card2,rgba(176,108,40,.08));border:1px solid var(--line,rgba(176,108,40,.18))">
     <div style="font-weight:800;margin-bottom:4px">Por que existe o Pro?</div>
-    <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Palavra, a reflexão do dia, o áudio e a acessibilidade <b>são gratuitos para todos</b>, e continuarão sendo. As ferramentas de estudo aprofundado são Pro: é isso que paga a inteligência artificial e os servidores e mantém o app evoluindo. Quem assina ajuda a manter o essencial aberto para quem não pode.</div>
+    <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Palavra, a reflexão do dia, o áudio e a acessibilidade <b>são gratuitos para todos</b>, e continuarão sendo. As ferramentas de estudo aprofundado são Pro: é isso que paga a inteligência artificial e os servidores, e mantém o app evoluindo. Quem assina ajuda a manter o essencial aberto para quem não pode.</div>
   </div>
   <button class="btn full" id="proBuy" style="margin-top:18px">Assinar Pro</button>
   <button class="btn ghost full" id="proRestore" style="margin-top:8px">Já assinei: restaurar</button>
@@ -1528,7 +1528,7 @@ initStore("biblia_v1",normalize,()=>{ applyA11y(); if(!S.welcomed&&!localStorage
 
 /* ---------- App independente: login, Pro, offline ---------- */
 async function openPro(why){ $("proWhy").textContent=why||"Mais fôlego para quem estuda a fundo."; $("proBg").hidden=false;
-  const can=await RB.billingAvailable(); const price=can?await RB.proPrice():(RB.priceLabel||"");
+  const can=await RB.billingAvailable(); const price=(can?await RB.proPrice().catch(()=>""):"")||RB.priceLabel||"";
   $("proBuy").textContent=price?`Assinar Pro · ${price}`:"Assinar Pro"; $("proNote").textContent=can?"Cobrança mensal pela Google Play. Cancele quando quiser na Play Store.":"A assinatura está disponível no app instalado pela Google Play."; $("proBuy").disabled=!can; }
 $("proClose").onclick=()=>{ $("proBg").hidden=true; };
 $("proBuy").onclick=async()=>{ try{ const ok=await RB.buyPro(); if(ok){ $("proBg").hidden=true; toast("Bem-vindo ao Pro ✨"); } else toast("Não foi possível confirmar a compra"); }catch(e){ toast("Compra cancelada"); } };
