@@ -6,6 +6,15 @@
 <meta name="theme-color" content="#f5ede1">
 <title>Reflexão Bíblica</title>
 <meta name="description" content="Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexão diária, estudo dirigido e dicionário.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Reflexão Bíblica">
+<meta property="og:title" content="Reflexão Bíblica: seu café com a Palavra">
+<meta property="og:description" content="Um texto por dia, traduzido do original, com uma reflexão de 2 minutos. Grátis.">
+<meta property="og:url" content="https://reflexao-biblica.pages.dev/">
+<meta property="og:image" content="https://reflexao-biblica.pages.dev/icons/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="manifest" href="/manifest.webmanifest">
 <link rel="icon" href="/icons/icon-192.png">
 <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -200,7 +209,7 @@
 </head>
 <body>
 <div id="app">
-  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ghost" id="proChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px" aria-label="Conhecer o Reflexão Bíblica Pro">✨ Pro</button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
+  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" id="loginChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px">Entrar</button><button class="btn ghost" id="proChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px" aria-label="Conhecer o Reflexão Bíblica Pro">✨ Pro</button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
   <div class="scroll" id="scroll">
     <section class="view on" id="v-hoje">
       <div class="card hero cafe">
@@ -341,10 +350,11 @@
 <div id="gate" hidden role="dialog" aria-modal="true" aria-label="Entrar">
   <svg viewBox="0 0 120 120" width="96" height="96" aria-hidden="true"><path d="M34 52h56v22a24 24 0 0 1-24 24h-8a24 24 0 0 1-24-24z" fill="var(--surface2)" stroke="var(--gold)" stroke-width="3"/><path d="M90 58h6a10 10 0 0 1 0 20h-7" fill="none" stroke="var(--gold)" stroke-width="3"/><g fill="none" stroke="var(--gold)" stroke-width="3" stroke-linecap="round"><path d="M48 40c-6-8 6-12 0-20"/><path d="M62 42c-6-8 6-12 0-20"/><path d="M76 40c-6-8 6-12 0-20"/></g></svg>
   <h2 style="font-family:var(--display);font-size:30px;margin:6px 0 4px">Reflexão Bíblica</h2>
-  <p class="muted" style="margin:0 0 18px;max-width:340px">Um café, um texto, uma reflexão. Entre para salvar suas leituras, anotações e estudos em qualquer aparelho.</p>
+  <p class="muted" style="margin:0 0 18px;max-width:340px">Um café, um texto, uma reflexão. Com a conta grátis você faz perguntas, estuda e guarda suas leituras e anotações em qualquer aparelho.</p>
   <button class="btn full" id="gGoogle" style="max-width:340px">Entrar com Google</button>
   <div class="row" style="max-width:340px;width:100%;margin-top:10px;flex-wrap:nowrap"><input id="gEmail" type="email" placeholder="ou seu e-mail" autocomplete="email"><button class="btn ghost" id="gEmailGo">Enviar link</button></div>
   <p class="sm muted" id="gMsg" style="margin:12px 0 0;max-width:340px"></p>
+  <button class="link-btn" id="gClose" hidden style="margin-top:14px;color:var(--muted)">Agora não</button>
   <p class="sm muted" style="margin:18px 0 0">Ao entrar, você concorda com a <a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a>.</p>
 </div>
 <div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
@@ -533,7 +543,9 @@ function md(src){
     else{close();h+=`<p>${inl(l)}</p>`;}}
   close();return h;}
 
-async function kvGet(key){ try{ if(store.mode==="db"&&store.db&&store.uid){ const s=await store.db.doc(`data/users/${store.uid}/${key}`).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); }
+const SHK=k=>/^(ch_|intro_|ent_|tema_|rf_|ls_|qz_)/.test(k);
+async function kvGet(key){ if(SHK(key)&&store.mode!=="db"){ try{ const db=window.claude&&await window.claude.use("db"); if(db){ const s=await db.doc(key).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); } }
+  try{ if(store.mode==="db"&&store.db&&store.uid){ const s=await store.db.doc(`data/users/${store.uid}/${key}`).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); }
   try{ const t=localStorage.getItem(store.key+"_kv_"+key); return t?JSON.parse(t):null; }catch(e){ return null; } }
 async function kvSet(key,obj){ try{ localStorage.setItem(store.key+"_kv_"+key,JSON.stringify(obj)); }catch(e){}
   try{ if(store.mode==="db"&&store.db&&store.uid) await store.db.doc(`data/users/${store.uid}/${key}`).set(obj); }catch(e){ console.warn(e); } }
@@ -622,10 +634,13 @@ Judaica (quando se aplica), católica, protestante, ortodoxa e leitura acadêmic
 Exatamente 3 perguntas numeradas: uma de compreensão, uma de conexão entre os textos e uma de reflexão pessoal.`; }
 const WAIT=["Traduzindo do original…","Consultando o hebraico e o grego…","Preparando sua leitura…","Pegue seu café, já está quase…","Comparando as tradições…"];
 function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
-async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s) throw {code:"no_sample"}; skel(el);
+async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; }; skel(el);
   const r=await s(prompt,Object.assign({modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }},opts));
   let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “Avisar” no fim do texto para refazer.*"; toast("A resposta veio incompleta"); } return t; }
-function needClaude(id){ const n=$(id); n.textContent="Entre na sua conta para usar esta função."; n.hidden=false; }
+let lastTap=0; document.addEventListener("pointerdown",()=>{ lastTap=Date.now(); },true);
+function askLogin(why){ if(window.RB&&RB.user) return; if(Date.now()-lastTap>6000) return; $("gate").hidden=false; $("gClose").hidden=false; $("gMsg").textContent=why||"Crie sua conta grátis para usar esta função. Leva 5 segundos."; }
+function openLogin(why){ $("gate").hidden=false; $("gClose").hidden=false; $("gMsg").textContent=why||""; }
+function needClaude(id){ const n=$(id); n.innerHTML='Crie sua conta grátis para usar esta função. <button class="link-btn" onclick="openLogin()">Entrar</button>'; n.hidden=false; }
 
 /* ---------- Hoje / passagem ---------- */
 function show(r, kind){
@@ -694,11 +709,11 @@ async function deepen(){
   if(!isPro()&&!cur.deep&&freeDeepLeft()<=0){ openPro("Você já usou o estudo aprofundado grátis desta semana. No Pro ele fica liberado sempre."); return; } busy=true; const b=$("deepBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>Preparando o estudo completo…';
   skel($("deep"),"Preparando o estudo completo…");
   try{ cur.deep=await sharedReflection(cur.ref,"d",deepPrompt(cur.ref),$("deep")); persist(); if(!isPro()) useFreeDeep(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
-  catch(e){ $("deep").textContent=e&&e.code==="no_sample"?"Entre na sua conta para o estudo completo.":errMsg(e); }
+  catch(e){ $("deep").textContent=e&&e.code==="no_sample"?"Crie sua conta grátis para o estudo completo.":errMsg(e); }
   busy=false; b.disabled=false; b.textContent="Aprofundar: estudo completo do texto"; show(cur,$("kind").textContent);
 }
 async function ask(){
-  const q=$("ask").value.trim(); if(!q||!cur) return; const s=await getSample(); if(!s) return;
+  const q=$("ask").value.trim(); if(!q||!cur) return; const s=await getSample(); if(!s){ openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; }
   $("ask").value=""; $("qa").insertAdjacentHTML("beforeend",`<div class="q">${esc(q)}</div><div class="a md" id="stream"><span class="spin"></span></div>`);
   try{ const r=await s(`Você é um biblista com domínio de hebraico, aramaico e grego koiné. Responda à pergunta abaixo sobre ${cur.ref}, em português do Brasil, de forma direta, precisa e sem puxar para nenhuma religião. Até 220 palavras. Se citar o original, translitere e dê a grafia original.\n\nLEITURA FEITA ANTES:\n${cur.text||""}\n${cur.deep||""}\n\n${(cur.qa||[]).map(x=>`P: ${x.q}\nR: ${x.a}`).join("\n\n")}\n\nPERGUNTA: ${q}`,{cache:false,onText:({text})=>{const e=$("stream"); if(e) e.innerHTML=md(text);}});
     (cur.qa=cur.qa||[]).push({q,a:r.text}); cur.qa=cur.qa.slice(-6); persist(); renderQA(); }
@@ -744,7 +759,7 @@ function lessonNote(){ clearTimeout(noteT); noteT=setTimeout(async()=>{ if(!curL
 function renderQuiz(){ const Q=curLData&&curLData.quiz, box=$("quizBox"); if(!Q){ box.innerHTML=`<button class="btn ghost full" id="quizGo">🧠 Teste rápido: 3 perguntas</button>`; $("quizGo").onclick=makeQuiz; return; }
   box.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Teste rápido</div>`+Q.q.map((q,i)=>`<div class="qz"><div class="t" style="font-size:16px;margin-bottom:6px">${i+1}. ${esc(q.p)}</div>${q.o.map((o,j)=>{ const a=Q.ans&&Q.ans[i]; const cls=a==null?"":j===q.c?"ok":a===j?"bad":""; return `<button class="qopt ${cls}" data-q="${i}" data-o="${j}" ${a!=null?"disabled":""}>${esc(o)}</button>`; }).join("")}${Q.ans&&Q.ans[i]!=null?`<div class="sm muted" style="margin-top:6px">${esc(q.e||"")}</div>`:""}</div>`).join("")+(Q.ans&&Object.keys(Q.ans).length===Q.q.length?`<div class="note" style="color:var(--text);margin-top:10px">Você acertou ${Q.q.filter((q,i)=>Q.ans[i]===q.c).length} de ${Q.q.length}.</div>`:"");
   box.querySelectorAll("[data-q]").forEach(b=>b.onclick=async()=>{ Q.ans=Q.ans||{}; Q.ans[+b.dataset.q]=+b.dataset.o; renderQuiz(); await kvSet("lesson_"+curL.id,curLData); }); }
-async function makeQuiz(){ const s=await getSample(); if(!s){ toast("Entre na sua conta para usar a IA"); return; } $("quizBox").innerHTML='<div class="row muted sm"><span class="spin"></span>Preparando o teste…</div>';
+async function makeQuiz(){ const s=await getSample(); if(!s){ openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; } $("quizBox").innerHTML='<div class="row muted sm"><span class="spin"></span>Preparando o teste…</div>';
   try{ const qk="qz_"+curL.id; let cached=null; if(curLData.shared){ try{ cached=await kvGet(qk); }catch(e){} }
     if(cached&&cached.q){ curLData.quiz={q:cached.q,ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz(); return; }
     const r=await askJSONb(`Com base nesta lição, crie 3 perguntas de múltipla escolha (4 opções cada, só uma correta) que testem compreensão real, não decoreba. Sem puxar para nenhuma religião: quando o tema for de fé, pergunte "segundo o texto" ou "segundo a tradição X". JSON: {"q":[{"p":"pergunta","o":["a","b","c","d"],"c":0,"e":"explicação de 1 frase"}]}
@@ -779,7 +794,7 @@ async function genLesson(force){
 }
 async function sendAnswer(){
   const a=$("ans").value.trim(); if(a.length<10){ toast("Escreva suas respostas"); return; } if(!curLData) return;
-  const s=await getSample(); if(!s){ toast("Entre na sua conta para usar a IA"); return; }
+  const s=await getSample(); if(!s){ openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; }
   const b=$("ansBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>O mentor está lendo…'; $("fb").innerHTML='<span class="spin"></span>';
   try{ const r=await s(`Você é o mentor de um estudo dirigido da Bíblia: acolhedor, honesto e exigente, com domínio de hebraico, aramaico e grego koiné, sem puxar para nenhuma religião.
 O aluno estudou a lição "${curL.title}" (${curL.refs.join("; ")}) e respondeu às perguntas.
@@ -1002,7 +1017,7 @@ async function bookIntro(b){
   try{ const t=await stream(`${BASE}
 
 Escreva uma introdução ao livro de ${b} para quem vai começar a ler. No máximo 280 palavras, títulos "## ": ## Em uma frase ## Autor e data (com os debates) ## Contexto ## Temas centrais ## Como ler (dicas práticas) ## Versículo-chave (traduzido do original, "> **v** …", com a referência).`,out,{shared:true}); out.innerHTML=md(t); await kvSet(k,{text:t}); }
-  catch(e){ out.innerHTML=`<div class="note">${e&&e.code==="no_sample"?"Entre na sua conta para ver a introdução.":esc(errMsg(e))}</div>`; }
+  catch(e){ out.innerHTML=`<div class="note">${e&&e.code==="no_sample"?"Crie sua conta grátis para ver a introdução.":esc(errMsg(e))}</div>`; }
 }
 const autoCont={};
 async function translateChapter(cont){
@@ -1011,14 +1026,14 @@ async function translateChapter(cont){
   const last=(prev.match(/\*\*(\d+)\*\*/g)||[]).map(x=>+x.replace(/\*/g,"")).pop()||0;
   const el=$("chOut"); if(!cont){ skel(el,"Traduzindo "+b+" "+c+" do original…"); autoCont[k]=0; } $("chMore").hidden=true;
   const p = cont ? `${BASE}\n\nContinue a tradução de ${b} ${c} a partir do versículo ${last+1} até o fim do capítulo, diretamente do ${origLang(b,c)}. Mesmo formato ("> **n** …", subtítulos "### " se necessário), SEM repetir o título nem versículos anteriores. Última linha: "Tradução do [língua] original." Se não couber, pare ao final de um versículo.` : chapterPrompt(b,c);
-  try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
+  try{ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; };
     const r=await s(p,{modelTier:"complex",shared:true,onText:({text})=>{ el.innerHTML=md((prev?prev+"\n":"")+text); }});
     const txt=(prev?prev.replace(/\n?Tradução do .*original\.?\s*$/i,"")+"\n":"")+r.text, complete=!r.truncated && /Tradução do .* original/i.test(r.text);
     await kvSet(k,{text:txt,complete}); S.read=S.read||{}; S.read[b+" "+c]=1; save();
     if(chCur.b===b&&chCur.c===c){ el.innerHTML=md(txt); decorate(el,`${b} ${c}`); $("chMore").hidden=complete;
       if(!complete&&(autoCont[k]||0)<4){ autoCont[k]=(autoCont[k]||0)+1; chBusy=false; return translateChapter(true); }
       if(!cont||complete){ if(seqNext) chapterReady(); else { autoRead(txt,`${b} ${c}`,"cap"); setTimeout(prefetchNext,6000); } } } }
-  catch(e){ console.warn(e); if(!cont) el.innerHTML=""; const n=$("chNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para traduzir este capítulo.":errMsg(e); n.hidden=false; }
+  catch(e){ console.warn(e); if(!cont) el.innerHTML=""; const n=$("chNote"); n.textContent=e&&e.code==="no_sample"?"Crie sua conta grátis para abrir este capítulo.":errMsg(e); n.hidden=false; }
   chBusy=false;
 }
 
@@ -1078,11 +1093,11 @@ async function openEntry(t,cat,sub){
 async function genEntry(deep){
   if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
   skel(el,deep?"Aprofundando o verbete…":"Escrevendo o verbete…"); $("dDeep").hidden=true; if(!deep) $("dRel").innerHTML="";
-  try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
+  try{ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; };
     const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,feature:deep?"entry_deep":"",onText:({text})=>{ el.innerHTML=md(text); }});
     const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
     if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
-  catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para abrir o verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
+  catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Crie sua conta grátis para abrir este verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
   dBusy=false;
 }
 
@@ -1137,7 +1152,7 @@ function openVerse(ref,text){
 async function verseAI(ref,text,kind,q){
   const out=kind==="ask"?$("vQA"):$("vOut"); if(!out) return; const k=`${kind}_${vKey(ref)}`;
   if(kind!=="ask"){ const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireRefLinks(out); return; } }
-  const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para usar esta função.</div>`; return; }
+  const s=await getSample(); if(!s){ out.innerHTML=""; openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Consultando o original…</div>';
   try{
     if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`,{shared:true,feature:"il"});
@@ -1153,7 +1168,7 @@ async function verseAI(ref,text,kind,q){
     const html=`<div class="md" style="font-size:16px">${md(r.text)}</div>`; out.innerHTML=html; if(kind==="alt") await kvSet(k,{html});
   }catch(e){ console.warn(e); out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }
 }
-async function askJSONb(p,xo={}){ const s=await getSample(); if(typeof s.json==="function"){ try{ return await s.json(p,Object.assign({modelTier:"complex"},xo)); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
+async function askJSONb(p,xo={}){ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; } if(typeof s.json==="function"){ try{ return await s.json(p,Object.assign({modelTier:"complex"},xo)); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
   const r=await s(p+"\n\nResponda APENAS com o JSON válido.",Object.assign({modelTier:"complex"},xo)); const a=r.text.indexOf("{"),b=r.text.lastIndexOf("}"); return JSON.parse(r.text.slice(a,b+1)); }
 function wireRefLinks(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeModal(); mode="short"; openRef(b.dataset.go); }); }
 /* ---------- Cartão para compartilhar ---------- */
@@ -1277,7 +1292,7 @@ async function themeSearch(){
   S.themeHist=[q,...(S.themeHist||[]).filter(x=>norm(x)!==norm(q))].slice(0,10); save();
   const out=$("dList"), k="tema_"+norm(q).replace(/[^a-z0-9]/g,"").slice(0,50);
   const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireTheme(out); return; }
-  const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para buscar.</div>`; return; }
+  const s=await getSample(); if(!s){ out.innerHTML=""; openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Procurando em toda a Bíblia…</div>';
   try{ const r=await askJSONb(`Onde a Bíblia fala sobre "${q}"? Organize as passagens mais importantes em 3 a 5 grupos temáticos, cobrindo Antigo e Novo Testamento (e deuterocanônicos se relevante), de 3 a 5 passagens por grupo. Sem puxar para nenhuma religião. JSON: {"resumo":"2 frases sobre como o tema aparece ao longo da Bíblia","grupos":[{"titulo":"","refs":[{"ref":"Livro C:V-V","resumo":"no máximo 14 palavras"}]}]}`,{shared:true});
     const html=`${r.resumo?`<p class="md" style="font-size:16px;margin:0 0 10px">${esc(r.resumo)}</p>`:""}${(r.grupos||[]).map(g=>`<div class="eyebrow" style="margin:14px 0 4px;color:var(--gold)">${esc(g.titulo)}</div>${(g.refs||[]).map(x=>`<button class="li" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)}</div><div class="sm muted">${esc(x.resumo||"")}</div></div><span class="pill">›</span></button>`).join("")}`).join("")}`;
@@ -1483,10 +1498,10 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   <div class="eyebrow" style="margin:18px 0 8px">Nosso propósito</div>
   <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. A Palavra, a reflexão diária e a acessibilidade são gratuitas para todos. As ferramentas de estudo aprofundado são Pro, e é isso que mantém o app de pé.</p>
   <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
-  <div class="sm muted">${esc((window.RB&&RB.user&&RB.user.email)||"")} · Plano ${window.RB&&RB.plan==="pro"?"Pro ✨":"Grátis"}</div>
+  <div class="sm muted">${window.RB&&RB.user?esc(RB.user.email||"")+" · Plano "+(RB.plan==="pro"?"Pro ✨":"Grátis"):"Você está usando sem conta. Suas leituras e anotações ficam só neste aparelho."}</div>
   <div class="sm muted" id="usageLine" style="margin-top:4px"></div>
-  <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ghost" id="signOut">Sair</button></div>
-  <button class="link-btn" id="delAcc" style="margin-top:10px;color:#c0392b">Excluir minha conta e meus dados</button>
+  <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"||!(window.RB&&RB.user)?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ${window.RB&&RB.user?"ghost":""}" id="signOut">${window.RB&&RB.user?"Sair":"Entrar ou criar conta grátis"}</button></div>
+  <button class="link-btn" id="delAcc" ${window.RB&&RB.user?"":"hidden"} style="margin-top:10px;color:#c0392b">Excluir minha conta e meus dados</button>
   <p class="sm" style="margin:12px 0 0"><a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a> · <a href="/termos.html" style="color:var(--gold2)">Termos de uso</a></p>
   <p class="sm muted" style="margin:14px 0 0">Comandos de voz (botão 🎤 redondo, quando disponível): “abrir Salmo 23”, “Gênesis capítulo 1”, “próximo capítulo”, “reflexão do dia”, “ler”, “parar”, “o que é arcanjo”, “lição 3”, “estudar João 3:16”. Funciona também com leitores de tela como o TalkBack.</p>
   <button class="btn full" id="setClose" style="margin-top:16px">Fechar</button>`;
@@ -1496,8 +1511,8 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   $("tgC").onclick=()=>{ a.contrast=!a.contrast; applyA11y(); save(); draw(); }; $("tgA").onclick=()=>{ a.auto=!a.auto; save(); draw(); if(a.auto) speakText("Leitura automática ligada.","Teste"); };
   $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); };
   $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
-  if(window.RB&&RB.api) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta"); }).catch(()=>{});
-  $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>RB.signOut(); $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
+  if(window.RB&&RB.api&&RB.user) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta"); }).catch(()=>{});
+  $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>{ if(RB.user) RB.signOut(); else { $("setBg").hidden=true; openLogin(); } }; $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
   $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
   draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button")?.focus(),50); };
 $("setBg").onclick=e=>{ if(e.target===$("setBg")) $("setBg").hidden=true; };
@@ -1508,7 +1523,7 @@ function stopSpeakSoft(){ if(SP.state!=="idle") stopSpeak(); }
 let autoDone=false;
 function loadDaily(){ const t=dstr(), ref=todayRef(), d=S.daily[t]; show(d&&d.ref===ref&&d.v===3?d:{id:"d-"+t,ref,daily:true,v:3,mode:"short",text:null,deep:null,qa:[]},"Seu café com a Palavra");
   if(cur.text) markVisit();
-  if(!cur.text && !autoDone){ autoDone=true; getSample().then(s=>{ if(s) generate(); }); } }
+  if(!cur.text && !autoDone){ autoDone=true; generate(); } }
 initStore("biblia_v1",normalize,()=>{ applyA11y(); if(!S.welcomed&&!localStorage.getItem("biblia_welcomed")) $("welcome").hidden=false; if(!cur||cur.daily) loadDaily(); renderList(); renderStudy(); renderPlan(); renderDailyPlan(); renderCont(); });
 
 /* ---------- App independente: login, Pro, offline ---------- */
@@ -1521,7 +1536,8 @@ $("proRestore").onclick=async()=>{ const p=await RB.restorePurchases(); toast(p=
 window.addEventListener("rb-quota",e=>openPro((e.detail&&e.detail.message)||"Você usou o limite grátis de hoje."));
 $("gGoogle").onclick=()=>RB.signInGoogle();
 $("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ const m=String(err&&err.message||err); $("gMsg").textContent=/rate limit|security purposes|seconds/i.test(m)?"Muitos pedidos de link em pouco tempo. Espere alguns minutos e tente de novo.":("Não consegui enviar o link: "+m); } };
-RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } if(!RB.user) $("gate").hidden=false; });
+RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } const lc=$("loginChip"); lc.hidden=!!RB.user; lc.onclick=()=>openLogin(); });
+$("gClose").onclick=()=>{ $("gate").hidden=true; };
 RB.ready.then(()=>{ const c=$("proChip"); if(c){ c.hidden=RB.plan==="pro"||!RB.user; c.onclick=()=>openPro(); } });
 { const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
