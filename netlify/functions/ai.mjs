@@ -57,28 +57,7 @@ async function handle(req) {
     return json(upstream.status === 429 ? 429 : 502, { error: "ia", status: upstream.status, detail: ("Anthropic " + upstream.status + ": " + detail).slice(0, 240) });
   }
 
-  // Converte o SSE da Anthropic em texto puro; no fim, envia \u0000STOP:<motivo>.
-  const enc = new TextEncoder(), dec = new TextDecoder();
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = upstream.body.getReader(); let buf = "", stop = "end_turn";
-      try {
-        for (;;) {
-          const { done, value } = await reader.read(); if (done) break;
-          buf += dec.decode(value, { stream: true });
-          let i; while ((i = buf.indexOf("\n\n")) >= 0) {
-            const chunk = buf.slice(0, i); buf = buf.slice(i + 2);
-            const line = chunk.split("\n").find((l) => l.startsWith("data:")); if (!line) continue;
-            let ev; try { ev = JSON.parse(line.slice(5).trim()); } catch { continue; }
-            if (ev.type === "content_block_delta" && ev.delta?.type === "text_delta") controller.enqueue(enc.encode(ev.delta.text));
-            if (ev.type === "message_delta" && ev.delta?.stop_reason) stop = ev.delta.stop_reason;
-            if (ev.type === "error") stop = "error";
-          }
-        }
-      } catch (e) { stop = "error"; }
-      controller.enqueue(enc.encode("\u0000STOP:" + stop)); controller.close();
-    },
-  });
-  return new Response(stream, { headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" } });
+  // Repassa o SSE da Anthropic direto ao app (quase zero CPU no servidor; o app interpreta os eventos).
+  return new Response(upstream.body, { headers: { "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-store", "x-rb-format": "sse" } });
 }
 export const config = { path: "/api/ai-fn" }; // a rota /api/ai é atendida pela Edge Function (sem o limite de 10 s)

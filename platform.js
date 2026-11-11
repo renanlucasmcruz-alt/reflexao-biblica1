@@ -30,14 +30,22 @@
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body) throw {code:"unavailable"};
-    const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="", stall=null;
+    // O servidor repassa o SSE da Anthropic; aqui juntamos o texto e o motivo de parada.
+    const rd=r.body.getReader(), dec=new TextDecoder(); let text="", stop="", buf="", stall=null, gotEnd=false;
     const arm=()=>{ clearTimeout(stall); stall=setTimeout(()=>{ rd.cancel().catch(()=>{}); },text?45000:60000); }; arm();
-    try{ for(;;){ const {done,value}=await rd.read(); if(done) break; arm(); text+=dec.decode(value,{stream:true});
-      const i=text.indexOf("\u0000"); const visible=i>=0?text.slice(0,i):text; if(opts.onText) opts.onText({text:visible}); } }
+    const feed=(chunk)=>{ const line=chunk.split("\n").find(l=>l.startsWith("data:")); if(!line) return; let ev; try{ ev=JSON.parse(line.slice(5).trim()); }catch(e){ return; }
+      if(ev.type==="content_block_delta"&&ev.delta&&ev.delta.type==="text_delta"){ text+=ev.delta.text; if(opts.onText) opts.onText({text}); }
+      else if(ev.type==="message_delta"&&ev.delta&&ev.delta.stop_reason) stop=ev.delta.stop_reason;
+      else if(ev.type==="message_stop") gotEnd=true;
+      else if(ev.type==="error") stop="error"; };
+    try{ for(;;){ const {done,value}=await rd.read(); if(done) break; arm(); buf+=dec.decode(value,{stream:true}).replace(/\r/g,"");
+      let i; while((i=buf.indexOf("\n\n"))>=0){ feed(buf.slice(0,i)); buf=buf.slice(i+2); } }
+      if(buf.trim()) feed(buf); }
     catch(e){} finally{ clearTimeout(stall); }
-    const i=text.indexOf("\u0000"); if(i>=0){ stop=text.slice(i+1).replace("STOP:",""); text=text.slice(0,i); } else stop=text?"cut":"error";
-    if(stop==="error") throw {code:"unavailable",detail:"a conexão caiu antes da resposta"};
-    return {text,truncated:stop==="max_tokens"||stop==="cut"};
+    if(stop==="error"&&!text) throw {code:"unavailable",detail:"a IA retornou um erro"};
+    if(!gotEnd&&!stop) stop=text?"cut":"error";
+    if(stop==="error"&&!text) throw {code:"unavailable",detail:"a conexão caiu antes da resposta"};
+    return {text,truncated:stop==="max_tokens"||stop==="cut"||stop==="error"};
   }
   sample.limits=async()=>({images:true});
 

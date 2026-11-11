@@ -1,4 +1,7 @@
-const env = (k, d = "") => (globalThis.Netlify?.env?.get?.(k)) ?? globalThis.process?.env?.[k] ?? d;
+/* Variáveis de ambiente: Cloudflare (contexto da requisição), Netlify Edge ou Node. */
+let RUNTIME_ENV = null;
+export const setEnv = (e) => { RUNTIME_ENV = e || null; };
+export const env = (k, d = "") => (RUNTIME_ENV && RUNTIME_ENV[k] != null ? String(RUNTIME_ENV[k]) : undefined) ?? (globalThis.Netlify?.env?.get?.(k)) ?? globalThis.process?.env?.[k] ?? d;
 export const CFG = {
   SUPABASE_URL: () => env("SUPABASE_URL"),
   SUPABASE_ANON_KEY: () => env("SUPABASE_ANON_KEY"),
