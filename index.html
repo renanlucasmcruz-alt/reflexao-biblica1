@@ -67,7 +67,7 @@
   .btn.ghost{background:var(--surface2);color:var(--text);border:1px solid var(--line);font-weight:700}
   .btn:disabled{opacity:.55}
   .btn.full{width:100%;padding:15px}
-  input,textarea{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px 14px;font:inherit;font-size:16px;outline:none}
+  input,textarea,select{width:100%;background:var(--surface2);color:var(--text);border:1px solid var(--line);border-radius:14px;padding:13px 14px;font:inherit;font-size:16px;outline:none}
   input:focus,textarea:focus{border-color:var(--gold)}
   .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{padding:8px 13px;border-radius:999px;background:var(--surface2);border:1px solid var(--line);font-size:13.5px;font-weight:600;font-family:var(--serif)}
@@ -138,6 +138,10 @@
   .streakbox{display:flex;align-items:center;gap:12px;padding:14px 18px}
   .streakbox .n{font-family:var(--display);font-size:22px;color:var(--gold2);font-weight:700}
   #topTitle:focus{outline:none}
+  .md .tnote{font-size:12.5px;color:var(--muted);font-style:italic;margin-top:4px}
+  .remcard{display:flex;gap:12px;align-items:center;margin-top:18px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--surface2)}
+  .ic{width:1.15em;height:1.15em;vertical-align:-.22em;flex:none}
+  .feat>span:first-child .ic{width:24px;height:24px;color:var(--gold2)}
   .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px;padding-top:12px;border-top:1px solid var(--line)}
   .act{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 2px;border-radius:14px;color:var(--text);font-size:12px;font-weight:600}
   .act svg{width:22px;height:22px;color:var(--gold2)}
@@ -168,7 +172,7 @@
   @media (prefers-reduced-motion:reduce){.steam path{animation:none;opacity:.4}}
   blockquote.v{cursor:pointer;border-radius:8px;margin:0 -6px!important;padding:3px 6px!important;transition:background .2s}
   blockquote.v:hover{background:var(--glow)}
-  blockquote.v.hasnote::after{content:" ✏️";font-size:13px}
+  blockquote.v.hasnote::after{content:" ✎";font-size:14px;color:var(--gold)}
   blockquote.v.fav b::after{content:" ★";color:var(--gold)}
   blockquote.v.flash{animation:fl 1.6s ease}
   @keyframes fl{0%,60%{background:var(--line)}}
@@ -209,7 +213,7 @@
 </head>
 <body>
 <div id="app">
-  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" id="loginChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px">Entrar</button><button class="btn ghost" id="proChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px" aria-label="Conhecer o Reflexão Bíblica Pro">✨ Pro</button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
+  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn" id="loginChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px">Entrar</button><button class="iconbtn" id="meBtn" hidden aria-label="Sua conta"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg></button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
   <div class="scroll" id="scroll">
     <section class="view on" id="v-hoje">
       <div class="card hero cafe">
@@ -224,7 +228,8 @@
       </div>
       <div class="card" id="outCard" hidden>
         <div class="md" id="out"></div>
-        <div class="row" id="fbRow" hidden style="margin-top:18px;justify-content:space-between;flex-wrap:nowrap"><span class="sm muted">Essa reflexão te ajudou?</span><span class="row" style="gap:6px"><button class="chip" id="fbUp" aria-label="Sim, ajudou">👍</button><button class="chip" id="fbDn" aria-label="Não ajudou">👎</button></span></div>
+        <div class="remcard" id="remCard" hidden><div style="flex:1"><b>Quer lembrar amanhã?</b><div class="sm muted">Um aviso por dia, às 8h. Dá para mudar o horário nos ajustes.</div></div><div class="row" style="gap:6px;flex-wrap:nowrap"><button class="btn" id="remYes" style="padding:9px 14px">Ativar</button><button class="link-btn" id="remNo" style="color:var(--muted)">Agora não</button></div></div>
+        <div class="row" id="fbRow" hidden style="margin-top:18px;justify-content:space-between;flex-wrap:nowrap"><span class="sm muted">Essa reflexão te ajudou?</span><span class="row" style="gap:6px"><button class="chip" id="fbUp" aria-label="Sim, ajudou"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7"/></svg></button><button class="chip" id="fbDn" aria-label="Não ajudou"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 13V4h3v9zM17 13l-4 8a2 2 0 0 1-2-2v-4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17"/></svg></button></span></div>
                 <button class="btn full" id="deepBtn" hidden style="margin-top:20px;flex-direction:column;gap:0">Aprofundar o estudo</button>
         <div class="md" id="deep" style="margin-top:22px"></div>
         <div id="qaWrap" hidden>
@@ -247,7 +252,7 @@
           <div class="bar"><i id="stBar" style="width:0"></i></div>
           <button class="btn full" id="stCont" style="margin-top:14px">Começar</button>
         </div>
-        <button class="card" id="tlOpen" style="text-align:left;width:100%;display:flex;gap:12px;align-items:center"><span style="font-size:26px" aria-hidden="true">🕰️</span><span style="flex:1"><span class="eyebrow" style="display:block">Linha do tempo bíblica</span><span class="sm muted">De Abraão à formação do cânon, com datas e debates</span></span><span class="pill">›</span></button>
+        <button class="card" id="tlOpen" style="text-align:left;width:100%;display:flex;gap:12px;align-items:center"><span style="color:var(--gold2)"><svg class="ic" style="width:28px;height:28px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span style="flex:1"><span class="eyebrow" style="display:block">Linha do tempo bíblica</span><span class="sm muted">De Abraão à formação do cânon, com datas e debates</span></span><span class="pill">›</span></button>
         <div class="card" id="tracks"></div>
       </div>
       <div id="tlView" hidden><button class="btn ghost" id="tlBack" style="margin-bottom:12px">← Estudos</button><div class="card"><p class="sm muted" style="margin:0 0 8px">Datas aproximadas; onde há debate entre estudiosos, isso está indicado. Toque num período para abrir o verbete.</p><div id="tlList"></div></div></div>
@@ -260,14 +265,14 @@
           <div class="chips" id="lRefs"></div>
           <div class="note" id="lNote" hidden style="margin-top:12px"></div>
         </div>
-        <div class="card"><button class="btn ghost full" data-say="lic" style="margin-bottom:14px">🔊 Ouvir lição</button><div class="md" id="lOut"></div>
+        <div class="card"><button class="btn ghost full" data-say="lic" style="margin-bottom:14px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg> Ouvir lição</button><div class="md" id="lOut"></div>
           <div class="mentor" id="mentor" hidden>
             <div class="eyebrow" style="color:var(--gold)">Sua vez · mentor</div>
             <p class="sm muted" style="margin:6px 0 10px">Responda às perguntas acima com suas palavras. O mentor comenta, corrige o que for preciso e aprofunda.</p>
             <textarea id="ans" data-mic="fill" style="min-height:130px" placeholder="1. …&#10;2. …&#10;3. …"></textarea>
             <button class="btn full" id="ansBtn" style="margin-top:10px">Enviar ao mentor</button>
             <div class="md" id="fb" style="margin-top:14px"></div>
-            <button class="btn ghost full" data-say="fb" style="margin-top:10px">🔊 Ouvir comentário</button>
+            <button class="btn ghost full" data-say="fb" style="margin-top:10px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg> Ouvir comentário</button>
           </div>
           <div id="lExtra" hidden>
             <div id="quizBox" style="margin-top:18px"></div>
@@ -298,12 +303,12 @@
         </div>
       </div>
       <div id="chView" hidden>
-        <div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="row"><button class="btn ghost" id="chBack">← Livros</button><button class="btn ghost" id="chIntro" aria-label="Sobre este livro">ℹ️</button></div><div class="row"><button class="btn ghost" id="chPrev" aria-label="Capítulo anterior">‹</button><button class="btn ghost" id="chNext" aria-label="Próximo capítulo">›</button></div></div>
+        <div class="row" style="justify-content:space-between;margin-bottom:12px"><div class="row"><button class="btn ghost" id="chBack">← Livros</button><button class="btn ghost" id="chIntro" aria-label="Sobre este livro"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg></button></div><div class="row"><button class="btn ghost" id="chPrev" aria-label="Capítulo anterior">‹</button><button class="btn ghost" id="chNext" aria-label="Próximo capítulo">›</button></div></div>
         <div class="card">
           <div class="md" id="chOut"></div>
           <div class="note" id="chNote" hidden style="margin-top:12px"></div>
           <button class="btn ghost full" id="chMore" hidden style="margin-top:14px">Continuar a tradução</button>
-          <button class="btn ghost full" data-say="cap" style="margin-top:14px">🔊 Ouvir capítulo</button>
+          <button class="btn ghost full" data-say="cap" style="margin-top:14px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg> Ouvir capítulo</button>
           <button class="btn full" id="chStudy" style="margin-top:18px">Estudar este capítulo</button><button class="report" id="chRegen">Encontrou algo errado? Avisar</button>
         </div>
       </div>
@@ -322,7 +327,7 @@
       <div id="dView" hidden>
         <button class="btn ghost" id="dBack" style="margin-bottom:12px">← Dicionário</button>
         <div class="card hero"><div class="eyebrow" id="dCat"></div><div class="ref" id="dTitle" style="font-size:30px"></div><div class="sm muted" id="dSub"></div><div class="note" id="dNote" hidden style="margin-top:12px"></div></div>
-        <div class="card"><button class="btn ghost full" data-say="dic" style="margin-bottom:14px">🔊 Ouvir verbete</button><div class="md" id="dOut"></div>
+        <div class="card"><button class="btn ghost full" data-say="dic" style="margin-bottom:14px"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg> Ouvir verbete</button><div class="md" id="dOut"></div>
           <button class="btn full" id="dDeep" hidden style="margin-top:20px">Aprofundar este verbete</button>
           <div id="dRel"></div>
           <div class="md" id="dDeepOut" style="margin-top:22px"></div>
@@ -360,11 +365,11 @@
 <div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
   <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:26px;margin:0">Reflexão Bíblica <span style="color:var(--gold)">Pro</span></h2><button class="iconbtn" id="proClose" aria-label="Fechar">✕</button></div>
   <p class="muted" id="proWhy" style="margin:8px 0 14px">Mais fôlego para quem estuda a fundo.</p>
-  <div class="feat"><span>📚</span><span><b>As 10 trilhas de estudo</b>, com mentor, teste e certificado (a primeira, “Fundamentos”, é grátis)</span></div>
-  <div class="feat" style="margin-top:10px"><span>🔍</span><span><b>Estudo aprofundado</b> de cada reflexão, sempre que quiser (no grátis: 1 por semana)</span></div>
-  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Texto original palavra por palavra</b> em hebraico, aramaico e grego, referências cruzadas e outras traduções</span></div>
-  <div class="feat" style="margin-top:10px"><span>📖</span><span><b>Verbetes aprofundados</b> no dicionário</span></div>
-  <div class="feat" style="margin-top:10px"><span>💬</span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 3)</span></div>
+  <div class="feat"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></span><span><b>As 10 trilhas de estudo</b>, com mentor, teste e certificado (a primeira, “Fundamentos”, é grátis)</span></div>
+  <div class="feat" style="margin-top:10px"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></span><span><b>Estudo aprofundado</b> de cada reflexão, sempre que quiser (no grátis: 1 por semana)</span></div>
+  <div class="feat" style="margin-top:10px"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7V5h16v2"/><path d="M12 5v14"/><path d="M9 19h6"/></svg></span><span><b>Texto original palavra por palavra</b> em hebraico, aramaico e grego, referências cruzadas e outras traduções</span></div>
+  <div class="feat" style="margin-top:10px"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11"/></svg></span><span><b>Verbetes aprofundados</b> no dicionário</span></div>
+  <div class="feat" style="margin-top:10px"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg></span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 3)</span></div>
   <div class="purpose" style="margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--card2,rgba(176,108,40,.08));border:1px solid var(--line,rgba(176,108,40,.18))">
     <div style="font-weight:800;margin-bottom:4px">Por que existe o Pro?</div>
     <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Palavra, a reflexão do dia, o áudio e a acessibilidade <b>são gratuitos para todos</b>, e continuarão sendo. As ferramentas de estudo aprofundado são Pro: é isso que paga a inteligência artificial e os servidores, e mantém o app evoluindo. Quem assina ajuda a manter o essencial aberto para quem não pode.</div>
@@ -378,20 +383,22 @@
   <h2>Um café, um texto,<br>uma reflexão.</h2>
   <p class="muted" style="margin:0;max-width:360px">A Bíblia traduzida direto do hebraico, do aramaico e do grego, com leituras curtas para o dia a dia e estudo profundo quando você quiser.</p>
   <div class="stack" style="display:flex;flex-direction:column;gap:12px;margin:6px 0">
-    <div class="feat"><span>☕</span><span><b>Reflexão do dia</b><br><span class="sm muted">2 minutos para pensar o dia</span></span></div>
-    <div class="feat"><span>📖</span><span><b>Bíblia completa e planos de leitura</b><br><span class="sm muted">Destaque, anote e veja o original</span></span></div>
-    <div class="feat"><span>🎓</span><span><b>Estudo dirigido com mentor</b><br><span class="sm muted">A Bíblia inteira, por temas</span></span></div>
+    <div class="feat"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z"/><path d="M17 11h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3c-.8 1 .8 2 0 3M12 3c-.8 1 .8 2 0 3"/></svg></span><span><b>Reflexão do dia</b><br><span class="sm muted">2 minutos para pensar o dia</span></span></div>
+    <div class="feat"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 5c3-1 6-1 10 1 4-2 7-2 10-1v14c-3-1-6-1-10 1-4-2-7-2-10-1z"/><path d="M12 6v14"/></svg></span><span><b>Bíblia completa e planos de leitura</b><br><span class="sm muted">Destaque, anote e veja o original</span></span></div>
+    <div class="feat"><span><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v6"/></svg></span><span><b>Estudo dirigido com mentor</b><br><span class="sm muted">A Bíblia inteira, por temas</span></span></div>
   </div>
   <input id="wName" placeholder="Como podemos te chamar? (opcional)" style="max-width:360px" autocomplete="given-name">
   <button class="btn full" id="welcomeGo" style="max-width:360px">Começar meu café com a Palavra</button>
 </div>
 <div id="sr" class="sr-only" aria-live="polite"></div>
-<div id="player" hidden role="region" aria-label="Leitura em voz alta"><span aria-hidden="true">🔊</span><span id="plLabel" class="sm" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn ghost" id="plPause" style="padding:8px 12px">Pausar</button><button class="btn" id="plStop" style="padding:8px 12px">Parar</button></div>
+<div id="player" hidden role="region" aria-label="Leitura em voz alta"><span style="color:var(--gold2)"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span><span id="plLabel" class="sm" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span><button class="btn ghost" id="plPause" style="padding:8px 12px">Pausar</button><button class="btn" id="plStop" style="padding:8px 12px">Parar</button></div>
 <button id="vcBtn" hidden aria-label="Comando de voz: fale o que deseja, por exemplo, abrir Salmo 23"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
 <input id="vcIn" type="hidden">
 <div id="listenUI" hidden role="dialog" aria-live="assertive" aria-label="Ouvindo"><div class="lsCard"><div class="lsDot" aria-hidden="true"></div><div class="eyebrow" style="color:var(--gold)">Ouvindo… pode falar</div><div id="lsText" class="lsText">…</div><div class="row" style="justify-content:center;margin-top:14px"><button class="btn ghost" id="lsCancel">Cancelar</button><button class="btn" id="lsDone">Pronto</button></div></div></div>
 <div id="setBg" hidden><div id="setSheet" role="dialog" aria-modal="true" aria-label="Acessibilidade"></div></div>
 <script>
+const ICP={"cup": "<path d=\"M4 9h13v5a6 6 0 0 1-6 6h-1a6 6 0 0 1-6-6z\"/><path d=\"M17 11h1.5a2.5 2.5 0 0 1 0 5H17\"/><path d=\"M8 3c-.8 1 .8 2 0 3M12 3c-.8 1 .8 2 0 3\"/>", "book": "<path d=\"M2 5c3-1 6-1 10 1 4-2 7-2 10-1v14c-3-1-6-1-10 1-4-2-7-2-10-1z\"/><path d=\"M12 6v14\"/>", "cap": "<path d=\"M2 9l10-5 10 5-10 5z\"/><path d=\"M6 11v5c3 2 9 2 12 0v-5\"/><path d=\"M22 9v6\"/>", "layers": "<path d=\"M12 3l9 5-9 5-9-5z\"/><path d=\"M3 13l9 5 9-5\"/>", "search": "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/>", "type": "<path d=\"M4 7V5h16v2\"/><path d=\"M12 5v14\"/><path d=\"M9 19h6\"/>", "dict": "<path d=\"M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z\"/><path d=\"M5 17a3 3 0 0 1 3-3h11\"/>", "chat": "<path d=\"M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z\"/>", "clock": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 7v5l3 2\"/>", "mail": "<rect x=\"3\" y=\"5\" width=\"18\" height=\"14\" rx=\"2\"/><path d=\"M3 7l9 6 9-6\"/>", "vol": "<path d=\"M11 5 6 9H3v6h3l5 4z\"/><path d=\"M15.5 8.5a5 5 0 0 1 0 7\"/>", "pause": "<path d=\"M8 5v14M16 5v14\"/>", "play": "<path d=\"M7 5l12 7-12 7z\"/>", "check": "<path d=\"M9 11l3 3 8-8\"/><path d=\"M20 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11\"/>", "info": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 11v5M12 8h.01\"/>", "flame": "<path d=\"M12 22c4 0 7-3 7-7 0-4-3-6-4-9-1 3-3 4-4 4 0-2-1-4-3-6-1 4-3 6-3 11 0 4 3 7 7 7z\"/>", "star": "<path d=\"M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z\"/>", "lock": "<rect x=\"5\" y=\"11\" width=\"14\" height=\"9\" rx=\"2\"/><path d=\"M8 11V8a4 4 0 0 1 8 0v3\"/>", "pen": "<path d=\"M4 20h4L19 9l-4-4L4 16z\"/><path d=\"M14 6l4 4\"/>", "copy": "<rect x=\"9\" y=\"9\" width=\"11\" height=\"11\" rx=\"2\"/><path d=\"M5 15V6a2 2 0 0 1 2-2h9\"/>", "image": "<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"2\"/><path d=\"M21 16l-5-5-9 9\"/>", "link": "<path d=\"M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1\"/><path d=\"M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1\"/>", "swap": "<path d=\"M4 8h13l-3-3M20 16H7l3 3\"/>", "help": "<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.7M12 17h.01\"/>", "up": "<path d=\"M7 11v9H4v-9zM7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2.3l-1.2 7A2 2 0 0 1 17.8 20H7\"/>", "down": "<path d=\"M17 13V4h3v9zM17 13l-4 8a2 2 0 0 1-2-2v-4H5a2 2 0 0 1-2-2.3l1.2-7A2 2 0 0 1 6.2 4H17\"/>"};
+function ic(n,c){ return `<svg class="${c||"ic"}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICP[n]||""}</svg>`; }
 /* Camada de plataforma: substitui as capacidades do Claude por serviços próprios
    (Supabase para login e dados, função /api/ai para a IA, voz e microfone do navegador). */
 (function(){
@@ -401,7 +408,7 @@
     const r=await fetch("/api/config"); if(!r.ok) throw new Error("config"); const c=await r.json();
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
     CFG.sb=createClient(c.supabaseUrl,c.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    CFG.priceLabel=c.priceLabel||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
+    CFG.priceLabel=c.priceLabel||""; CFG.vapidPublic=c.vapidPublic||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
     const { data } = await CFG.sb.auth.getSession(); CFG.session=data.session; CFG.user=data.session?.user||null;
     CFG.sb.auth.onAuthStateChange((_e,s)=>{ const was=!!CFG.user; CFG.session=s; CFG.user=s?.user||null; if(!was&&CFG.user) location.reload(); });
     if(CFG.user) await refreshPlan();
@@ -417,11 +424,13 @@
   /* ---- IA (substitui "sample") ---- */
   async function blobToB64(b){ const buf=await b.arrayBuffer(); let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
   async function sample(input, opts={}){
-    await CFG.ready; if(!CFG.user) throw {code:"no_sample"};
+    await CFG.ready; if(!CFG.user&&!opts.anonDaily) throw {code:"no_sample"};
     const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
     const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
-    const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
+    const r=opts.anonDaily ? await fetch("/api/daily",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({key:opts.anonDaily,prompt:typeof input==="string"?input:""}),signal:opts.signal})
+      : await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
       body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared,feature:opts.feature||""}),signal:opts.signal});
+    if(opts.anonDaily&&r.ok&&!(r.headers.get("content-type")||"").includes("event-stream")){ const j=await r.json(); if(opts.onText) opts.onText({text:j.text}); return {text:j.text,truncated:false}; }
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body){ const j=await r.json().catch(()=>({})); throw {code:"unavailable",detail:j.detail||("HTTP "+r.status+(j.error?" "+j.error:""))}; }
@@ -443,6 +452,7 @@
     return {text,truncated:stop==="max_tokens"||stop==="cut"||stop==="error"};
   }
   sample.limits=async()=>({images:true});
+  CFG.sampleDaily=(prompt,key,opts={})=>sample(prompt,Object.assign({},opts,{anonDaily:key}));
 
   /* ---- Banco (substitui "db") ---- */
   function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
@@ -540,12 +550,18 @@ function md(src){
     else if((m=l.match(/^#{3,}\s+(.*)/))){close();h+=`<h4>${inl(m[1])}</h4>`;}
     else if((m=l.match(/^[-*•]\s+(.*)/))){if(list!=="ul"){close();h+="<ul>";list="ul";}h+=`<li>${inl(m[1])}</li>`;}
     else if((m=l.match(/^\d+[.)]\s+(.*)/))){if(list!=="ol"){close();h+="<ol>";list="ol";}h+=`<li>${inl(m[1])}</li>`;}
+    else if(/^\*?Tradu[çc][ãa]o (feita )?d[oa]s? .{0,60}original[^.]{0,40}\.?\*?$/i.test(l)&&l.length<140){close();h+=`<p class="tnote">${inl(l.replace(/\.?\*?$/,"").replace(/^\*/,""))}, assistida por IA.</p>`;}
     else{close();h+=`<p>${inl(l)}</p>`;}}
   close();return h;}
 
 const SHK=k=>/^(ch_|intro_|ent_|tema_|rf_|ls_|qz_)/.test(k);
-async function kvGet(key){ if(SHK(key)&&store.mode!=="db"){ try{ const db=window.claude&&await window.claude.use("db"); if(db){ const s=await db.doc(key).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); } }
-  try{ if(store.mode==="db"&&store.db&&store.uid){ const s=await store.db.doc(`data/users/${store.uid}/${key}`).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); }
+function lsPutShared(key,v){ try{ const K="rb_shk"; let ix=[]; try{ ix=JSON.parse(localStorage.getItem(K)||"[]"); }catch(e){} ix=ix.filter(k=>k!==key); ix.push(key);
+  while(ix.length>400){ localStorage.removeItem(store.key+"_kv_"+ix.shift()); }
+  for(let t=0;t<5;t++){ try{ localStorage.setItem(store.key+"_kv_"+key,JSON.stringify(v)); break; }catch(e){ if(!ix.length) break; localStorage.removeItem(store.key+"_kv_"+ix.shift()); } }
+  localStorage.setItem(K,JSON.stringify(ix)); }catch(e){} }
+async function kvGet(key){
+  if(SHK(key)){ try{ const db=store.db||(window.claude&&await window.claude.use("db")); if(db){ const s=await db.doc(key).get(); if(s.exists){ const v=clone(s.data()); lsPutShared(key,v); return v; } } }catch(e){ console.warn(e); } }
+  else { try{ if(store.mode==="db"&&store.db&&store.uid){ const s=await store.db.doc(`data/users/${store.uid}/${key}`).get(); if(s.exists) return clone(s.data()); } }catch(e){ console.warn(e); } }
   try{ const t=localStorage.getItem(store.key+"_kv_"+key); return t?JSON.parse(t):null; }catch(e){ return null; } }
 async function kvSet(key,obj){ try{ localStorage.setItem(store.key+"_kv_"+key,JSON.stringify(obj)); }catch(e){}
   try{ if(store.mode==="db"&&store.db&&store.uid) await store.db.doc(`data/users/${store.uid}/${key}`).set(obj); }catch(e){ console.warn(e); } }
@@ -657,7 +673,8 @@ function show(r, kind){
   { const sv=S.saved.some(x=>x.id===r.id); $("saveBtn").classList.toggle("on",sv); $("saveBtn").querySelector("span").textContent=sv?"Salvo":"Salvar"; $("saveBtn").disabled=sv; }
   $("gen").textContent = r.mode==="deep"?"Estudar":"Ler reflexão"; $("gen").classList.remove("ghost");
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
-  $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").innerHTML = "Aprofundar o estudo"+(isPro()?"":freeDeepLeft()>0?'<small style="display:block;font-weight:600;opacity:.85;font-size:12px;margin-top:2px">1 estudo grátis por semana</small>':" 🔒");
+  $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").innerHTML = "Aprofundar o estudo"+(isPro()?"":freeDeepLeft()>0?'<small style="display:block;font-weight:600;opacity:.85;font-size:12px;margin-top:2px">1 estudo grátis por semana</small>':" "+ic("lock"));
+  $("remCard").hidden = !(r.daily&&r.text&&remSup()&&!S.remindAsked&&!(S.remind||{}).on&&streak()>=1&&Object.keys(S.visits||{}).length>=2);
   $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
   renderStreak();
   if(has) renderQA();
@@ -668,9 +685,13 @@ function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||
 /* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
    Se houver problema no texto, o leitor usa "Avisar problema" (ver reportShared). */
 function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
-async function sharedReflection(ref,kind,prompt,target){ return sharedText(rfKey(ref,kind),prompt,target,kind==="d"?{feature:"deep"}:{}); }
+async function sharedReflection(ref,kind,prompt,target,ex={}){ return sharedText(rfKey(ref,kind),prompt,target,Object.assign(kind==="d"?{feature:"deep"}:{},ex)); }
 async function sharedText(key,prompt,target,xo={}){
   try{ const c=await kvGet(key); if(c&&c.text){ target.innerHTML=md(c.text); return c.text; } }catch(e){}
+  if(xo.daily && window.RB && !RB.user && RB.sampleDaily){ skel(target);
+    try{ const r=await RB.sampleDaily(prompt,key,{onText:({text})=>{ target.innerHTML=md(text); }}); if(!r.text) throw 0; try{ localStorage.setItem(store.key+"_kv_"+key,JSON.stringify({text:r.text})); }catch(e){} return r.text; }
+    catch(e){ target.innerHTML=""; throw {code:"no_sample"}; } }
+  delete xo.daily;
   const t=await stream(prompt,target,Object.assign({shared:true},xo));
   if(!/REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t) && t.indexOf("veio incompleto")<0){ try{ await kvSet(key,{text:t}); }catch(e){} }
   return t;
@@ -683,7 +704,7 @@ function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)
 function freeDeepLeft(){ const w=S.deepWeek||{}; return w.k===weekKey()?Math.max(0,1-(w.n||0)):1; }
 function useFreeDeep(){ const k=weekKey(); const w=(S.deepWeek&&S.deepWeek.k===k)?S.deepWeek:{k,n:0}; w.n=(w.n||0)+1; S.deepWeek=w; save(); }
 function needPro(why){ if(isPro()) return false; try{ closeModal(); }catch(e){} openPro(why); return true; }
-const LOCK=()=>isPro()?"":" 🔒";
+const LOCK=()=>isPro()?"":" "+ic("lock");
 /* ---------- Avisar problema (substitui "gerar de novo" no conteúdo que é igual para todos) ---------- */
 const repArm={};
 async function reportShared(btn,keys,onReplaced){
@@ -706,7 +727,7 @@ async function generate(){
   const deepMode=cur.mode==="deep";
   const target=deepMode?$("deep"):$("out"); if(deepMode) $("out").innerHTML=""; skel(target);
   try{ const t=isRegen ? await stream(deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref),target)
-      : await sharedReflection(cur.ref, deepMode?"d":"s", deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref,true), target);
+      : await sharedReflection(cur.ref, deepMode?"d":"s", deepMode?deepPrompt(cur.ref):shortPrompt(cur.ref,true), target, {daily:!!cur.daily&&!deepMode});
     if(/^\s*REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t)){ busy=false; b.disabled=false; b.textContent="Tentar de novo"; return; }
     if(deepMode) cur.deep=t; else { cur.text=t; cur.deep=null; } cur.qa=[]; cur.date=dstr(); persist(); markVisit(); autoRead(t,cur.ref,"hoje"); }
   catch(e){ console.warn(e); $("outCard").hidden=true; if(e&&e.code==="no_sample") needClaude("note"); else { $("note").textContent=errMsg(e); $("note").hidden=false; } }
@@ -743,7 +764,7 @@ function renderStudy(){
   $("stCont").onclick=()=>openLesson((next||LESSONS[0]).id);
   const openT = next?next.ti:0;
   $("tracks").innerHTML=TRACKS.map((t,ti)=>{ const ls=LESSONS.filter(l=>l.ti===ti), d=ls.filter(l=>S.study.done[l.id]).length;
-    return `<div class="track ${ti===openT?"open":""}"><button data-tr="${ti}"><div><div class="sm muted">Trilha ${ti+1}</div><div class="tt">${esc(t[0])}</div></div><span class="pill">${ti>0&&!isPro()?"🔒 Pro":`${d}/${ls.length}`}</span></button>
+    return `<div class="track ${ti===openT?"open":""}"><button data-tr="${ti}"><div><div class="sm muted">Trilha ${ti+1}</div><div class="tt">${esc(t[0])}</div></div><span class="pill">${ti>0&&!isPro()?ic("lock")+" Pro":`${d}/${ls.length}`}</span></button>
       <div class="lessons">${ls.map(l=>{ const n=LESSONS.indexOf(l)+1; return `<button class="lesson ${S.study.done[l.id]?"done":""}" data-l="${l.id}"><span class="n">${S.study.done[l.id]?"✓":n}</span><span><div class="lt">${esc(l.title)}</div><div class="lr">${esc(l.refs.join(" · "))}</div></span></button>`; }).join("")}</div></div>`; }).join("");
   $("tracks").querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>b.parentElement.classList.toggle("open"));
   $("tracks").querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>openLesson(b.dataset.l));
@@ -764,7 +785,7 @@ function renderLesson(){ $("lOut").innerHTML=md(curLData.text); decorate($("lOut
 function sectionize(el){ const kids=[...el.children]; let cur2=null, out=[]; kids.forEach(n=>{ if(n.tagName==="H3"){ const d=document.createElement("details"); const t=n.textContent.toLowerCase(); d.open=/objetivo|textos|perguntas|síntese|sintese/.test(t); const s=document.createElement("summary"); s.innerHTML=n.innerHTML; d.appendChild(s); cur2=d; out.push(d); } else if(cur2) cur2.appendChild(n); else out.push(n); }); el.innerHTML=""; out.forEach(n=>el.appendChild(n)); }
 let noteT=null;
 function lessonNote(){ clearTimeout(noteT); noteT=setTimeout(async()=>{ if(!curLData||!curL) return; curLData.note=$("lNoteIn").value; await kvSet("lesson_"+curL.id,curLData); },700); }
-function renderQuiz(){ const Q=curLData&&curLData.quiz, box=$("quizBox"); if(!Q){ box.innerHTML=`<button class="btn ghost full" id="quizGo">🧠 Teste rápido: 3 perguntas</button>`; $("quizGo").onclick=makeQuiz; return; }
+function renderQuiz(){ const Q=curLData&&curLData.quiz, box=$("quizBox"); if(!Q){ box.innerHTML=`<button class="btn ghost full" id="quizGo">${ic("check")} Teste rápido: 3 perguntas</button>`; $("quizGo").onclick=makeQuiz; return; }
   box.innerHTML=`<div class="eyebrow" style="margin-bottom:8px">Teste rápido</div>`+Q.q.map((q,i)=>`<div class="qz"><div class="t" style="font-size:16px;margin-bottom:6px">${i+1}. ${esc(q.p)}</div>${q.o.map((o,j)=>{ const a=Q.ans&&Q.ans[i]; const cls=a==null?"":j===q.c?"ok":a===j?"bad":""; return `<button class="qopt ${cls}" data-q="${i}" data-o="${j}" ${a!=null?"disabled":""}>${esc(o)}</button>`; }).join("")}${Q.ans&&Q.ans[i]!=null?`<div class="sm muted" style="margin-top:6px">${esc(q.e||"")}</div>`:""}</div>`).join("")+(Q.ans&&Object.keys(Q.ans).length===Q.q.length?`<div class="note" style="color:var(--text);margin-top:10px">Você acertou ${Q.q.filter((q,i)=>Q.ans[i]===q.c).length} de ${Q.q.length}.</div>`:"");
   box.querySelectorAll("[data-q]").forEach(b=>b.onclick=async()=>{ Q.ans=Q.ans||{}; Q.ans[+b.dataset.q]=+b.dataset.o; renderQuiz(); await kvSet("lesson_"+curL.id,curLData); }); }
 async function makeQuiz(){ const s=await getSample(); if(!s){ openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; } $("quizBox").innerHTML='<div class="row muted sm"><span class="spin"></span>Preparando o teste…</div>';
@@ -789,7 +810,7 @@ async function certificate(ti){ const c=document.createElement("canvas"); c.widt
   x.font="32px Manrope,Arial"; x.fillStyle="#7b6553"; x.fillText(`${LESSONS.filter(l=>l.ti===ti).length} lições · ${new Date().toLocaleDateString("pt-BR",{day:"2-digit",month:"long",year:"numeric"})}`,700,730);
   x.font="30px Manrope,Arial"; x.fillText("☕ Reflexão Bíblica",700,860);
   const blob=await new Promise(r=>c.toBlob(r,"image/png")), url=URL.createObjectURL(blob);
-  openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:22px;margin:0">🎉 Trilha concluída!</h2><button class="iconbtn" id="ctClose" aria-label="Fechar">✕</button></div><img src="${url}" alt="Certificado da trilha ${esc(TRACKS[ti][0])}" style="width:100%;border-radius:12px;margin:12px 0"><button class="btn full" id="ctSave">Baixar certificado</button><p class="sm muted" style="margin:8px 0 0">Ou toque e segure na imagem para salvar.</p>`);
+  openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:22px;margin:0">Trilha concluída!</h2><button class="iconbtn" id="ctClose" aria-label="Fechar">✕</button></div><img src="${url}" alt="Certificado da trilha ${esc(TRACKS[ti][0])}" style="width:100%;border-radius:12px;margin:12px 0"><button class="btn full" id="ctSave">Baixar certificado</button><p class="sm muted" style="margin:8px 0 0">Ou toque e segure na imagem para salvar.</p>`);
   $("ctClose").onclick=closeModal; $("ctSave").onclick=async()=>{ try{ const d=await window.claude.use("downloads"); if(!d) throw 0; await d.save({filename:"certificado-"+(ti+1)+".png",data:blob}); }catch(e){ toast("Toque e segure na imagem para salvar"); } }; }
 let lRegenArm=0;
 async function genLesson(force){
@@ -987,7 +1008,7 @@ function renderBooks(){
   $("books").innerHTML=BOOKS[testament].map(([b])=>`<button class="chip" data-b="${esc(b)}" style="${bookSel===b?"background:var(--gold);color:var(--onaccent)":""}">${esc(b)}</button>`).join("");
   $("books").querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>{ bookSel=x.dataset.b; renderBooks(); $("chaps").scrollIntoView({behavior:"smooth",block:"nearest"}); });
   if(bookSel){ const n=BOOKS[testament].find(x=>x[0]===bookSel)[1];
-    $("chaps").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="eyebrow">${esc(bookSel)} · capítulos</div><button class="link-btn" id="bkIntro">ℹ️ Sobre o livro</button></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px">${Array.from({length:n},(_,i)=>`<button class="chip" data-c="${i+1}" style="text-align:center;padding:9px 0;${S.read&&S.read[bookSel+" "+(i+1)]?"border-color:var(--gold)":""}">${i+1}</button>`).join("")}</div>`;
+    $("chaps").innerHTML=`<div class="row" style="justify-content:space-between;margin-bottom:8px"><div class="eyebrow">${esc(bookSel)} · capítulos</div><button class="link-btn" id="bkIntro">${ic("info")} Sobre o livro</button></div><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(46px,1fr));gap:6px">${Array.from({length:n},(_,i)=>`<button class="chip" data-c="${i+1}" style="text-align:center;padding:9px 0;${S.read&&S.read[bookSel+" "+(i+1)]?"border-color:var(--gold)":""}">${i+1}</button>`).join("")}</div>`;
     $("chaps").querySelectorAll("[data-c]").forEach(x=>x.onclick=()=>openChapter(bookSel,+x.dataset.c)); $("bkIntro").onclick=()=>bookIntro(bookSel); }
   else $("chaps").innerHTML=testament==="Deuterocanônicos"?`<p class="sm muted" style="margin:0">Livros presentes nas Bíblias católica e ortodoxa, preservados em grego. As Bíblias protestantes não os incluem.</p>`:"";
 }
@@ -1018,7 +1039,7 @@ function renderCont(){ const L=S.lastRead, box=$("contBox"); if(!box) return; if
   box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Continuar de onde parou</div><div class="t" style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(L.b)} ${L.c}</div></div><button class="btn" id="contGo">Continuar</button></div>`;
   $("contGo").onclick=()=>openChapter(L.b,L.c); }
 async function bookIntro(b){
-  const k="intro_"+chKey(b,0); openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:24px;margin:0">Sobre ${esc(b)}</h2><button class="iconbtn" id="biClose" aria-label="Fechar">✕</button></div><div class="md" id="biOut" style="margin-top:12px;font-size:16px"></div><button class="btn ghost full" data-sayintro="1" style="margin-top:12px">🔊 Ouvir</button>`);
+  const k="intro_"+chKey(b,0); openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:24px;margin:0">Sobre ${esc(b)}</h2><button class="iconbtn" id="biClose" aria-label="Fechar">✕</button></div><div class="md" id="biOut" style="margin-top:12px;font-size:16px"></div><button class="btn ghost full" data-sayintro="1" style="margin-top:12px">${ic("vol")} Ouvir</button>`);
   $("biClose").onclick=closeModal; const out=$("biOut");
   $("setSheet").querySelector("[data-sayintro]").onclick=()=>startSpeech("intro",`Sobre o livro de ${b}.`,out.innerText,`Sobre ${b}`);
   const c=await kvGet(k); if(c&&c.text){ out.innerHTML=md(c.text); return; }
@@ -1135,10 +1156,10 @@ function openVerse(ref,text){
     <p class="md" style="margin:10px 0 14px;font-size:18px">${esc(text)}</p>
     <div class="row" style="gap:8px;margin-bottom:12px" role="group" aria-label="Cor do destaque">${Object.entries(HLC).map(([k,c])=>`<button class="dot ${hh.c===k?"on":""}" data-c="${k}" style="background:${c.replace(/[\d.]+\)$/,"0.9)")}" aria-label="Destacar em ${k}"></button>`).join("")}<button class="chip" data-c="" style="font-family:var(--ui)">Sem cor</button></div>
     <div class="vgrid">
-      <button class="vbtn" id="vFav">${hh.f?"★ Favorito":"☆ Favoritar"}</button><button class="vbtn" id="vNote">✏️ ${hh.n?"Editar nota":"Anotar"}</button>
-      <button class="vbtn" id="vCopy">📋 Copiar</button><button class="vbtn" id="vCard">🖼️ Cartão</button>
-      <button class="vbtn" id="vIl">🔤 Original${LOCK()}</button><button class="vbtn" id="vXr">🔗 Referências${LOCK()}</button>
-      <button class="vbtn" id="vAlt">🔄 Outras traduções${LOCK()}</button><button class="vbtn" id="vAsk">❓ Perguntar</button>
+      <button class="vbtn" id="vFav">${hh.f?ic("star")+" Favorito":ic("star")+" Favoritar"}</button><button class="vbtn" id="vNote">${ic("pen")} ${hh.n?"Editar nota":"Anotar"}</button>
+      <button class="vbtn" id="vCopy">${ic("copy")} Copiar</button><button class="vbtn" id="vCard">${ic("image")} Cartão</button>
+      <button class="vbtn" id="vIl">${ic("type")} Original${LOCK()}</button><button class="vbtn" id="vXr">${ic("link")} Referências${LOCK()}</button>
+      <button class="vbtn" id="vAlt">${ic("swap")} Outras traduções${LOCK()}</button><button class="vbtn" id="vAsk">${ic("help")} Perguntar</button>
     </div>
     <div id="vOut" style="margin-top:14px">${extra||(hh.n?`<div class="note" style="color:var(--text)"><b>Sua nota:</b> ${esc(hh.n)}</div>`:"")}</div>`);
     const set=(k,v)=>{ S.hl[ref]=Object.assign({},S.hl[ref]||{},{[k]:v,t:text,d:dstr()}); const o=S.hl[ref]; if(!o.c&&!o.n&&!o.f) delete S.hl[ref]; save(); redecorateAll(); };
@@ -1258,7 +1279,7 @@ function renderMine(){
   if(myTab==="leituras"){ renderList(); $("list").hidden=false; $("myList").hidden=true; $("myTools").hidden=true; return; }
   $("list").hidden=true; $("myList").hidden=false; $("myTools").hidden=false; const q=norm($("mySearch").value.trim());
   const L=H.filter(([r,v])=>(myTab==="destaques"?v.c:myTab==="notas"?v.n:v.f)&&(!q||norm(r+" "+(v.t||"")+" "+(v.n||"")).includes(q)));
-  $("myList").innerHTML=L.length?L.map(([r,v])=>`<div class="li"><button style="flex:1;text-align:left" data-open="${esc(r)}"><div class="t" style="font-size:16px">${v.c?`<span class="cdot" style="background:${HLC[v.c].replace(/[\d.]+\)$/,"0.9)")}"></span>`:""}${esc(r)}</div><div class="sm" style="margin-top:2px">${esc((v.t||"").slice(0,140))}</div>${v.n?`<div class="sm muted" style="margin-top:4px">✏️ ${esc(v.n)}</div>`:""}</button></div>`).join(""):`<div class="empty">Toque em qualquer versículo para ${myTab==="notas"?"anotar":myTab==="favoritos"?"favoritar":"destacar"}.</div>`;
+  $("myList").innerHTML=L.length?L.map(([r,v])=>`<div class="li"><button style="flex:1;text-align:left" data-open="${esc(r)}"><div class="t" style="font-size:16px">${v.c?`<span class="cdot" style="background:${HLC[v.c].replace(/[\d.]+\)$/,"0.9)")}"></span>`:""}${esc(r)}</div><div class="sm" style="margin-top:2px">${esc((v.t||"").slice(0,140))}</div>${v.n?`<div class="sm muted" style="margin-top:4px">${ic("pen")} ${esc(v.n)}</div>`:""}</button></div>`).join(""):`<div class="empty">Toque em qualquer versículo para ${myTab==="notas"?"anotar":myTab==="favoritos"?"favoritar":"destacar"}.</div>`;
   $("myList").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>{ const p=parseRef(b.dataset.open); if(p){ go("biblia"); openChapter(p.book,p.chapter,p.v); } });
 }
 /* ---------- Planos de leitura ---------- */
@@ -1348,6 +1369,7 @@ const TT={hoje:"Reflexão Bíblica",biblia:"Bíblia",estudos:"Estudos",dic:"Dici
 function go(v){ document.querySelectorAll(".view").forEach(s=>s.classList.toggle("on",s.id==="v-"+v)); document.querySelectorAll("#tabs button").forEach(b=>b.classList.toggle("on",b.dataset.v===v)); $("topTitle").textContent=TT[v]; $("scroll").scrollTop=0; stopSpeakSoft(); setTimeout(()=>$("topTitle").focus({preventScroll:true}),30);
   if(v==="salvas") renderMine(); if(v==="biblia"){ $("bHome").hidden=false; $("chView").hidden=true; renderBooks(); renderPlan(); renderCont(); } if(v==="hoje") renderDailyPlan(); if(v==="dic"){ $("dHome").hidden=false; $("dView").hidden=true; renderDic(); } if(v==="estudos"){ $("studyHome").hidden=false; $("lessonView").hidden=true; $("tlView").hidden=true; renderStudy(); } }
 document.querySelectorAll("#tabs button").forEach(b=>b.onclick=()=>{ if(b.dataset.v==="hoje"&&cur&&!cur.daily&&$("v-hoje").classList.contains("on")) loadDaily(); go(b.dataset.v); });
+$("remYes").onclick=async()=>{ S.remindAsked=1; save(); $("remCard").hidden=true; await remindOn(8); }; $("remNo").onclick=()=>{ S.remindAsked=1; save(); $("remCard").hidden=true; };
 $("gen").onclick=generate; $("repBtn").onclick=generate; $("deepBtn").onclick=deepen; $("askBtn").onclick=ask;
 $("ask").addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); ask(); } });
 $("goRef").onclick=()=>openRef($("refIn").value);
@@ -1384,7 +1406,7 @@ function applyA11y(){ const a=S.a11y||{}; document.documentElement.dataset.fs=a.
   const hr=new Date().getHours(), th=a.theme||"auto", dark=th==="dark"||(th==="auto"&&(hr<6||hr>=19)); document.documentElement.dataset.theme=dark?"dark":"light";
   const m=document.querySelector('meta[name="theme-color"]'); if(m) m.content=dark?"#16100c":"#f5ede1"; greet(); }
 function markVisit(){ S.visits=S.visits||{}; S.visits[dstr()]=1; const k=Object.keys(S.visits).sort(); while(k.length>400) delete S.visits[k.shift()]; save(); }
-function renderStreak(){ const st=streak(), b=$("streakBox"); if(!b) return; b.hidden=st<1; b.innerHTML=`<span style="font-size:26px" aria-hidden="true">🔥</span><div><div class="n">${st} ${st===1?"dia de leitura":"dias seguidos"}</div><div class="sm muted">${st<2?"Volte amanhã para começar sua sequência.":"Continue assim: um texto por dia."}</div></div>`; }
+function renderStreak(){ const st=streak(), b=$("streakBox"); if(!b) return; b.hidden=st<1; b.innerHTML=`<span style="color:var(--gold2)">${ic("flame","ic\" style=\"width:28px;height:28px")}</span><div><div class="n">${st} ${st===1?"dia de leitura":"dias seguidos"}</div><div class="sm muted">${st<2?"Volte amanhã para começar sua sequência.":"Continue assim: um texto por dia."}</div></div>`; }
 function streak(){ const v=S.visits||{}; let n=0; const d=new Date(); if(!v[dstr(d)]) d.setDate(d.getDate()-1); while(v[dstr(d)]){ n++; d.setDate(d.getDate()-1); } return n; }
 function greet(){ const hr=new Date().getHours(), e=$("hello"); if(!e) return;
   const [g,s]= hr<5?["Boa madrugada 🌙","Silêncio, um chá e um texto para pensar."]: hr<12?["Bom dia ☕","Pegue seu café. Dois minutos de leitura e uma pergunta para levar com você."]: hr<18?["Boa tarde ☕","Uma pausa no meio do dia: um texto, uma reflexão."]:["Boa noite 🌙","Desacelere. Um texto curto para fechar o dia."];
@@ -1406,7 +1428,7 @@ function spokenRef(r){ const m=String(r).trim().match(/^(.+?)\s+(\d+)(?::(\d+)(?
   const [,b,c,v1,v2,c2,v3]=m; let s=`${b}, capítulo ${c}`; if(v1) s+= v2?`, versículos ${v1} a ${v2}`:c2?`, versículo ${v1}, até o capítulo ${c2}, versículo ${v3}`:`, versículo ${v1}`; return s; }
 function plain(md){ return String(md||"").replace(/^#+\s*/gm,"").replace(/^>\s?/gm,"").replace(/\*\*(\d+)\*\*/g,"Versículo $1.").replace(/[*_`]/g,"").replace(/\[|\]/g,"").replace(/\(([^)]*[֐-׿Ͱ-Ͽ][^)]*)\)/g,"").replace(/\n{2,}/g,"\n").trim(); }
 function splitParts(t){ const out=[]; t.split(/\n/).forEach(p=>{ p=p.trim(); if(!p) return; while(p.length>900){ let cut=p.lastIndexOf(". ",900); if(cut<200) cut=900; out.push(p.slice(0,cut+1)); p=p.slice(cut+1).trim(); } if(p) out.push(p); }); return out; }
-function syncSay(){ document.querySelectorAll("[data-say]").forEach(b=>{ const on=SP.key===b.dataset.say; const sp=b.classList.contains("act")&&b.querySelector("span"); if(sp){ sp.textContent= on&&SP.state==="playing"?"Pausar":on&&SP.state==="paused"?"Continuar":"Ouvir"; b.classList.toggle("on",on&&SP.state==="playing"); } else b.textContent = on&&SP.state==="playing"?"⏸ Pausar":on&&SP.state==="paused"?"▶ Continuar":(b.dataset.lab||"🔊 Ouvir"); b.setAttribute("aria-pressed",on&&SP.state==="playing"?"true":"false"); });
+function syncSay(){ document.querySelectorAll("[data-say]").forEach(b=>{ const on=SP.key===b.dataset.say; const sp=b.classList.contains("act")&&b.querySelector("span"); if(sp){ sp.textContent= on&&SP.state==="playing"?"Pausar":on&&SP.state==="paused"?"Continuar":"Ouvir"; b.classList.toggle("on",on&&SP.state==="playing"); } else b.innerHTML = on&&SP.state==="playing"?ic("pause")+" Pausar":on&&SP.state==="paused"?ic("play")+" Continuar":(b.dataset.lab||ic("vol")+" Ouvir"); b.setAttribute("aria-pressed",on&&SP.state==="playing"?"true":"false"); });
   if(SP.state==="idle"){ $("player").hidden=true; } else { $("player").hidden=false; $("plLabel").textContent=SP.label; $("plPause").textContent=SP.state==="paused"?"Continuar":"Pausar"; } }
 async function playFrom(i){
   SP.idx=i; SP.state="playing"; const tok=++SP.token, rate=(S.a11y&&S.a11y.rate)||1, t=await getTTS(); syncSay();
@@ -1453,7 +1475,7 @@ async function initDictation(){
     clearTimeout(silT); const t=dictTarget, cb=dictCb; dictCb=null;
     if(dictCancel){ dictCancel=false; return; }
     if(t){ t.dispatchEvent(new Event("input",{bubbles:true})); if(cb&&t.value.trim()) cb(t.value.trim()); else if(!t.value.trim()) toast("Não ouvi nada. Tente de novo, mais perto do microfone."); } });
-  document.querySelectorAll("[data-mic]").forEach(el=>addMic(el)); $("vcBtn").hidden=false;
+  document.querySelectorAll("[data-mic]").forEach(el=>addMic(el)); $("vcBtn").dataset.ok="1"; applyVc();
 }
 const MIC_ACT={send:i=>{ const s=i.closest(".composer")?.querySelector(".send"); s&&s.click(); },go:()=>openRef($("refIn").value),search:()=>{ if(dMode==="tema") themeSearch(); },fill:null};
 MIC_ACT.send2=()=>$("vQGo")&&$("vQGo").click();
@@ -1494,15 +1516,31 @@ const cap1=s=>s?s[0].toUpperCase()+s.slice(1):s;
 function readCurrent(){ const v=document.querySelector(".view.on").id; speakFor(v==="v-hoje"?"hoje":v==="v-biblia"?"cap":v==="v-estudos"?"lic":v==="v-dic"?"dic":""); }
 $("vcBtn").onclick=()=>{ if(!dict) return; $("vcIn").value=""; listen($("vcIn"),runVoice); toast("Pode falar"); };
 /* ajustes */
-$("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHTML=`<h2 style="font-family:var(--display);font-size:24px;margin:0 0 14px">Aparência e acessibilidade</h2>
+/* ---------- Lembrete diário ---------- */
+const remSup=()=>"serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+function b64uToU8(s){ s=s.replace(/-/g,"+").replace(/_/g,"/"); const r=atob(s+"===".slice((s.length+3)%4)); return Uint8Array.from(r,c=>c.charCodeAt(0)); }
+async function remindOn(h){ if(!remSup()){ toast("Este aparelho não permite lembretes por aqui"); return false; }
+  try{ await RB.ready; if(!RB.vapidPublic){ toast("Lembretes ainda não estão disponíveis"); return false; }
+    const perm=await Notification.requestPermission(); if(perm!=="granted"){ toast("Permita as notificações para receber o lembrete"); return false; }
+    const reg=await navigator.serviceWorker.ready; let sub=await reg.pushManager.getSubscription();
+    if(!sub) sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64uToU8(RB.vapidPublic)});
+    const utc=Math.floor((((h*60+new Date().getTimezoneOffset())/60)%24+24)%24);
+    await RB.api("/api/push-sub",{endpoint:sub.endpoint,hour:utc}); S.remind={on:true,h}; save(); toast(`Pronto! Lembrete todo dia às ${h}h`); return true; }
+  catch(e){ console.warn(e); toast("Não consegui ativar o lembrete agora"); return false; } }
+async function remindOff(){ try{ const reg=await navigator.serviceWorker.ready; const sub=await reg.pushManager.getSubscription(); if(sub){ await RB.api("/api/push-sub",{endpoint:sub.endpoint,off:true}).catch(()=>{}); await sub.unsubscribe(); } }catch(e){} S.remind={on:false,h:(S.remind||{}).h||8}; save(); toast("Lembrete desligado"); }
+function openSettings(mode){ const a=S.a11y; const draw=()=>{ $("setSheet").innerHTML=`<h2 style="font-family:var(--display);font-size:24px;margin:0 0 14px">${mode==="conta"?"Sua conta":"Aparência e acessibilidade"}</h2><div ${mode==="conta"?"hidden":""}>
+  <div class="eyebrow" style="margin-bottom:8px">Lembrete diário</div><div class="row" style="flex-wrap:nowrap"><button class="btn ${(S.remind||{}).on?"ghost":""}" id="remTg" style="flex:1">${(S.remind||{}).on?"Desligar lembrete":"Ativar lembrete"}</button><select id="remH" aria-label="Horário do lembrete" style="width:110px">${Array.from({length:18},(_,i)=>i+5).map(h=>`<option value="${h}" ${((S.remind||{}).h||8)===h?"selected":""}>${h}h</option>`).join("")}</select></div>
+  <p class="sm muted" style="margin:6px 0 14px">${(S.remind||{}).on?`Você recebe um aviso todo dia às ${(S.remind||{}).h}h.`:"Um aviso por dia, no horário que você escolher."}</p>
   <div class="eyebrow" style="margin-bottom:8px">Tamanho do texto</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[[1,"Normal"],[2,"Grande"],[3,"Muito grande"]].map(([v,l])=>`<button class="${a.fs===v?"on":""}" data-fs="${v}">${l}</button>`).join("")}</div>
   <div class="eyebrow" style="margin:14px 0 8px">Aparência</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[["auto","Automática"],["light","Dia"],["dark","Noite"]].map(([v,l])=>`<button class="${(a.theme||"auto")===v?"on":""}" data-th="${v}">${l}</button>`).join("")}</div>
   <div class="eyebrow" style="margin:14px 0 8px">Velocidade da voz</div><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[[0.8,"Devagar"],[1,"Normal"],[1.25,"Rápida"]].map(([v,l])=>`<button class="${a.rate===v?"on":""}" data-rate="${v}">${l}</button>`).join("")}</div>
   <button class="btn ghost full" id="tgC" style="margin-top:14px" aria-pressed="${a.contrast}">Alto contraste: ${a.contrast?"ligado":"desligado"}</button>
   <button class="btn ghost full" id="tgA" style="margin-top:8px" aria-pressed="${a.auto}">Ler em voz alta automaticamente: ${a.auto?"ligado":"desligado"}</button>
   <button class="btn ghost full" id="tgS" style="margin-top:8px" aria-pressed="${!!a.seq}">Ouvir capítulos em sequência: ${a.seq?"ligado":"desligado"}</button>
+  <button class="btn ghost full" id="tgV" style="margin-top:8px" aria-pressed="${!!a.vc}">Botão de comandos de voz: ${a.vc?"ligado":"desligado"}</button>
+  <p class="sm muted" style="margin:10px 0 0;line-height:1.5">Com o botão ligado, você pode falar: “abrir Salmo 23”, “próximo capítulo”, “reflexão do dia”, “ler”, “parar”, “o que é arcanjo”. Funciona também com leitores de tela, como o TalkBack.</p></div><div ${mode==="conta"?"":"hidden"}>
   <div class="eyebrow" style="margin:14px 0 8px">Seu nome</div><div class="row" style="flex-wrap:nowrap"><input id="setName" value="${esc(S.name||"")}" placeholder="Como podemos te chamar?"><button class="btn" id="setNameOk">OK</button></div>
-  <button class="btn ghost full" id="shareApp" style="margin-top:14px">💌 Indicar o app para alguém</button>
+  <button class="btn ghost full" id="shareApp" style="margin-top:14px">${ic("mail")} Indicar o app para alguém</button>
   <div class="eyebrow" style="margin:18px 0 8px">Nosso propósito</div>
   <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. A Palavra, a reflexão diária e a acessibilidade são gratuitas para todos. As ferramentas de estudo aprofundado são Pro, e é isso que mantém o app de pé.</p>
   <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
@@ -1511,20 +1549,22 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"||!(window.RB&&RB.user)?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ${window.RB&&RB.user?"ghost":""}" id="signOut">${window.RB&&RB.user?"Sair":"Entrar ou criar conta grátis"}</button></div>
   <button class="link-btn" id="delAcc" ${window.RB&&RB.user?"":"hidden"} style="margin-top:10px;color:#c0392b">Excluir minha conta e meus dados</button>
   <p class="sm" style="margin:12px 0 0"><a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a> · <a href="/termos.html" style="color:var(--gold2)">Termos de uso</a></p>
-  <p class="sm muted" style="margin:14px 0 0">Comandos de voz (botão 🎤 redondo, quando disponível): “abrir Salmo 23”, “Gênesis capítulo 1”, “próximo capítulo”, “reflexão do dia”, “ler”, “parar”, “o que é arcanjo”, “lição 3”, “estudar João 3:16”. Funciona também com leitores de tela como o TalkBack.</p>
+  </div>
   <button class="btn full" id="setClose" style="margin-top:16px">Fechar</button>`;
   $("setSheet").querySelectorAll("[data-fs]").forEach(b=>b.onclick=()=>{ a.fs=+b.dataset.fs; applyA11y(); save(); draw(); });
   $("setSheet").querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ a.theme=b.dataset.th; applyA11y(); save(); draw(); });
   $("setSheet").querySelectorAll("[data-rate]").forEach(b=>b.onclick=()=>{ a.rate=+b.dataset.rate; save(); draw(); speakText("Velocidade da voz ajustada.","Teste"); });
   $("tgC").onclick=()=>{ a.contrast=!a.contrast; applyA11y(); save(); draw(); }; $("tgA").onclick=()=>{ a.auto=!a.auto; save(); draw(); if(a.auto) speakText("Leitura automática ligada.","Teste"); };
-  $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); };
+  $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); }; $("remTg").onclick=async()=>{ const h=+$("remH").value; if((S.remind||{}).on) await remindOff(); else await remindOn(h); draw(); }; $("remH").onchange=async()=>{ if((S.remind||{}).on){ await remindOn(+$("remH").value); draw(); } }; $("tgV").onclick=()=>{ a.vc=!a.vc; save(); applyVc(); draw(); if(a.vc) toast("Botão de voz ligado: fica no canto da tela"); };
   $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
   if(window.RB&&RB.api&&RB.user) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta"); }).catch(()=>{});
   $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>{ if(RB.user) RB.signOut(); else { $("setBg").hidden=true; openLogin(); } }; $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
   $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
-  draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button")?.focus(),50); };
+  draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button:not([hidden] *)")?.focus(),50); }
+$("setBtn").onclick=()=>openSettings("a11y");
+function applyVc(){ const b=$("vcBtn"); if(b) b.hidden=!(b.dataset.ok==="1"&&S.a11y&&S.a11y.vc); }
 $("setBg").onclick=e=>{ if(e.target===$("setBg")) $("setBg").hidden=true; };
-document.querySelectorAll("[data-say]").forEach(b=>{ b.dataset.lab=b.textContent; b.onclick=()=>toggleSay(b.dataset.say); });
+document.querySelectorAll("[data-say]").forEach(b=>{ b.dataset.lab=b.innerHTML; b.onclick=()=>toggleSay(b.dataset.say); });
 applyA11y(); initDictation();
 
 function stopSpeakSoft(){ if(SP.state!=="idle") stopSpeak(); }
@@ -1544,7 +1584,7 @@ $("proRestore").onclick=async()=>{ const p=await RB.restorePurchases(); toast(p=
 window.addEventListener("rb-quota",e=>openPro((e.detail&&e.detail.message)||"Você usou o limite grátis de hoje."));
 $("gGoogle").onclick=()=>RB.signInGoogle();
 $("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ const m=String(err&&err.message||err); $("gMsg").textContent=/rate limit|security purposes|seconds/i.test(m)?"Muitos pedidos de link em pouco tempo. Espere alguns minutos e tente de novo.":("Não consegui enviar o link: "+m); } };
-RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } const lc=$("loginChip"); lc.hidden=!!RB.user; lc.onclick=()=>openLogin(); });
+RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } const lc=$("loginChip"); lc.hidden=!!RB.user; lc.onclick=()=>openLogin(); const mb=$("meBtn"); mb.hidden=!RB.user; mb.onclick=()=>openSettings("conta"); });
 $("gClose").onclick=()=>{ $("gate").hidden=true; };
 RB.ready.then(()=>{ const c=$("proChip"); if(c){ c.hidden=RB.plan==="pro"||!RB.user; c.onclick=()=>openPro(); } });
 { const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }

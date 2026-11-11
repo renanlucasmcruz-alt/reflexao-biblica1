@@ -58,3 +58,13 @@ begin
   return c <= p_limit;
 end; $$;
 revoke execute on function public.take_quota(uuid, int) from anon, authenticated;
+
+-- lembrete diário (notificações): só o servidor lê e escreve
+create table if not exists public.push_subs (
+  endpoint text primary key,
+  user_id uuid references auth.users on delete cascade,
+  hour int not null check (hour between 0 and 23),
+  created_at timestamptz not null default now()
+);
+create index if not exists push_subs_hour on public.push_subs (hour);
+alter table public.push_subs enable row level security;

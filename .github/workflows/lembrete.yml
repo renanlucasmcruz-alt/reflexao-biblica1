@@ -1,0 +1,12 @@
+name: Lembrete diário
+on:
+  schedule:
+    - cron: "2 * * * *"
+  workflow_dispatch:
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Enviar lembretes desta hora
+        run: curl -fsS -X POST "https://reflexao-biblica.pages.dev/api/cron" -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"

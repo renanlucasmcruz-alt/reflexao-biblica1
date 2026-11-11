@@ -7,7 +7,7 @@
     const r=await fetch("/api/config"); if(!r.ok) throw new Error("config"); const c=await r.json();
     const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2.45.4");
     CFG.sb=createClient(c.supabaseUrl,c.supabaseAnonKey,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
-    CFG.priceLabel=c.priceLabel||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
+    CFG.priceLabel=c.priceLabel||""; CFG.vapidPublic=c.vapidPublic||""; CFG.googleLogin=!!c.googleLogin; const gb=document.getElementById("gGoogle"); if(gb&&!CFG.googleLogin) gb.hidden=true;
     const { data } = await CFG.sb.auth.getSession(); CFG.session=data.session; CFG.user=data.session?.user||null;
     CFG.sb.auth.onAuthStateChange((_e,s)=>{ const was=!!CFG.user; CFG.session=s; CFG.user=s?.user||null; if(!was&&CFG.user) location.reload(); });
     if(CFG.user) await refreshPlan();
@@ -23,11 +23,13 @@
   /* ---- IA (substitui "sample") ---- */
   async function blobToB64(b){ const buf=await b.arrayBuffer(); let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
   async function sample(input, opts={}){
-    await CFG.ready; if(!CFG.user) throw {code:"no_sample"};
+    await CFG.ready; if(!CFG.user&&!opts.anonDaily) throw {code:"no_sample"};
     const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
     const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
-    const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
+    const r=opts.anonDaily ? await fetch("/api/daily",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({key:opts.anonDaily,prompt:typeof input==="string"?input:""}),signal:opts.signal})
+      : await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
       body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared,feature:opts.feature||""}),signal:opts.signal});
+    if(opts.anonDaily&&r.ok&&!(r.headers.get("content-type")||"").includes("event-stream")){ const j=await r.json(); if(opts.onText) opts.onText({text:j.text}); return {text:j.text,truncated:false}; }
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body) throw {code:"unavailable"};
@@ -49,6 +51,7 @@
     return {text,truncated:stop==="max_tokens"||stop==="cut"||stop==="error"};
   }
   sample.limits=async()=>({images:true});
+  CFG.sampleDaily=(prompt,key,opts={})=>sample(prompt,Object.assign({},opts,{anonDaily:key}));
 
   /* ---- Banco (substitui "db") ---- */
   function keyOf(path){ const m=path.match(/^data\/users\/[^/]+\/(.+)$/); return m?m[1]:path; }
