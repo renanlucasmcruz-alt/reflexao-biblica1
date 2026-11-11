@@ -1,11 +1,13 @@
-import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota } from "./_lib.mjs";
+import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota, usageToday } from "./_lib.mjs";
 
 /* Custo: grátis usa o Haiku (barato); Pro usa o modelo do nível pedido (Sonnet).
    Conteúdo compartilhado (tradução de capítulos, introduções, dicionário, interlinear...)
    é gerado uma vez e servido a todos, então sempre vai no modelo de maior qualidade. */
-function pickModel(tier, plan, shared) {
+/* Pro: as primeiras PRO_PREMIUM_DAILY (10) perguntas do dia vão no modelo de maior qualidade;
+   depois disso continua respondendo, no modelo econômico, até o limite diário. */
+function pickModel(tier, plan, shared, usedToday) {
   if (shared) return CFG.MODEL("complex");
-  if (plan === "pro") return CFG.MODEL(tier);
+  if (plan === "pro" && usedToday <= CFG.PRO_PREMIUM()) return CFG.MODEL(tier);
   return CFG.MODEL("quick");
 }
 
@@ -34,6 +36,8 @@ async function handle(req) {
     return json(402, { message: plan === "pro" ? "Você atingiu o limite de segurança de hoje. Volte amanhã." : `Você usou as ${CFG.FREE_DAILY()} consultas grátis de hoje. Assine o Pro para continuar sem limites.` });
   }
 
+  const usedToday = (!shared && plan === "pro") ? await usageToday(user.id) : 0;
+
   // Imagens (opcional) vão no último turno do usuário.
   const msgs = messages.map((m) => ({ role: m.role === "assistant" ? "assistant" : "user", content: String(m.content || "") }));
   if (Array.isArray(body.images) && body.images.length) {
@@ -47,7 +51,7 @@ async function handle(req) {
   const upstream = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": CFG.ANTHROPIC_KEY(), "anthropic-version": "2023-06-01", "content-type": "application/json" },
-    body: JSON.stringify({ model: pickModel(tier, plan, shared), max_tokens: maxTokens, stream: true, messages: msgs, ...(concise ? { system: "Responda de forma enxuta e direta: vá ao essencial, sem perder a precisão. Se o pedido exigir um formato fixo, siga o formato." } : {}) }),
+    body: JSON.stringify({ model: pickModel(tier, plan, shared, usedToday), max_tokens: maxTokens, stream: true, messages: msgs, ...(concise ? { system: "Responda de forma enxuta e direta: vá ao essencial, sem perder a precisão. Se o pedido exigir um formato fixo, siga o formato." } : {}) }),
   });
   if (!upstream.ok || !upstream.body) {
     const t = await upstream.text().catch(() => "");

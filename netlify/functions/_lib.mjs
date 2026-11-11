@@ -9,6 +9,7 @@ export const CFG = {
   ANTHROPIC_KEY: () => env("ANTHROPIC_API_KEY"),
   FREE_DAILY: () => parseInt(env("FREE_DAILY_LIMIT", "5"), 10),
   SHARED_DAILY: (plan) => parseInt(env(plan === "pro" ? "PRO_SHARED_LIMIT" : "FREE_SHARED_LIMIT", plan === "pro" ? "200" : "40"), 10),
+  PRO_PREMIUM: () => parseInt(env("PRO_PREMIUM_DAILY", "10"), 10),
   PRO_DAILY: () => parseInt(env("PRO_DAILY_LIMIT", "60"), 10),
   MODEL: (tier) => tier === "quick" ? env("MODEL_QUICK", "claude-haiku-5-5") : tier === "complex" ? env("MODEL_COMPLEX", "claude-sonnet-5-5") : env("MODEL_DEFAULT", "claude-sonnet-5-5"),
   PACKAGE: () => env("ANDROID_PACKAGE_NAME"),
@@ -56,4 +57,11 @@ export async function takeSharedQuota(userId, plan) {
     await sb("usage", { method: "POST", headers: { prefer: "resolution=merge-duplicates" }, body: JSON.stringify({ user_id: userId, day, count: n + 1 }) });
   } catch (e) { /* se o contador falhar, não bloqueia */ }
   return true;
+}
+
+/* Quantas perguntas o usuário já fez hoje (contador principal). */
+export async function usageToday(userId) {
+  const d = new Date().toISOString().slice(0, 10);
+  try { const r = await sb(`usage?user_id=eq.${userId}&day=eq.${d}&select=count`); const [row] = r.ok ? await r.json() : []; return row ? row.count : 0; }
+  catch (e) { return 0; }
 }

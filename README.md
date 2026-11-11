@@ -26,6 +26,7 @@ Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexã
 | `FREE_DAILY_LIMIT` | perguntas grátis por dia (padrão 5) |
 | `FREE_SHARED_LIMIT` | conteúdos novos (capítulos, lições) por dia no grátis (padrão 40) |
 | `PRO_DAILY_LIMIT` | perguntas por dia no Pro (padrão 60) |
+| `PRO_PREMIUM_DAILY` | quantas dessas vão no modelo de maior qualidade (padrão 10) |
 | `MODEL_QUICK`, `MODEL_DEFAULT`, `MODEL_COMPLEX` | modelos (padrões: claude-haiku-5-5, claude-sonnet-5-5, claude-sonnet-5-5) |
 | `ANDROID_PACKAGE_NAME` | nome do pacote Android (ex.: app.reflexaobiblica.twa) |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON da conta de serviço do Google Play (para validar o Pro) |
