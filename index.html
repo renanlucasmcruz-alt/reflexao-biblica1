@@ -360,7 +360,7 @@
 <div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
   <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:26px;margin:0">Reflexão Bíblica <span style="color:var(--gold)">Pro</span></h2><button class="iconbtn" id="proClose" aria-label="Fechar">✕</button></div>
   <p class="muted" id="proWhy" style="margin:8px 0 14px">Mais fôlego para quem estuda a fundo.</p>
-  <div class="feat"><span>📚</span><span><b>As 9 trilhas de estudo</b>, com mentor, teste e certificado (a primeira, “Fundamentos”, é grátis)</span></div>
+  <div class="feat"><span>📚</span><span><b>As 10 trilhas de estudo</b>, com mentor, teste e certificado (a primeira, “Fundamentos”, é grátis)</span></div>
   <div class="feat" style="margin-top:10px"><span>🔍</span><span><b>Estudo aprofundado</b> de cada reflexão, sempre que quiser (no grátis: 1 por semana)</span></div>
   <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Texto original palavra por palavra</b> em hebraico, aramaico e grego, referências cruzadas e outras traduções</span></div>
   <div class="feat" style="margin-top:10px"><span>📖</span><span><b>Verbetes aprofundados</b> no dicionário</span></div>
@@ -378,7 +378,7 @@
   <h2>Um café, um texto,<br>uma reflexão.</h2>
   <p class="muted" style="margin:0;max-width:360px">A Bíblia traduzida direto do hebraico, do aramaico e do grego, com leituras curtas para o dia a dia e estudo profundo quando você quiser.</p>
   <div class="stack" style="display:flex;flex-direction:column;gap:12px;margin:6px 0">
-    <div class="feat"><span>☕</span><span><b>Reflexão do dia</b><br><span class="sm muted">2 minutos, com senso crítico</span></span></div>
+    <div class="feat"><span>☕</span><span><b>Reflexão do dia</b><br><span class="sm muted">2 minutos para pensar o dia</span></span></div>
     <div class="feat"><span>📖</span><span><b>Bíblia completa e planos de leitura</b><br><span class="sm muted">Destaque, anote e veja o original</span></span></div>
     <div class="feat"><span>🎓</span><span><b>Estudo dirigido com mentor</b><br><span class="sm muted">A Bíblia inteira, por temas</span></span></div>
   </div>
@@ -750,7 +750,7 @@ function renderStudy(){
 }
 async function openLesson(id){
   const L=LESSONS.find(l=>l.id===id); if(!L) return;
-  if(L.ti>0&&!isPro()){ openPro(`A trilha ${L.ti+1} faz parte do Pro. A trilha 1 é grátis inteira, com mentor, teste e certificado.`); return; } if(SP.key==="lic"||SP.key==="fb") stopSpeak(); curL=L; S.study.last=id; save();
+  if(L.ti>0&&!isPro()){ openPro(`A trilha ${L.ti+1} faz parte do Pro. A trilha 1 é totalmente grátis, com mentor, teste e certificado.`); return; } if(SP.key==="lic"||SP.key==="fb") stopSpeak(); curL=L; S.study.last=id; save();
   $("studyHome").hidden=true; $("lessonView").hidden=false; $("scroll").scrollTop=0; $("topTitle").textContent=`Lição ${LESSONS.indexOf(L)+1}`;
   $("lTrack").textContent=`Trilha ${L.ti+1} · ${L.track}`; $("lTitle").textContent=L.title; $("lRefs").innerHTML=L.refs.map(r=>`<span class="chip">${esc(r)}</span>`).join("");
   $("lNote").hidden=true; $("lDone").textContent=S.study.done[id]?"Lição concluída ✓":"Concluir lição";
@@ -1149,7 +1149,7 @@ function openVerse(ref,text){
       $("vNoteSave").onclick=()=>{ set("n",$("vNoteIn").value.trim()||null); draw(); toast("Nota salva"); }; };
     $("vCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(`“${text}” (${ref})`); toast("Versículo copiado"); }catch(e){ toast("Não consegui copiar"); } };
     $("vCard").onclick=()=>shareCard(text,ref);
-    $("vIl").onclick=()=>{ if(needPro("A análise palavra por palavra no hebraico e no grego faz parte do Pro.")) return; verseAI(ref,text,"il"); };
+    $("vIl").onclick=()=>{ if(needPro("A análise palavra por palavra no hebraico, no aramaico e no grego faz parte do Pro.")) return; verseAI(ref,text,"il"); };
     $("vXr").onclick=()=>{ if(needPro("As referências cruzadas fazem parte do Pro.")) return; verseAI(ref,text,"xr"); };
     $("vAlt").onclick=()=>{ if(needPro("As outras formas de traduzir do original fazem parte do Pro.")) return; verseAI(ref,text,"alt"); };
     $("vAsk").onclick=()=>{ $("vOut").innerHTML=`<div class="row" style="flex-wrap:nowrap"><input id="vQ" data-mic="send2" placeholder="Pergunte sobre este versículo"><button class="btn" id="vQGo">Enviar</button></div><div class="md" id="vQA" style="margin-top:12px"></div>`; addMic($("vQ")); $("vQ").focus();
@@ -1464,7 +1464,7 @@ function addMic(input){ if(!dict||input._mic) return; input._mic=true; const b=d
 function listen(input,cb){ if(!dict) return; if(dictOn){ dict.stop().catch(()=>{}); return; }
   stopSpeakSoft(); dictTarget=input; dictBase=input.type==="hidden"?"":input.value.trim(); dictCb=cb; $("lsText").textContent="…"; $("listenUI").hidden=false;
   dict.start().catch(e=>{ $("listenUI").hidden=true; const c=e&&e.code;
-    if(c==="not_granted"){ toast("Microfone bloqueado. Libere o microfone para claude.ai nas configurações do navegador."); }
+    if(c==="not_granted"){ toast("Microfone bloqueado. Libere o microfone para este app nas configurações do celular."); }
     else if(c==="dismissed"){ toast("Toque de novo e permita o uso do microfone."); }
     else toast("Não consegui usar o microfone agora"+(c?` (${c})`:"")+". Use o microfone do teclado."); }); }
 $("lsDone").onclick=()=>{ if(dictOn) dict.stop().catch(()=>{}); };
