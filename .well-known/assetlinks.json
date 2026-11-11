@@ -1,4 +1,8 @@
 [{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": { "namespace": "android_app", "package_name": "COLE_AQUI_O_NOME_DO_PACOTE", "sha256_cert_fingerprints": ["COLE_AQUI_A_IMPRESSAO_DIGITAL_SHA256"] }
-}]
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.reflexaobiblica.twa",
+        "sha256_cert_fingerprints": ["EF:BE:62:09:66:31:22:00:11:79:68:3D:4E:D8:EF:D2:6D:B3:77:CC:88:6F:E7:F6:E6:E7:C6:3D:DD:64:02:66"]
+      }
+    }]
