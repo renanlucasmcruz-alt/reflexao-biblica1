@@ -185,7 +185,7 @@
 </head>
 <body>
 <div id="app">
-  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></header>
+  <header class="top"><div><div class="eyebrow" id="topDate"></div><h1 id="topTitle" tabindex="-1">Reflexão Bíblica</h1></div><div class="row" style="flex-wrap:nowrap;gap:8px"><button class="btn ghost" id="proChip" hidden style="padding:8px 14px;border-radius:999px;font-size:14px" aria-label="Conhecer o Reflexão Bíblica Pro">✨ Pro</button><button class="iconbtn" id="setBtn" aria-label="Aparência e acessibilidade: tema, tamanho do texto, voz e contraste"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="2"/><path d="M5 8l7 2 7-2M12 10v5l-3 6M12 15l3 6"/></svg></button></div></header>
   <div class="scroll" id="scroll">
     <section class="view on" id="v-hoje">
       <div class="card" id="dailyPlan" hidden></div>
@@ -250,7 +250,7 @@
             <div class="eyebrow" style="margin:18px 0 6px">Minhas anotações da lição</div>
             <textarea id="lNoteIn" data-mic="fill" style="min-height:90px" placeholder="O que você quer guardar desta lição?"></textarea>
           </div>
-          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="lRegen">Gerar de novo</button><button class="btn" id="lDone">Concluir lição</button></div>
+          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="lRegen">⚠️ Avisar problema</button><button class="btn" id="lDone">Concluir lição</button></div>
         </div>
       </div>
     </section>
@@ -280,7 +280,7 @@
           <div class="note" id="chNote" hidden style="margin-top:12px"></div>
           <button class="btn ghost full" id="chMore" hidden style="margin-top:14px">Continuar a tradução</button>
           <button class="btn ghost full" data-say="cap" style="margin-top:14px">🔊 Ouvir capítulo</button>
-          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="chRegen">Traduzir de novo</button><button class="btn" id="chStudy">Estudar este capítulo</button></div>
+          <div class="row" style="margin-top:18px;justify-content:space-between"><button class="btn ghost" id="chRegen">⚠️ Avisar problema</button><button class="btn" id="chStudy">Estudar este capítulo</button></div>
         </div>
       </div>
     </section>
@@ -302,7 +302,7 @@
           <button class="btn full" id="dDeep" hidden style="margin-top:20px">Aprofundar este verbete</button>
           <div id="dRel"></div>
           <div class="md" id="dDeepOut" style="margin-top:22px"></div>
-          <button class="btn ghost" id="dRegen" style="margin-top:16px">Gerar de novo</button>
+          <button class="btn ghost" id="dRegen" style="margin-top:16px">⚠️ Avisar problema neste verbete</button>
         </div>
       </div>
     </section>
@@ -384,6 +384,7 @@
   CFG.refreshPlan=refreshPlan;
   CFG.ready=loadConfig().catch(e=>{ console.warn("config",e); return CFG; });
   async function token(){ const { data } = await CFG.sb.auth.getSession(); return data.session?.access_token; }
+  CFG.api=async(path,body)=>{ const r=await fetch(path,{method:body?"POST":"GET",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},body:body?JSON.stringify(body):undefined}); const j=await r.json().catch(()=>({})); if(!r.ok) throw {code:"unavailable",detail:j.error||("HTTP "+r.status)}; return j; };
 
   /* ---- IA (substitui "sample") ---- */
   async function blobToB64(b){ const buf=await b.arrayBuffer(); let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }
@@ -605,7 +606,7 @@ const WAIT=["Traduzindo do original…","Consultando o hebraico e o grego…","P
 function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
 async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s) throw {code:"no_sample"}; skel(el);
   const r=await s(prompt,Object.assign({modelTier:"complex",onText:({text})=>{ el.innerHTML=md(text); }},opts));
-  let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “Gerar de novo” para completar.*"; toast("A resposta veio incompleta"); } return t; }
+  let t=r.text; if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “⚠️ Avisar problema” para refazer.*"; toast("A resposta veio incompleta"); } return t; }
 function needClaude(id){ const n=$(id); n.textContent="Entre na sua conta para usar esta função."; n.hidden=false; }
 
 /* ---------- Hoje / passagem ---------- */
@@ -613,7 +614,7 @@ function show(r, kind){
   if(cur!==r&&SP.key==="hoje") stopSpeak(); cur=r; $("ref").textContent=r.ref; $("kind").textContent=kind||"Reflexão do dia";
   const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("copy").hidden=!has; $("storyBtn").hidden=!r.text; $("storyBtn2").hidden=!r.text; $("sayHoje").hidden=!has; $("qaWrap").hidden=!has;
   $("saveBtn").hidden=!has || S.saved.some(x=>x.id===r.id);
-  $("gen").textContent = has?"Gerar de novo":(r.mode==="deep"?"Estudar":"Ler reflexão");
+  $("gen").textContent = has?"⚠️ Avisar problema neste texto":(r.mode==="deep"?"Estudar":"Ler reflexão"); $("gen").classList.toggle("ghost",has);
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
   $("deepBtn").hidden = !r.text || !!r.deep;
   $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
@@ -624,7 +625,7 @@ function show(r, kind){
 function renderQA(){ $("qa").innerHTML=(cur.qa||[]).map(x=>`<div class="q">${esc(x.q)}</div><div class="a md">${md(x.a)}</div>`).join(""); }
 function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||[]).filter(x=>x.date!==dstr()); S.dayIndex.unshift({date:dstr(),ref:cur.ref}); S.dayIndex=S.dayIndex.slice(0,180); kvSet("day_"+dstr(),{ref:cur.ref,text:cur.text,deep:cur.deep,date:dstr()}); } const sv=S.saved.find(x=>x.id===cur.id); if(sv) Object.assign(sv,clone(cur)); save(); }
 /* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
-   "Gerar de novo" continua pessoal (leva em conta o feedback do leitor) e não sobrescreve a versão compartilhada. */
+   Se houver problema no texto, o leitor usa "Avisar problema" (ver reportShared). */
 function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
 async function sharedReflection(ref,kind,prompt,target){ return sharedText(rfKey(ref,kind),prompt,target); }
 async function sharedText(key,prompt,target){
@@ -633,9 +634,21 @@ async function sharedText(key,prompt,target){
   if(!/REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t) && t.indexOf("veio incompleto")<0){ try{ await kvSet(key,{text:t}); }catch(e){} }
   return t;
 }
+/* ---------- Avisar problema (substitui "gerar de novo" no conteúdo que é igual para todos) ---------- */
+const repArm={};
+async function reportShared(btn,keys,onReplaced){
+  const id=btn.id; if(!repArm[id]||Date.now()-repArm[id]>4000){ repArm[id]=Date.now(); const old=btn.textContent; btn.textContent="Tem algo errado? Toque de novo para avisar"; setTimeout(()=>{ if(btn.textContent.startsWith("Tem algo")) btn.textContent=old; },4000); return; }
+  repArm[id]=0; btn.disabled=true;
+  try{ const r=await RB.api("/api/report",{keys:keys.filter(Boolean)});
+    if(r.replaced){ toast("Obrigado! Preparando uma versão nova…"); await onReplaced(); }
+    else toast("Obrigado pelo aviso! Se mais alguém avisar, o texto é refeito para todos."); }
+  catch(e){ toast("Não consegui enviar o aviso agora"); }
+  btn.disabled=false; if(cur) show(cur,$("kind").textContent);
+}
 let regenArm=0;
 async function generate(){
   if(busy||!cur) return;
+  if(cur&&(cur.text||cur.deep)){ return reportShared($("gen"),[rfKey(cur.ref,"s"),rfKey(cur.ref,"d")],async()=>{ cur.text=""; cur.deep=""; persist(); show(cur,$("kind").textContent); await generate(); }); }
   if((cur.text||cur.deep) && Date.now()-regenArm>4000){ regenArm=Date.now(); const g=$("gen"); g.textContent="Toque de novo para confirmar"; setTimeout(()=>{ if(!busy) show(cur,$("kind").textContent); },4000); toast("Isso substitui o texto atual"); return; }
   const isRegen=!!(cur.text||cur.deep);
   regenArm=0; busy=true; $("note").hidden=true; const b=$("gen"); b.disabled=true; b.innerHTML='<span class="spin"></span>Traduzindo do original…';
@@ -728,8 +741,8 @@ async function certificate(ti){ const c=document.createElement("canvas"); c.widt
   $("ctClose").onclick=closeModal; $("ctSave").onclick=async()=>{ try{ const d=await window.claude.use("downloads"); if(!d) throw 0; await d.save({filename:"certificado-"+(ti+1)+".png",data:blob}); }catch(e){ toast("Toque e segure na imagem para salvar"); } }; }
 let lRegenArm=0;
 async function genLesson(force){
-  if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="Gerar de novo"; },4000); return; }
-  lRegenArm=0; $("lRegen").textContent="Gerar de novo"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
+  if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="⚠️ Avisar problema"; },4000); return; }
+  lRegenArm=0; $("lRegen").textContent="⚠️ Avisar problema"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
   const first=!(keep&&keep.text);
   try{ const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut")) : await stream(lessonPrompt(L),$("lOut")); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
   catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
@@ -1301,14 +1314,14 @@ $("fbUp").onclick=()=>{ S.fb=S.fb||{}; S.fb[cur.date||dstr()]=1; save(); show(cu
 $("fbDn").onclick=()=>{ S.fb=S.fb||{}; S.fb[cur.date||dstr()]=-1; save(); show(cur,$("kind").textContent); toast("Anotado. As próximas serão mais práticas."); };
 $("welcomeGo").onclick=()=>{ const nm=$("wName").value.trim(); if(nm) S.name=nm.slice(0,30); greet(); S.welcomed=1; try{ localStorage.setItem("biblia_welcomed","1"); }catch(e){} save(); $("welcome").hidden=true; };
 setInterval(()=>{ if((S.a11y||{}).theme==="auto") applyA11y(); },10*60*1000);
-$("chBack").onclick=()=>go("biblia"); $("chMore").onclick=()=>translateChapter(true); $("chRegen").onclick=()=>translateChapter(false);
+$("chBack").onclick=()=>go("biblia"); $("chMore").onclick=()=>translateChapter(true); $("chRegen").onclick=()=>{ if(!chCur) return; reportShared($("chRegen"),[chKey(chCur.b,chCur.c)],()=>translateChapter(false)); };
 $("chPrev").onclick=()=>{ if(chCur&&chCur.c>1) openChapter(chCur.b,chCur.c-1); }; $("chNext").onclick=()=>{ if(chCur) openChapter(chCur.b,chCur.c+1); };
 $("chStudy").onclick=()=>{ if(!chCur) return; mode="deep"; openRef(`${chCur.b} ${chCur.c}`); };
 $("dSearch").addEventListener("input",renderDic);
 document.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{ dMode=b.dataset.dm; document.querySelectorAll("[data-dm]").forEach(x=>x.classList.toggle("on",x===b)); $("dThemeGo").hidden=dMode!=="tema"; $("dSearch").placeholder=dMode==="tema"?"Tema: perdão, ansiedade, justiça, morte…":"Pesquisar: anjo, Satanás, Gabriel, aliança…"; $("dList").innerHTML=dMode==="tema"?renderThemeHist():""; if(dMode==="tema") wireThemeHist(); renderDic(); });
 $("dThemeGo").onclick=themeSearch; $("dSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"&&dMode==="tema") themeSearch(); });
-$("tlOpen").onclick=openTimeline; $("tlBack").onclick=()=>go("estudos"); $("dBack").onclick=()=>go("dic"); $("dDeep").onclick=()=>genEntry(true); $("dRegen").onclick=()=>genEntry(false);
-$("lRegen").onclick=()=>genLesson(false); $("ansBtn").onclick=sendAnswer;
+$("tlOpen").onclick=openTimeline; $("tlBack").onclick=()=>go("estudos"); $("dBack").onclick=()=>go("dic"); $("dDeep").onclick=()=>genEntry(true); $("dRegen").onclick=()=>{ if(!dCur) return; reportShared($("dRegen"),[entKey(dCur.t)],()=>genEntry(false)); };
+$("lRegen").onclick=()=>{ if(!curL) return; reportShared($("lRegen"),["ls_"+curL.id,"qz_"+curL.id],async()=>{ if(curLData){ curLData.text=""; curLData.quiz=null; } await genLesson(true); }); }; $("ansBtn").onclick=sendAnswer;
 $("lNoteIn").addEventListener("input",lessonNote);
 $("scroll").addEventListener("scroll",()=>{ if($("lessonView").hidden) return; const s=$("scroll"), p=s.scrollTop/Math.max(1,s.scrollHeight-s.clientHeight); $("rprog").style.width=Math.round(p*100)+"%"; },{passive:true});
 $("lDone").onclick=()=>{ if(!curL) return; const was=trackDone(curL.ti); S.study.done[curL.id]=dstr(); save(); toast("Lição concluída ✓"); if(!was&&trackDone(curL.ti)){ certificate(curL.ti); return; } const nx=LESSONS[LESSONS.indexOf(curL)+1]; if(nx) openLesson(nx.id); else go("estudos"); };
@@ -1441,6 +1454,7 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. O essencial é e continuará gratuito. A assinatura Pro existe só para manter a plataforma de pé e evoluindo.</p>
   <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
   <div class="sm muted">${esc((window.RB&&RB.user&&RB.user.email)||"")} · Plano ${window.RB&&RB.plan==="pro"?"Pro ✨":"Grátis"}</div>
+  <div class="sm muted" id="usageLine" style="margin-top:4px"></div>
   <div class="row" style="margin-top:8px">${window.RB&&RB.plan==="pro"?"":`<button class="btn" id="goPro">Assinar Pro</button>`}<button class="btn ghost" id="signOut">Sair</button></div>
   <button class="link-btn" id="delAcc" style="margin-top:10px;color:#c0392b">Excluir minha conta e meus dados</button>
   <p class="sm" style="margin:12px 0 0"><a href="/privacidade.html" style="color:var(--gold2)">Política de Privacidade</a> · <a href="/termos.html" style="color:var(--gold2)">Termos de uso</a></p>
@@ -1452,6 +1466,7 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   $("tgC").onclick=()=>{ a.contrast=!a.contrast; applyA11y(); save(); draw(); }; $("tgA").onclick=()=>{ a.auto=!a.auto; save(); draw(); if(a.auto) speakText("Leitura automática ligada.","Teste"); };
   $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); };
   $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
+  if(window.RB&&RB.api) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta"); }).catch(()=>{});
   $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>RB.signOut(); $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
   $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
   draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button")?.focus(),50); };
@@ -1467,7 +1482,7 @@ function loadDaily(){ const t=dstr(), ref=todayRef(), d=S.daily[t]; show(d&&d.re
 initStore("biblia_v1",normalize,()=>{ applyA11y(); if(!S.welcomed&&!localStorage.getItem("biblia_welcomed")) $("welcome").hidden=false; if(!cur||cur.daily) loadDaily(); renderList(); renderStudy(); renderPlan(); renderDailyPlan(); renderCont(); });
 
 /* ---------- App independente: login, Pro, offline ---------- */
-async function openPro(why){ $("proWhy").textContent=why||"Sem limites para estudar a Palavra."; $("proBg").hidden=false;
+async function openPro(why){ $("proWhy").textContent=why||"Mais fôlego para quem estuda a fundo."; $("proBg").hidden=false;
   const can=await RB.billingAvailable(); const price=can?await RB.proPrice():(RB.priceLabel||"");
   $("proBuy").textContent=price?`Assinar Pro · ${price}`:"Assinar Pro"; $("proNote").textContent=can?"Cobrança mensal pela Google Play. Cancele quando quiser na Play Store.":"A assinatura está disponível no app instalado pela Google Play."; $("proBuy").disabled=!can; }
 $("proClose").onclick=()=>{ $("proBg").hidden=true; };
@@ -1477,6 +1492,7 @@ window.addEventListener("rb-quota",e=>openPro((e.detail&&e.detail.message)||"Voc
 $("gGoogle").onclick=()=>RB.signInGoogle();
 $("gEmailGo").onclick=async()=>{ const em=$("gEmail").value.trim(); if(!/^\S+@\S+\.\S+$/.test(em)){ $("gMsg").textContent="Digite um e-mail válido."; return; } try{ await RB.signInEmail(em); $("gMsg").textContent="Pronto! Abra o link que enviamos para "+em+" neste aparelho."; }catch(err){ const m=String(err&&err.message||err); $("gMsg").textContent=/rate limit|security purposes|seconds/i.test(m)?"Muitos pedidos de link em pouco tempo. Espere alguns minutos e tente de novo.":("Não consegui enviar o link: "+m); } };
 RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="Não consegui conectar ao servidor. Verifique a internet."; return; } if(!RB.user) $("gate").hidden=false; });
+RB.ready.then(()=>{ const c=$("proChip"); if(c){ c.hidden=RB.plan==="pro"||!RB.user; c.onclick=()=>openPro(); } });
 { const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }
 if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
 </script>

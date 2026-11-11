@@ -18,6 +18,7 @@
   CFG.refreshPlan=refreshPlan;
   CFG.ready=loadConfig().catch(e=>{ console.warn("config",e); return CFG; });
   async function token(){ const { data } = await CFG.sb.auth.getSession(); return data.session?.access_token; }
+  CFG.api=async(path,body)=>{ const r=await fetch(path,{method:body?"POST":"GET",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},body:body?JSON.stringify(body):undefined}); const j=await r.json().catch(()=>({})); if(!r.ok) throw {code:"unavailable",detail:j.error||("HTTP "+r.status)}; return j; };
 
   /* ---- IA (substitui "sample") ---- */
   async function blobToB64(b){ const buf=await b.arrayBuffer(); let s=""; const u=new Uint8Array(buf); for(let i=0;i<u.length;i+=0x8000) s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000)); return btoa(s); }

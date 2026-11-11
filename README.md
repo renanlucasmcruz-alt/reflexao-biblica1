@@ -31,3 +31,5 @@ Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexã
 | `ANDROID_PACKAGE_NAME` | nome do pacote Android (ex.: app.reflexaobiblica.twa) |
 | `GOOGLE_SERVICE_ACCOUNT_JSON` | JSON da conta de serviço do Google Play (para validar o Pro) |
 | `PRO_PRICE_LABEL` | texto do preço exibido fora da Play Store (opcional) |
+| `REPORT_THRESHOLD` | quantas pessoas precisam avisar problema para refazer um texto (padrão 2) |
+| `ADMIN_EMAILS` | e-mails que refazem um texto com um aviso só (separados por vírgula) |
