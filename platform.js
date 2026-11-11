@@ -27,7 +27,7 @@
     const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
     const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
     const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
-      body:JSON.stringify({messages,tier:opts.modelTier||"default",images}),signal:opts.signal});
+      body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared,feature:opts.feature||""}),signal:opts.signal});
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body) throw {code:"unavailable"};

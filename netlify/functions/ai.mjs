@@ -1,4 +1,7 @@
-import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota, usageToday } from "./_lib.mjs";
+import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota, usageToday, takeWeekly, env } from "./_lib.mjs";
+
+/* Ferramentas de estudo profundo: só no Pro. */
+const PRO_ONLY = new Set(["il", "xr", "alt", "entry_deep", "lesson_pro"]);
 
 /* Custo: grátis usa o Haiku (barato); Pro usa o modelo do nível pedido (Sonnet).
    Conteúdo compartilhado (tradução de capítulos, introduções, dicionário, interlinear...)
@@ -29,6 +32,13 @@ async function handle(req) {
 
   const plan = await getPlan(user.id);
   const shared = body.shared === true;
+  const feature = typeof body.feature === "string" ? body.feature : "";
+  if (plan !== "pro" && PRO_ONLY.has(feature)) {
+    return json(402, { message: "Esta ferramenta de estudo aprofundado faz parte do Pro.", pro: true });
+  }
+  if (plan !== "pro" && feature === "deep" && !(await takeWeekly(user.id, parseInt(env("FREE_DEEP_WEEKLY", "2"), 10)))) {
+    return json(402, { message: "Você já usou o estudo aprofundado grátis desta semana. No Pro ele é liberado.", pro: true });
+  }
   if (shared && !(await takeSharedQuota(user.id, plan))) {
     return json(402, { message: "Você abriu muitos conteúdos novos hoje. Volte amanhã ou assine o Pro." });
   }

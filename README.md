@@ -23,7 +23,8 @@ Um café, um texto, uma reflexão. A Bíblia traduzida do original, com reflexã
 | `SUPABASE_ANON_KEY` | chave pública (anon) do Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | chave secreta (service_role) do Supabase |
 | `ANTHROPIC_API_KEY` | chave da API da Anthropic |
-| `FREE_DAILY_LIMIT` | perguntas grátis por dia (padrão 5) |
+| `FREE_DAILY_LIMIT` | perguntas grátis por dia (padrão 3) |
+| `FREE_DEEP_WEEKLY` | estudos aprofundados grátis por semana, trava do servidor (padrão 2; o app mostra 1) |
 | `FREE_SHARED_LIMIT` | conteúdos novos (capítulos, lições) por dia no grátis (padrão 40) |
 | `PRO_DAILY_LIMIT` | perguntas por dia no Pro (padrão 60) |
 | `PRO_PREMIUM_DAILY` | quantas dessas vão no modelo de maior qualidade (padrão 10) |

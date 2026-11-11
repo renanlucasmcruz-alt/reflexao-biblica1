@@ -334,12 +334,14 @@
 <div id="proBg" hidden><div id="proSheet" role="dialog" aria-modal="true" aria-label="Assinar Pro">
   <div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:26px;margin:0">Reflexão Bíblica <span style="color:var(--gold)">Pro</span></h2><button class="iconbtn" id="proClose" aria-label="Fechar">✕</button></div>
   <p class="muted" id="proWhy" style="margin:8px 0 14px">Mais fôlego para quem estuda a fundo.</p>
-  <div class="feat"><span>💬</span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 5), com respostas completas</span></div>
-  <div class="feat" style="margin-top:10px"><span>🎓</span><span>Correções do mentor nos estudos dirigidos <b>sem esbarrar no limite</b> do dia</span></div>
-  <div class="feat" style="margin-top:10px"><span>🔎</span><span>Mais conteúdos novos por dia: capítulos, interlinear, dicionário e buscas</span></div>
+  <div class="feat"><span>📚</span><span><b>Todas as trilhas</b> de estudo dirigido, com mentor, teste e certificado (a trilha 1 é grátis)</span></div>
+  <div class="feat" style="margin-top:10px"><span>🔍</span><span><b>Estudo aprofundado</b> de cada reflexão, sempre que quiser (no grátis: 1 por semana)</span></div>
+  <div class="feat" style="margin-top:10px"><span>🔤</span><span><b>Original palavra por palavra</b> no hebraico e no grego, referências cruzadas e outras traduções</span></div>
+  <div class="feat" style="margin-top:10px"><span>📖</span><span><b>Verbetes aprofundados</b> no dicionário</span></div>
+  <div class="feat" style="margin-top:10px"><span>💬</span><span>Até <b>60 perguntas por dia</b> ao mentor (no grátis são 3)</span></div>
   <div class="purpose" style="margin-top:16px;padding:14px 16px;border-radius:16px;background:var(--card2,rgba(176,108,40,.08));border:1px solid var(--line,rgba(176,108,40,.18))">
     <div style="font-weight:800;margin-bottom:4px">Por que existe o Pro?</div>
-    <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Bíblia, a reflexão do dia, as lições e o dicionário <b>continuam gratuitos para todos</b>. O Pro não vende fé nem tranca conteúdo: ele paga a inteligência artificial e os servidores, e mantém o app evoluindo. Quem assina ajuda a manter tudo aberto para quem não pode.</div>
+    <div class="sm" style="line-height:1.55">O Reflexão Bíblica nasceu para tornar o conhecimento bíblico acessível. A Palavra, a reflexão do dia, o áudio e a acessibilidade <b>são gratuitos para todos</b>, e continuarão sendo. As ferramentas de estudo aprofundado são Pro: é isso que paga a inteligência artificial e os servidores e mantém o app evoluindo. Quem assina ajuda a manter o essencial aberto para quem não pode.</div>
   </div>
   <button class="btn full" id="proBuy" style="margin-top:18px">Assinar Pro</button>
   <button class="btn ghost full" id="proRestore" style="margin-top:8px">Já assinei: restaurar</button>
@@ -393,7 +395,7 @@
     const messages = typeof input==="string" ? [{role:"user",content:input}] : input;
     const images = opts.images ? await Promise.all(opts.images.map(async b=>({media_type:b.type||"image/jpeg",data:await blobToB64(b)}))) : null;
     const r=await fetch("/api/ai",{method:"POST",headers:{"content-type":"application/json",authorization:"Bearer "+await token()},
-      body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared}),signal:opts.signal});
+      body:JSON.stringify({messages,tier:opts.modelTier||"default",images,shared:!!opts.shared,feature:opts.feature||""}),signal:opts.signal});
     if(r.status===402){ const j=await r.json().catch(()=>({})); window.dispatchEvent(new CustomEvent("rb-quota",{detail:j})); throw {code:"quota",message:j.message}; }
     if(r.status===429) throw {code:"rate_limited"};
     if(!r.ok||!r.body){ const j=await r.json().catch(()=>({})); throw {code:"unavailable",detail:j.detail||("HTTP "+r.status+(j.error?" "+j.error:""))}; }
@@ -616,7 +618,7 @@ function show(r, kind){
   $("saveBtn").hidden=!has || S.saved.some(x=>x.id===r.id);
   $("gen").textContent = has?"⚠️ Avisar problema neste texto":(r.mode==="deep"?"Estudar":"Ler reflexão"); $("gen").classList.toggle("ghost",has);
   $("out").innerHTML = r.text?md(r.text):""; $("deep").innerHTML = r.deep?md(r.deep):"";
-  $("deepBtn").hidden = !r.text || !!r.deep;
+  $("deepBtn").hidden = !r.text || !!r.deep; $("deepBtn").textContent = isPro()?"Aprofundar: estudo completo do texto":(freeDeepLeft()>0?"Aprofundar: estudo completo (1 grátis por semana)":"Aprofundar: estudo completo 🔒 Pro");
   $("fbRow").hidden = !(r.daily&&r.text); if(r.daily&&r.text){ const f=(S.fb||{})[r.date||dstr()]; $("fbUp").classList.toggle("on",f===1); $("fbDn").classList.toggle("on",f===-1); }
   const st=streak(); $("streak").hidden=st<2; $("streak").textContent=`🔥 ${st} dias seguidos`;
   if(has) renderQA();
@@ -627,13 +629,22 @@ function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||
 /* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
    Se houver problema no texto, o leitor usa "Avisar problema" (ver reportShared). */
 function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
-async function sharedReflection(ref,kind,prompt,target){ return sharedText(rfKey(ref,kind),prompt,target); }
-async function sharedText(key,prompt,target){
+async function sharedReflection(ref,kind,prompt,target){ return sharedText(rfKey(ref,kind),prompt,target,kind==="d"?{feature:"deep"}:{}); }
+async function sharedText(key,prompt,target,xo={}){
   try{ const c=await kvGet(key); if(c&&c.text){ target.innerHTML=md(c.text); return c.text; } }catch(e){}
-  const t=await stream(prompt,target,{shared:true});
+  const t=await stream(prompt,target,Object.assign({shared:true},xo));
   if(!/REFER[ÊE]NCIA INV[ÁA]LIDA/i.test(t) && t.indexOf("veio incompleto")<0){ try{ await kvSet(key,{text:t}); }catch(e){} }
   return t;
 }
+/* ---------- Grátis x Pro ----------
+   Grátis: Bíblia, reflexão do dia, áudio/acessibilidade, dicionário básico, planos, notas, trilha 1 inteira, 3 perguntas/dia
+   e 1 estudo aprofundado por semana. Pro: interlinear, referências, outras traduções, verbete aprofundado, trilhas 2+ e estudos aprofundados. */
+function isPro(){ return !!(window.RB&&RB.plan==="pro"); }
+function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.toISOString().slice(0,10); }
+function freeDeepLeft(){ const w=S.deepWeek||{}; return w.k===weekKey()?Math.max(0,1-(w.n||0)):1; }
+function useFreeDeep(){ const k=weekKey(); const w=(S.deepWeek&&S.deepWeek.k===k)?S.deepWeek:{k,n:0}; w.n=(w.n||0)+1; S.deepWeek=w; save(); }
+function needPro(why){ if(isPro()) return false; try{ closeModal(); }catch(e){} openPro(why); return true; }
+const LOCK=()=>isPro()?"":" 🔒";
 /* ---------- Avisar problema (substitui "gerar de novo" no conteúdo que é igual para todos) ---------- */
 const repArm={};
 async function reportShared(btn,keys,onReplaced){
@@ -663,9 +674,10 @@ async function generate(){
   busy=false; b.disabled=false; show(cur,$("kind").textContent);
 }
 async function deepen(){
-  if(busy||!cur) return; busy=true; const b=$("deepBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>Preparando o estudo completo…';
+  if(busy||!cur) return;
+  if(!isPro()&&!cur.deep&&freeDeepLeft()<=0){ openPro("Você já usou o estudo aprofundado grátis desta semana. No Pro ele fica liberado sempre."); return; } busy=true; const b=$("deepBtn"); b.disabled=true; b.innerHTML='<span class="spin"></span>Preparando o estudo completo…';
   skel($("deep"),"Preparando o estudo completo…");
-  try{ cur.deep=await sharedReflection(cur.ref,"d",deepPrompt(cur.ref),$("deep")); persist(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
+  try{ cur.deep=await sharedReflection(cur.ref,"d",deepPrompt(cur.ref),$("deep")); persist(); if(!isPro()) useFreeDeep(); autoRead(cur.deep,"Estudo de "+cur.ref,"hoje"); }
   catch(e){ $("deep").textContent=e&&e.code==="no_sample"?"Entre na sua conta para o estudo completo.":errMsg(e); }
   busy=false; b.disabled=false; b.textContent="Aprofundar: estudo completo do texto"; show(cur,$("kind").textContent);
 }
@@ -692,13 +704,14 @@ function renderStudy(){
   $("stCont").onclick=()=>openLesson((next||LESSONS[0]).id);
   const openT = next?next.ti:0;
   $("tracks").innerHTML=TRACKS.map((t,ti)=>{ const ls=LESSONS.filter(l=>l.ti===ti), d=ls.filter(l=>S.study.done[l.id]).length;
-    return `<div class="track ${ti===openT?"open":""}"><button data-tr="${ti}"><div><div class="sm muted">Trilha ${ti+1}</div><div class="tt">${esc(t[0])}</div></div><span class="pill">${d}/${ls.length}</span></button>
+    return `<div class="track ${ti===openT?"open":""}"><button data-tr="${ti}"><div><div class="sm muted">Trilha ${ti+1}</div><div class="tt">${esc(t[0])}</div></div><span class="pill">${ti>0&&!isPro()?"🔒 Pro":`${d}/${ls.length}`}</span></button>
       <div class="lessons">${ls.map(l=>{ const n=LESSONS.indexOf(l)+1; return `<button class="lesson ${S.study.done[l.id]?"done":""}" data-l="${l.id}"><span class="n">${S.study.done[l.id]?"✓":n}</span><span><div class="lt">${esc(l.title)}</div><div class="lr">${esc(l.refs.join(" · "))}</div></span></button>`; }).join("")}</div></div>`; }).join("");
   $("tracks").querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>b.parentElement.classList.toggle("open"));
   $("tracks").querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>openLesson(b.dataset.l));
 }
 async function openLesson(id){
-  const L=LESSONS.find(l=>l.id===id); if(!L) return; if(SP.key==="lic"||SP.key==="fb") stopSpeak(); curL=L; S.study.last=id; save();
+  const L=LESSONS.find(l=>l.id===id); if(!L) return;
+  if(L.ti>0&&!isPro()){ openPro(`A trilha ${L.ti+1} faz parte do Pro. A trilha 1 é grátis inteira, com mentor, teste e certificado.`); return; } if(SP.key==="lic"||SP.key==="fb") stopSpeak(); curL=L; S.study.last=id; save();
   $("studyHome").hidden=true; $("lessonView").hidden=false; $("scroll").scrollTop=0; $("topTitle").textContent=`Lição ${LESSONS.indexOf(L)+1}`;
   $("lTrack").textContent=`Trilha ${L.ti+1} · ${L.track}`; $("lTitle").textContent=L.title; $("lRefs").innerHTML=L.refs.map(r=>`<span class="chip">${esc(r)}</span>`).join("");
   $("lNote").hidden=true; $("lDone").textContent=S.study.done[id]?"Lição concluída ✓":"Concluir lição";
@@ -721,7 +734,7 @@ async function makeQuiz(){ const s=await getSample(); if(!s){ toast("Entre na su
     const r=await askJSONb(`Com base nesta lição, crie 3 perguntas de múltipla escolha (4 opções cada, só uma correta) que testem compreensão real, não decoreba. Sem puxar para nenhuma religião: quando o tema for de fé, pergunte "segundo o texto" ou "segundo a tradição X". JSON: {"q":[{"p":"pergunta","o":["a","b","c","d"],"c":0,"e":"explicação de 1 frase"}]}
 
 LIÇÃO:
-${curLData.text}`,curLData.shared?{shared:true}:{});
+${curLData.text}`,Object.assign(curLData.shared?{shared:true}:{},{feature:curL.ti>0?"lesson_pro":""}));
     curLData.quiz={q:(r.q||[]).slice(0,3).map(x=>({p:String(x.p),o:(x.o||[]).slice(0,4).map(String),c:+x.c||0,e:String(x.e||"")})),ans:{}}; await kvSet("lesson_"+curL.id,curLData); renderQuiz();
     if(curLData.shared&&curLData.quiz.q.length===3){ try{ await kvSet(qk,{q:curLData.quiz.q}); }catch(e){} } }
   catch(e){ $("quizBox").innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; } }
@@ -744,7 +757,7 @@ async function genLesson(force){
   if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="⚠️ Avisar problema"; },4000); return; }
   lRegenArm=0; $("lRegen").textContent="⚠️ Avisar problema"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
   const first=!(keep&&keep.text);
-  try{ const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut")) : await stream(lessonPrompt(L),$("lOut")); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
+  try{ const lf={feature:L.ti>0?"lesson_pro":""}; const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut"),lf) : await stream(lessonPrompt(L),$("lOut"),lf); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
   catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
   lBusy=false;
 }
@@ -761,7 +774,7 @@ ${curLData.text}
 RESPOSTAS DO ALUNO:
 ${a}
 
-Comente em português do Brasil, em no máximo 280 palavras, com títulos "### Pergunta 1", "### Pergunta 2", "### Pergunta 3": o que está bom, o que pode aprofundar, corrija com gentileza qualquer erro de fato ou de leitura do texto e faça uma pergunta de continuação. Termine com "### Próximo passo" em uma frase.`,{modelTier:"complex",cache:false,onText:({text})=>{ $("fb").innerHTML=md(text); }});
+Comente em português do Brasil, em no máximo 280 palavras, com títulos "### Pergunta 1", "### Pergunta 2", "### Pergunta 3": o que está bom, o que pode aprofundar, corrija com gentileza qualquer erro de fato ou de leitura do texto e faça uma pergunta de continuação. Termine com "### Próximo passo" em uma frase.`,{feature:curL&&curL.ti>0?"lesson_pro":"",modelTier:"complex",cache:false,onText:({text})=>{ $("fb").innerHTML=md(text); }});
     curLData.answer=a; curLData.feedback=r.text; await kvSet("lesson_"+curL.id,curLData); autoRead(r.text,"Comentário do mentor","fb"); }
   catch(e){ $("fb").textContent=errMsg(e); }
   b.disabled=false; b.textContent="Enviar ao mentor";
@@ -1050,7 +1063,7 @@ async function genEntry(deep){
   if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
   skel(el,deep?"Aprofundando o verbete…":"Escrevendo o verbete…"); $("dDeep").hidden=true; if(!deep) $("dRel").innerHTML="";
   try{ const s=await getSample(); if(!s) throw {code:"no_sample"};
-    const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,onText:({text})=>{ el.innerHTML=md(text); }});
+    const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,feature:deep?"entry_deep":"",onText:({text})=>{ el.innerHTML=md(text); }});
     const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
     if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
   catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Entre na sua conta para abrir o verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
@@ -1085,8 +1098,8 @@ function openVerse(ref,text){
     <div class="vgrid">
       <button class="vbtn" id="vFav">${hh.f?"★ Favorito":"☆ Favoritar"}</button><button class="vbtn" id="vNote">✏️ ${hh.n?"Editar nota":"Anotar"}</button>
       <button class="vbtn" id="vCopy">📋 Copiar</button><button class="vbtn" id="vCard">🖼️ Cartão</button>
-      <button class="vbtn" id="vIl">🔤 Original</button><button class="vbtn" id="vXr">🔗 Referências</button>
-      <button class="vbtn" id="vAlt">🔄 Outras traduções</button><button class="vbtn" id="vAsk">❓ Perguntar</button>
+      <button class="vbtn" id="vIl">🔤 Original${LOCK()}</button><button class="vbtn" id="vXr">🔗 Referências${LOCK()}</button>
+      <button class="vbtn" id="vAlt">🔄 Outras traduções${LOCK()}</button><button class="vbtn" id="vAsk">❓ Perguntar</button>
     </div>
     <div id="vOut" style="margin-top:14px">${extra||(hh.n?`<div class="note" style="color:var(--text)"><b>Sua nota:</b> ${esc(hh.n)}</div>`:"")}</div>`);
     const set=(k,v)=>{ S.hl[ref]=Object.assign({},S.hl[ref]||{},{[k]:v,t:text,d:dstr()}); const o=S.hl[ref]; if(!o.c&&!o.n&&!o.f) delete S.hl[ref]; save(); redecorateAll(); };
@@ -1097,9 +1110,9 @@ function openVerse(ref,text){
       $("vNoteSave").onclick=()=>{ set("n",$("vNoteIn").value.trim()||null); draw(); toast("Nota salva"); }; };
     $("vCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(`“${text}” (${ref})`); toast("Versículo copiado"); }catch(e){ toast("Não consegui copiar"); } };
     $("vCard").onclick=()=>shareCard(text,ref);
-    $("vIl").onclick=()=>verseAI(ref,text,"il");
-    $("vXr").onclick=()=>verseAI(ref,text,"xr");
-    $("vAlt").onclick=()=>verseAI(ref,text,"alt");
+    $("vIl").onclick=()=>{ if(needPro("A análise palavra por palavra no hebraico e no grego faz parte do Pro.")) return; verseAI(ref,text,"il"); };
+    $("vXr").onclick=()=>{ if(needPro("As referências cruzadas fazem parte do Pro.")) return; verseAI(ref,text,"xr"); };
+    $("vAlt").onclick=()=>{ if(needPro("As outras formas de traduzir do original fazem parte do Pro.")) return; verseAI(ref,text,"alt"); };
     $("vAsk").onclick=()=>{ $("vOut").innerHTML=`<div class="row" style="flex-wrap:nowrap"><input id="vQ" data-mic="send2" placeholder="Pergunte sobre este versículo"><button class="btn" id="vQGo">Enviar</button></div><div class="md" id="vQA" style="margin-top:12px"></div>`; addMic($("vQ")); $("vQ").focus();
       const go=()=>verseAI(ref,text,"ask",$("vQ").value.trim()); $("vQGo").onclick=go; $("vQ").addEventListener("keydown",e=>{ if(e.key==="Enter") go(); }); };
   };
@@ -1111,16 +1124,16 @@ async function verseAI(ref,text,kind,q){
   const s=await getSample(); if(!s){ out.innerHTML=`<div class="note">Entre na sua conta para usar esta função.</div>`; return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Consultando o original…</div>';
   try{
-    if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`,{shared:true});
+    if(kind==="il"){ const r=await askJSONb(`Faça a análise interlinear de ${ref} no original (hebraico do Texto Massorético, aramaico ou grego koiné do texto crítico). Para CADA palavra na ordem do original, dê: a palavra original, transliteração, número de Strong (se tiver certeza; senão deixe vazio), análise gramatical curta (classe, tempo/pessoa/número quando houver) e sentido em português. JSON: {"lingua":"hebraico|aramaico|grego","palavras":[{"orig":"","translit":"","strong":"","morf":"","sentido":""}],"nota":"no máximo 25 palavras sobre algo importante na gramática"}`,{shared:true,feature:"il"});
       const W=(r.palavras||[]).slice(0,60);
       const html=`<div class="eyebrow" style="margin-bottom:8px">Interlinear · ${esc(r.lingua||"")}</div><div class="ilgrid" ${/heb|aram/i.test(r.lingua||"")?'dir="rtl"':""}>${W.map(w=>`<div class="ilw" dir="ltr"><div class="ilo">${esc(w.orig)}</div><div class="ilt">${esc(w.translit)}</div><div class="ils">${esc(w.sentido)}</div><div class="ilm">${esc(w.morf)}${w.strong?" · "+esc(w.strong):""}</div></div>`).join("")}</div>${r.nota?`<p class="sm muted" style="margin:10px 0 0">${esc(r.nota)}</p>`:""}<p class="sm muted" style="margin:8px 0 0">Gerado por IA como apoio ao estudo. Para citação acadêmica, confira num léxico (BDB, BDAG) ou numa edição crítica.</p>`;
       out.innerHTML=html; await kvSet(k,{html}); return; }
-    if(kind==="xr"){ const r=await askJSONb(`Liste de 6 a 10 referências cruzadas importantes para ${ref} ("${text}"): citações diretas, alusões, paralelos e textos com o mesmo tema ou palavra-chave. JSON: {"refs":[{"ref":"Livro C:V","tipo":"citação|alusão|paralelo|tema","porque":"no máximo 15 palavras"}]}`,{shared:true});
+    if(kind==="xr"){ const r=await askJSONb(`Liste de 6 a 10 referências cruzadas importantes para ${ref} ("${text}"): citações diretas, alusões, paralelos e textos com o mesmo tema ou palavra-chave. JSON: {"refs":[{"ref":"Livro C:V","tipo":"citação|alusão|paralelo|tema","porque":"no máximo 15 palavras"}]}`,{shared:true,feature:"xr"});
       const html=`<div class="eyebrow" style="margin-bottom:6px">Referências cruzadas</div>${(r.refs||[]).slice(0,12).map(x=>`<button class="li xref" data-go="${esc(x.ref)}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x.ref)} <span class="pill">${esc(x.tipo||"")}</span></div><div class="sm muted">${esc(x.porque||"")}</div></div><span class="pill">›</span></button>`).join("")}`;
       out.innerHTML=html; wireRefLinks(out); await kvSet(k,{html}); return; }
     const prompt = kind==="alt" ? `Mostre formas diferentes e fiéis de traduzir ${ref} do original para o português, sem copiar nenhuma tradução publicada: 1) tradução bem literal (palavra por palavra), 2) tradução formal equilibrada, 3) tradução dinâmica (ideia por ideia). Depois, em até 60 palavras, explique onde as traduções costumam divergir e por quê. Use "### " para cada tipo.`
       : `Você é um biblista com domínio de hebraico, aramaico e grego koiné, sem puxar para nenhuma religião. Sobre ${ref} ("${text}"), responda em português do Brasil, em até 180 palavras, de forma direta: ${q}`;
-    const r=await s(prompt,{modelTier:"complex",shared:kind==="alt",cache:false,onText:({text})=>{ out.innerHTML=`<div class="md" style="font-size:16px">${md(text)}</div>`; }});
+    const r=await s(prompt,{modelTier:"complex",shared:kind==="alt",feature:kind==="alt"?"alt":"",cache:false,onText:({text})=>{ out.innerHTML=`<div class="md" style="font-size:16px">${md(text)}</div>`; }});
     const html=`<div class="md" style="font-size:16px">${md(r.text)}</div>`; out.innerHTML=html; if(kind==="alt") await kvSet(k,{html});
   }catch(e){ console.warn(e); out.innerHTML=`<div class="note">${esc(errMsg(e))}</div>`; }
 }
@@ -1320,7 +1333,7 @@ $("chStudy").onclick=()=>{ if(!chCur) return; mode="deep"; openRef(`${chCur.b} $
 $("dSearch").addEventListener("input",renderDic);
 document.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>{ dMode=b.dataset.dm; document.querySelectorAll("[data-dm]").forEach(x=>x.classList.toggle("on",x===b)); $("dThemeGo").hidden=dMode!=="tema"; $("dSearch").placeholder=dMode==="tema"?"Tema: perdão, ansiedade, justiça, morte…":"Pesquisar: anjo, Satanás, Gabriel, aliança…"; $("dList").innerHTML=dMode==="tema"?renderThemeHist():""; if(dMode==="tema") wireThemeHist(); renderDic(); });
 $("dThemeGo").onclick=themeSearch; $("dSearch").addEventListener("keydown",e=>{ if(e.key==="Enter"&&dMode==="tema") themeSearch(); });
-$("tlOpen").onclick=openTimeline; $("tlBack").onclick=()=>go("estudos"); $("dBack").onclick=()=>go("dic"); $("dDeep").onclick=()=>genEntry(true); $("dRegen").onclick=()=>{ if(!dCur) return; reportShared($("dRegen"),[entKey(dCur.t)],()=>genEntry(false)); };
+$("tlOpen").onclick=openTimeline; $("tlBack").onclick=()=>go("estudos"); $("dBack").onclick=()=>go("dic"); $("dDeep").onclick=()=>{ if(needPro("O verbete aprofundado faz parte do Pro. O verbete básico continua grátis.")) return; genEntry(true); }; $("dRegen").onclick=()=>{ if(!dCur) return; reportShared($("dRegen"),[entKey(dCur.t)],()=>genEntry(false)); };
 $("lRegen").onclick=()=>{ if(!curL) return; reportShared($("lRegen"),["ls_"+curL.id,"qz_"+curL.id],async()=>{ if(curLData){ curLData.text=""; curLData.quiz=null; } await genLesson(true); }); }; $("ansBtn").onclick=sendAnswer;
 $("lNoteIn").addEventListener("input",lessonNote);
 $("scroll").addEventListener("scroll",()=>{ if($("lessonView").hidden) return; const s=$("scroll"), p=s.scrollTop/Math.max(1,s.scrollHeight-s.clientHeight); $("rprog").style.width=Math.round(p*100)+"%"; },{passive:true});
@@ -1451,7 +1464,7 @@ $("setBtn").onclick=()=>{ const a=S.a11y; const draw=()=>{ $("setSheet").innerHT
   <div class="eyebrow" style="margin:14px 0 8px">Seu nome</div><div class="row" style="flex-wrap:nowrap"><input id="setName" value="${esc(S.name||"")}" placeholder="Como podemos te chamar?"><button class="btn" id="setNameOk">OK</button></div>
   <button class="btn ghost full" id="shareApp" style="margin-top:14px">💌 Indicar o app para alguém</button>
   <div class="eyebrow" style="margin:18px 0 8px">Nosso propósito</div>
-  <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. O essencial é e continuará gratuito. A assinatura Pro existe só para manter a plataforma de pé e evoluindo.</p>
+  <p class="sm muted" style="margin:0;line-height:1.55">Tornar o conhecimento bíblico acessível, com fidelidade ao texto original e sem puxar para nenhuma denominação. A Palavra, a reflexão diária e a acessibilidade são gratuitas para todos. As ferramentas de estudo aprofundado são Pro, e é isso que mantém o app de pé.</p>
   <div class="eyebrow" style="margin:18px 0 8px">Sua conta</div>
   <div class="sm muted">${esc((window.RB&&RB.user&&RB.user.email)||"")} · Plano ${window.RB&&RB.plan==="pro"?"Pro ✨":"Grátis"}</div>
   <div class="sm muted" id="usageLine" style="margin-top:4px"></div>
