@@ -1029,18 +1029,22 @@ FORMATO
 - Cada versículo numa linha começando com "> " e o número em negrito: "> **1** …".
 - Sem comentários nem notas. Última linha: "Tradução do [língua] original."
 - Se o capítulo for muito longo, pare sempre ao final de um versículo.`; }
+/* Bíblia já traduzida: arquivos estáticos por livro (/biblia/Genesis.json), abrem na hora e funcionam offline. */
+const BOOKFILES={};
+function bookSlug(b){ return b.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]/g,""); }
+async function staticChapter(b,c){ const k=bookSlug(b); try{ if(!(k in BOOKFILES)) BOOKFILES[k]=fetch(`/biblia/${k}.json`).then(r=>r.ok?r.json():null).catch(()=>null); const j=await BOOKFILES[k]; if(!j) { delete BOOKFILES[k]; return null; } const t=j.ch&&j.ch[String(c)]; return t?{text:t,complete:true,static:true}:null; }catch(e){ return null; } }
 async function openChapter(b,c,v){
   if(SP.key==="cap"&&!seqNext) stopSpeak(); chCur={b,c}; S.lastRead={b,c,d:dstr()}; save(); $("bHome").hidden=true; $("chView").hidden=false; $("scroll").scrollTop=0; $("topTitle").textContent=`${b} ${c}`;
   $("chNote").hidden=true; $("chMore").hidden=true; $("chOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo…</div>';
   const n=BOOKS[Object.keys(BOOKS).find(t=>BOOKS[t].some(x=>x[0]===b))].find(x=>x[0]===b)[1];
   $("chPrev").disabled=c<=1; $("chNext").disabled=c>=n;
-  const d=await kvGet(chKey(b,c)); if(chCur.b!==b||chCur.c!==c) return;
+  const d=(await staticChapter(b,c))||(await kvGet(chKey(b,c))); if(chCur.b!==b||chCur.c!==c) return;
   if(d&&d.text){ $("chOut").innerHTML=md(d.text); $("chMore").hidden=!!d.complete; decorate($("chOut"),`${b} ${c}`); flashVerse(v); chapterReady(); } else translateChapter(false);
 }
 let seqNext=false, preBusy=false;
 function chapterReady(){ if(seqNext){ seqNext=false; setTimeout(()=>speakFor("cap"),400); } setTimeout(prefetchNext,6000); }
 function nextOf(b,c){ const t=Object.keys(BOOKS).find(t=>BOOKS[t].some(x=>x[0]===b)), L=BOOKS[t], i=L.findIndex(x=>x[0]===b); if(c<L[i][1]) return [b,c+1]; if(i+1<L.length) return [L[i+1][0],1]; return null; }
-async function prefetchNext(){ if(preBusy||!chCur) return; const nx=nextOf(chCur.b,chCur.c); if(!nx) return; const k=chKey(nx[0],nx[1]); if(await kvGet(k)) return;
+async function prefetchNext(){ if(preBusy||!chCur) return; const nx=nextOf(chCur.b,chCur.c); if(!nx) return; const k=chKey(nx[0],nx[1]); if(await staticChapter(nx[0],nx[1])) return; if(await kvGet(k)) return;
   const s=await getSample(); if(!s) return; preBusy=true; try{ const r=await s(chapterPrompt(nx[0],nx[1]),{modelTier:"complex",shared:true}); await kvSet(k,{text:r.text,complete:!r.truncated&&/Tradução do .* original/i.test(r.text)}); }catch(e){} preBusy=false; }
 function renderCont(){ const L=S.lastRead, box=$("contBox"); if(!box) return; if(!L){ box.hidden=true; return; } box.hidden=false;
   box.innerHTML=`<div class="row" style="justify-content:space-between;flex-wrap:nowrap"><div><div class="eyebrow">Continuar de onde parou</div><div class="t" style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(L.b)} ${L.c}</div></div><button class="btn" id="contGo">Continuar</button></div>`;
