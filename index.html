@@ -697,6 +697,7 @@ function needClaude(id){ const n=$(id); n.innerHTML='Crie sua conta grátis para
 
 /* ---------- Hoje / passagem ---------- */
 function show(r, kind){
+  if(r&&r.daily&&r.deep&&!/##\s*Onde estamos/i.test(r.deep)){ r.deep=null; if(S.daily&&S.daily[dstr()]===r) save(); } /* estudo do dia no formato antigo: libera para refazer no novo */
   if(cur!==r&&SP.key==="hoje") stopSpeak(); cur=r; $("ref").textContent=shownRef(r); $("kind").textContent=kind||"Reflexão do dia";
   const has=!!(r.text||r.deep); $("outCard").hidden=!has; $("acts").hidden=!has; $("storyBtn").hidden=!r.text; $("repBtn").hidden=!has; $("repBtn").textContent="Encontrou algo errado neste texto? Avisar"; $("gen").parentElement.hidden=has; $("heroSub").hidden=has; $("qaWrap").hidden=!has;
   { const sv=S.saved.some(x=>x.id===r.id); $("saveBtn").classList.toggle("on",sv); $("saveBtn").querySelector("span").textContent=sv?"Salvo":"Salvar"; $("saveBtn").disabled=sv; }
@@ -714,7 +715,8 @@ function persist(){ if(cur.daily){ S.daily[dstr()]=cur; S.dayIndex=(S.dayIndex||
 /* Reflexão compartilhada: o primeiro leitor de uma passagem gera; os demais recebem pronta (sem gastar IA).
    Se houver problema no texto, o leitor usa "Avisar problema" (ver reportShared). */
 function rfKey(ref,kind){ return "rf_"+String(ref).normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]+/g,"_").replace(/^_|_$/g,"").slice(0,60)+"_"+kind; }
-async function sharedReflection(ref,kind,prompt,target,ex={}){ return sharedText(rfKey(ref,kind),prompt,target,Object.assign(kind==="d"?{feature:"deep"}:{},ex)); }
+/* "d2": estudo no formato novo (didático). Os estudos no formato antigo ("d") deixam de ser usados. */
+async function sharedReflection(ref,kind,prompt,target,ex={}){ return sharedText(rfKey(ref,kind==="d"?"d2":kind),prompt,target,Object.assign(kind==="d"?{feature:"deep"}:{},ex)); }
 async function sharedText(key,prompt,target,xo={}){
   const fx=xo.fill||(t=>t);
   try{ const c=await kvGet(key); if(c&&c.text){ const t=fx(c.text); target.innerHTML=md(t); if(t!==c.text&&window.RB&&RB.user){ kvSet(key,{text:t}).catch(()=>{}); } return t; } }catch(e){}
@@ -749,7 +751,7 @@ async function reportShared(btn,keys,onReplaced){
 let regenArm=0;
 async function generate(){
   if(busy||!cur) return;
-  if(cur&&(cur.text||cur.deep)){ return reportShared($("repBtn"),[rfKey(cur.ref,"s"),rfKey(cur.ref,"d")],async()=>{ cur.text=""; cur.deep=""; persist(); show(cur,$("kind").textContent); await generate(); }); }
+  if(cur&&(cur.text||cur.deep)){ return reportShared($("repBtn"),[rfKey(cur.ref,"s"),rfKey(cur.ref,"d2")],async()=>{ cur.text=""; cur.deep=""; persist(); show(cur,$("kind").textContent); await generate(); }); }
   if((cur.text||cur.deep) && Date.now()-regenArm>4000){ regenArm=Date.now(); const g=$("gen"); g.textContent="Toque de novo para confirmar"; setTimeout(()=>{ if(!busy) show(cur,$("kind").textContent); },4000); toast("Isso substitui o texto atual"); return; }
   const isRegen=!!(cur.text||cur.deep);
   regenArm=0; busy=true; $("note").hidden=true; const b=$("gen"); b.disabled=true; b.innerHTML='<span class="spin"></span>Traduzindo do original…';
