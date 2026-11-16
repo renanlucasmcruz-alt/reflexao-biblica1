@@ -659,7 +659,9 @@ Até 3 tópicos curtos: tradição judaica (quando se aplica), tradições crist
 Um parágrafo concreto, sem sermão.
 ## Para pensar
 Uma pergunta honesta.`; }
-function lessonPrompt(L){ const all=LESSONS.map(x=>x.title); const idx=LESSONS.indexOf(L);
+function lessonPrompt(L,ready){ const all=LESSONS.map(x=>x.title); const idx=LESSONS.indexOf(L); const RD=(ready&&ready.length)?`
+
+IMPORTANTE: o app já tem a tradução pronta destas referências: ${ready.join("; ")}. Para cada uma delas, em "## Os textos", escreva só o subtítulo "### Referência" e, na linha seguinte, exatamente [[PRONTO]] (não traduza nem escreva a linha "Tradução do..."). Traduza do original apenas as referências que não estão nesta lista.`:"";
   return `${BASE}
 
 Você é o professor de um ESTUDO DIRIGIDO da Bíblia inteira, organizado por temas (não livro por livro). Esta é a lição ${idx+1} de ${LESSONS.length}: "${L.title}" (trilha: ${L.track}).
@@ -684,7 +686,7 @@ Judaica (quando se aplica), católica, protestante, ortodoxa e leitura acadêmic
 ## Síntese
 3 a 5 tópicos curtos com o essencial.
 ## Perguntas para você
-Exatamente 3 perguntas numeradas: uma de compreensão, uma de conexão entre os textos e uma de reflexão pessoal.`; }
+Exatamente 3 perguntas numeradas: uma de compreensão, uma de conexão entre os textos e uma de reflexão pessoal.${RD}`; }
 const WAIT=["Traduzindo do original…","Consultando o hebraico, o aramaico e o grego…","Preparando sua leitura…","Pegue seu café, já está quase…","Comparando as tradições…"];
 function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
 async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; }; const fx=opts.fill||(t=>t); skel(el); if(opts.early){ const e=el.innerHTML; el.innerHTML=md(opts.early)+e; }
@@ -851,7 +853,7 @@ async function openLesson(id){
   if(curL!==L) return;
   if(curLData&&curLData.text){ renderLesson(); } else genLesson(true);
 }
-function renderLesson(){ $("lOut").innerHTML=md(curLData.text); decorate($("lOut"),curL.refs[0]); sectionize($("lOut")); $("mentor").hidden=false; $("ans").value=curLData.answer||""; $("fb").innerHTML=curLData.feedback?md(curLData.feedback):"";
+function renderLesson(){ $("lOut").innerHTML=md(curLData.text); decorate($("lOut"),curL.refs[0]); sectionize($("lOut")); { const L0=curL, D0=curLData; staticSwap(D0.text).then(t2=>{ if(t2!==D0.text&&curL===L0&&curLData===D0){ $("lOut").innerHTML=md(t2); decorate($("lOut"),L0.refs[0]); sectionize($("lOut")); } }).catch(()=>{}); } $("mentor").hidden=false; $("ans").value=curLData.answer||""; $("fb").innerHTML=curLData.feedback?md(curLData.feedback):"";
   $("lNoteIn").value=curLData.note||""; $("lExtra").hidden=false; renderQuiz(); }
 function sectionize(el){ const kids=[...el.children]; let cur2=null, out=[]; kids.forEach(n=>{ if(n.tagName==="H3"){ const d=document.createElement("details"); const t=n.textContent.toLowerCase(); d.open=/objetivo|textos|perguntas|síntese|sintese/.test(t); const s=document.createElement("summary"); s.innerHTML=n.innerHTML; d.appendChild(s); cur2=d; out.push(d); } else if(cur2) cur2.appendChild(n); else out.push(n); }); el.innerHTML=""; out.forEach(n=>el.appendChild(n)); }
 let noteT=null;
@@ -888,7 +890,7 @@ async function genLesson(force){
   if(lBusy||!curL) return; if(curLData&&curLData.text&&force!==true&&Date.now()-lRegenArm>4000){ lRegenArm=Date.now(); $("lRegen").textContent="Toque de novo para confirmar"; setTimeout(()=>{ $("lRegen").textContent="Encontrou algo errado? Avisar"; },4000); return; }
   lRegenArm=0; $("lRegen").textContent="Encontrou algo errado? Avisar"; lBusy=true; const L=curL; const keep=curLData||{}; $("mentor").hidden=true;
   const first=!(keep&&keep.text);
-  try{ const lf={feature:L.ti>0?"lesson_pro":""}; const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L),$("lOut"),lf) : await stream(lessonPrompt(L),$("lOut"),lf); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
+  try{ const lp=await lessonPre(L); const lf={feature:L.ti>0?"lesson_pro":"",fill:lp.fill}; const t=first ? await sharedText("ls_"+L.id,lessonPrompt(L,lp.ready),$("lOut"),lf) : await stream(lessonPrompt(L,lp.ready),$("lOut"),lf); curLData={text:t,answer:keep.answer||"",feedback:keep.feedback||"",note:keep.note||"",quiz:null,shared:first,date:dstr()}; await kvSet("lesson_"+L.id,curLData); if(curL===L){ renderLesson(); autoRead(t,L.title,"lic"); } }
   catch(e){ console.warn(e); $("lOut").innerHTML=""; if(e&&e.code==="no_sample") needClaude("lNote"); else { $("lNote").textContent=errMsg(e); $("lNote").hidden=false; } }
   lBusy=false;
 }
@@ -1184,7 +1186,7 @@ REGRAS DE RIGOR (obrigatórias):
 - Quando o termo não existir na Bíblia (ex.: um nome que vem de tradução ou da tradição), diga isso logo no início.
 
 ## Textos principais
-Os 2 ou 3 trechos mais importantes, traduzidos do original ("> **v** …"), com a referência em "### ".
+Os 2 ou 3 trechos mais importantes: para cada um, um subtítulo "### Livro capítulo:versículo-versículo" (só a referência, sem outras palavras) e, abaixo, o texto traduzido do original, um versículo por linha ("> **v** …").
 ## História da interpretação
 Da Bíblia hebraica ao período do Segundo Templo (Septuaginta, Qumran, Enoque, quando relevante), Novo Testamento, judaísmo rabínico, Pais da Igreja, Idade Média, Reforma e estudos modernos.
 ## Na cultura
@@ -1225,16 +1227,36 @@ function linkRefs(el){ if(!el) return; const rx=refRx(); const w=document.create
       f.appendChild(document.createTextNode(t.slice(last,st))); const a=document.createElement("button"); a.className="rlink"; a.type="button"; a.textContent=t.slice(st,m.index+m[0].length); a.setAttribute("aria-label","Abrir "+a.textContent+" na Bíblia");
       a.onclick=e=>{ e.stopPropagation(); go("biblia"); openChapter(book,c,v); }; f.appendChild(a); last=m.index+m[0].length; }
     if(last===0) return; f.appendChild(document.createTextNode(t.slice(last))); n.parentNode.replaceChild(f,n); }); }
+
+/* Liga os textos citados (estudos e dicionário) à nossa tradução pronta, quando ela existe */
+function headRef(h){ const names=Object.values(BOOKS).flat().map(x=>x[0]).concat(["Salmo"]).sort((a,b)=>b.length-a.length).map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  const m=String(h).match(new RegExp("("+names.join("|")+")\\s+(\\d{1,3})(?::(\\d{1,3})(?:\\s*[-–]\\s*(\\d{1,3}))?)?")); if(!m) return null;
+  const b=m[1]==="Salmo"?"Salmos":m[1]; if(+m[2]<1||+m[2]>bookCount(b)) return null; return `${b} ${m[2]}`+(m[3]?`:${m[3]}`+(m[4]?`-${m[4]}`:""):""); }
+async function staticSwap(text){ if(!text||text.indexOf("###")<0) return text; const L=text.split("\n"); const out=[]; let i=0, changed=false;
+  while(i<L.length){ const line=L[i]; out.push(line); const hm=line.match(/^#{3,4}\s+(.+?)\s*$/); i++;
+    if(!hm) continue; const ref=headRef(hm[1]); if(!ref) continue;
+    let j=i; while(j<L.length&&!L[j].trim()) j++; let k=j;
+    if(L[k]&&L[k].trim()==="[[PRONTO]]") k++; else while(k<L.length&&/^>/.test(L[k])) k++;
+    if(k===j) continue; let e=k; while(e<L.length&&!L[e].trim()) e++; if(L[e]&&/^\*?_?Tradução d[oa] .+ origina(l|is)\.?_?\*?\s*$/.test(L[e].trim())) k=e+1;
+    let pre=null; try{ pre=await staticPassage(ref,0); }catch(x){}
+    if(!pre||!pre.md){ if(L[j].trim()==="[[PRONTO]]"){ out.push("[Texto indisponível no momento]"); i=j+1; changed=true; } continue; }
+    out.push(...pre.md.split("\n")); i=k; changed=true; }
+  return changed?out.join("\n"):text; }
+async function lessonPre(L){ const ready=[], map={};
+  for(const r of L.refs){ const ref=headRef(r)||r; try{ const p=await staticPassage(ref,0); if(p&&p.md){ ready.push(r); map[norm(ref).replace(/\s/g,"")]=p.md; } }catch(e){} }
+  const fill=t=>{ if(!t||t.indexOf("[[PRONTO]]")<0) return t; let n=0; return t.replace(/^(#{3,4}\s+(.+?)\s*)\n+\[\[PRONTO\]\]/gm,(all,h,txt)=>{ const ref=headRef(txt); const k=ref?norm(ref).replace(/\s/g,""):""; const md=map[k]||map[norm(headRef(ready[n])||ready[n]||"").replace(/\s/g,"")]; n++; return md?h+"\n"+md:all; }); };
+  return {ready,fill}; }
 function splitRel(t){ const m=(t||"").match(/^\s*RELACIONADOS:\s*(.+)$/mi); return m?{body:t.replace(m[0],"").trim(),rel:m[1].split(/[;,]/).map(x=>x.trim().replace(/[.*]/g,"")).filter(Boolean).slice(0,6)}:{body:t||"",rel:[]}; }
 function renderRel(rel){ const box=$("dRel"); if(!dCur) return; let R=rel&&rel.length?rel:ENC.filter(e=>e[1]===dCur.cat&&e[0]!==dCur.t).slice(0,4).map(e=>e[0]);
   box.innerHTML=R.length?`<div class="eyebrow" style="margin:18px 0 8px">Verbetes relacionados</div><div class="chips">${R.map(r=>`<button class="chip" data-rel="${esc(r)}">${esc(r)}</button>`).join("")}</div>`:"";
   box.querySelectorAll("[data-rel]").forEach(b=>b.onclick=()=>{ const e=ENC.find(x=>norm(x[0])===norm(b.dataset.rel))||ENC.find(x=>norm(x[0]).includes(norm(b.dataset.rel))); openEntry(e?e[0]:b.dataset.rel,e?e[1]:"Pesquisa",e?e[2]:""); }); }
+function dShow(el,text,t){ el.innerHTML=md(text); linkRefs(el); decorate(el,""); staticSwap(text).then(t2=>{ if(t2!==text&&dCur&&dCur.t===t){ el.innerHTML=md(t2); linkRefs(el); decorate(el,""); } }).catch(()=>{}); }
 async function openEntry(t,cat,sub){
   if(SP.key==="dic") stopSpeak(); dCur={t,cat,sub}; $("dHome").hidden=true; $("dView").hidden=false; $("scroll").scrollTop=0;
   $("dCat").textContent=cat; $("dTitle").textContent=t; $("dSub").textContent=sub||""; $("dNote").hidden=true; $("dDeepOut").innerHTML=""; $("dDeep").hidden=true;
   $("dOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo…</div>';
   const d=await kvGet(entKey(t)); if(dCur.t!==t) return;
-  if(d&&d.text){ const sr=splitRel(d.text); $("dOut").innerHTML=md(sr.body); linkRefs($("dOut")); renderRel(sr.rel); if(d.deep){ $("dDeepOut").innerHTML=md(d.deep); linkRefs($("dDeepOut")); } else $("dDeep").hidden=false; } else genEntry(false);
+  if(d&&d.text){ const sr=splitRel(d.text); dShow($("dOut"),sr.body,t); renderRel(sr.rel); if(d.deep){ dShow($("dDeepOut"),d.deep,t); } else $("dDeep").hidden=false; } else genEntry(false);
 }
 async function genEntry(deep){
   if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
@@ -1242,7 +1264,7 @@ async function genEntry(deep){
   try{ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; };
     const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,feature:deep?"entry_deep":"",onText:({text})=>{ el.innerHTML=md(text); }});
     const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
-    if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); linkRefs(el); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
+    if(dCur.t===t){ const sr=splitRel(r.text); dShow(el,deep?r.text:sr.body,t); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
   catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Crie sua conta grátis para abrir este verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
   dBusy=false;
 }
