@@ -1,4 +1,4 @@
-import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota, usageToday, takeWeekly, env } from "./_lib.mjs";
+import { CFG, json, getUser, getPlan, takeQuota, takeSharedQuota, usageToday, takeWeekly, env, isAdminEmail } from "./_lib.mjs";
 
 /* Ferramentas de estudo profundo: só no Pro. */
 const PRO_ONLY = new Set(["il", "xr", "alt", "entry_deep", "lesson_pro"]);
@@ -39,10 +39,11 @@ async function handle(req) {
   if (plan !== "pro" && feature === "deep" && !(await takeWeekly(user.id, parseInt(env("FREE_DEEP_WEEKLY", "2"), 10)))) {
     return json(402, { message: "Você já usou o estudo aprofundado grátis desta semana. No Pro ele é liberado.", pro: true });
   }
-  if (shared && !(await takeSharedQuota(user.id, plan))) {
+  const admin = isAdminEmail(user.email);
+  if (shared && !admin && !(await takeSharedQuota(user.id, plan))) {
     return json(402, { message: "Você abriu muitos conteúdos novos hoje. Volte amanhã ou assine o Pro." });
   }
-  if (!shared && !(await takeQuota(user.id, plan))) {
+  if (!shared && !admin && !(await takeQuota(user.id, plan))) {
     return json(402, { message: plan === "pro" ? "Você atingiu o limite de segurança de hoje. Volte amanhã." : `Você usou as ${CFG.FREE_DAILY()} consultas grátis de hoje. Assine o Pro para continuar sem limites.` });
   }
 
