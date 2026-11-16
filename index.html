@@ -740,13 +740,14 @@ async function sharedText(key,prompt,target,xo={}){
    Grátis: Bíblia, reflexão do dia, áudio/acessibilidade, dicionário básico, planos, notas, trilha 1 inteira, 3 perguntas/dia
    e 1 estudo aprofundado por semana. Pro: interlinear, referências, outras traduções, verbete aprofundado, trilhas 2+ e estudos aprofundados. */
 /* ---------- Pré-geração (só o dono): deixa prontas a reflexão e o estudo dos próximos dias ---------- */
-const PREGEN={run:false,label:""};
+const PREGEN={run:false,label:""}; const x0=v=>v;
 function refForDate(d){ return PASS[(doy(d)+(d.getFullYear()-2026)*366)%PASS.length]; }
 async function pregen(days,btn){
   const jobs=[]; const base=new Date();
   for(let i=0;i<days;i++){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i); const ref=refForDate(d); jobs.push(["s",ref],["d",ref]); }
   return pregenRun(jobs,btn,"Os próximos "+days+" dias estão prontos");
 }
+function pregenLes(btn){ return pregenRun(LESSONS.map(L=>["l",L.id]),btn,"As lições dos Estudos estão prontas"); }
 function pregenEnc(btn){ return pregenRun(ENC.map(e=>["e",e[0]]),btn,"Os verbetes do dicionário estão prontos"); }
 async function pregenRun(jobs,btn,okMsg){
   if(PREGEN.run){ toast("Já está preparando. Deixe o app aberto."); return; }
@@ -756,6 +757,10 @@ async function pregenRun(jobs,btn,okMsg){
   upd();
   const one=async([kind,x])=>{
     try{
+      if(kind==="l"){ const L=LESSONS.find(x=>x.id===x0(x)); const k="ls_"+L.id; const c=await kvGet(k); if(c&&c.text) return;
+        const lp=await lessonPre(L); const box=document.createElement("div");
+        const t=await stream(lessonPrompt(L,lp.ready),box,{shared:true,fill:lp.fill,feature:L.ti>0?"lesson_pro":""});
+        if(t&&t.indexOf("veio incompleto")<0){ await kvSet(k,{text:t}); made++; } else fail++; return; }
       if(kind==="e"){ const k=entKey(x); const c=await kvGet(k); if(c&&c.text) return;
         const s=await getSample(); if(!s) throw 0; const r=await s(entryPrompt(x,false),{modelTier:"complex",shared:true});
         if(r&&r.text&&!r.truncated){ await kvSet(k,{text:r.text}); made++; } else fail++; return; }
@@ -1708,8 +1713,8 @@ function openSettings(mode){ const a=S.a11y; const draw=()=>{ $("setSheet").inne
   $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
   if(window.RB&&RB.api&&RB.user) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta");
     if(m.admin&&u&&!$("pregenBtn")){ const mk=(id,lab,fn)=>{ const b=document.createElement("button"); b.className="btn ghost full"; b.id=id; b.style.marginTop="10px"; b.textContent=lab; b.onclick=()=>fn(b); return b; };
-      const b1=mk("pregenBtn","Preparar os próximos 30 dias (dono)",b=>pregen(30,b)), b2=mk("pregenEncBtn","Preparar os verbetes do dicionário (dono)",b=>pregenEnc(b));
-      if(PREGEN.run&&PREGEN.btn){ const cur=PREGEN.btn.id==="pregenEncBtn"?b2:b1; cur.textContent=PREGEN.label; PREGEN.btn=cur; } u.after(b1); b1.after(b2); } }).catch(()=>{});
+      const b1=mk("pregenBtn","Preparar os próximos 30 dias (dono)",b=>pregen(30,b)), b2=mk("pregenEncBtn","Preparar os verbetes do dicionário (dono)",b=>pregenEnc(b)), b3=mk("pregenLesBtn","Preparar as lições dos Estudos (dono)",b=>pregenLes(b));
+      if(PREGEN.run&&PREGEN.btn){ const cur=PREGEN.btn.id==="pregenEncBtn"?b2:PREGEN.btn.id==="pregenLesBtn"?b3:b1; cur.textContent=PREGEN.label; PREGEN.btn=cur; } u.after(b1); b1.after(b2); b2.after(b3); } }).catch(()=>{});
   $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>{ if(RB.user) RB.signOut(); else { $("setBg").hidden=true; openLogin(); } }; $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
   $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
   draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button:not([hidden] *)")?.focus(),50); }
