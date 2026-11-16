@@ -1074,7 +1074,7 @@ async function staticPassage(ref,maxV){ try{ const p=String(ref).match(/^(.+?) (
   if(p[3]){ const a=+p[3], b=p[4]?+p[4]:a; vs=vs.filter(v=>v.n>=a&&v.n<=b); }
   if(!vs.length) return null;
   if(maxV&&vs.length>maxV){ const s=Math.floor((vs.length-6)/2); vs=vs.slice(s,s+6); }
-  const j=await BOOKFILES[bookSlug(book)]; const lang=(j&&j.lang)||"hebraico";
+  const j=await BOOKFILES[bookSlug(book)]; const lm=String(ch.text||"").match(/Tradução do (.+?) original\./); const lang=(lm&&lm[1])||(j&&j.lang)||"hebraico";
   return {md:vs.map(v=>v.l).join("\n")+`\n\nTradução do ${lang} original.`};
 }catch(e){ return null; } }
 function preFill(pre){ return t=>{ if(!t) return t; t=t.replace(/\[\[[A-Z]{0,5}\]?$/,""); if(t.includes("[[TEXTO]]")) return t.replace(/\[\[TEXTO\]\]/g,pre.md);
