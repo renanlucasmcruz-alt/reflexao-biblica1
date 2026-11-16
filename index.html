@@ -216,6 +216,7 @@
   #setBg[hidden]{display:none}
   #setSheet{width:100%;max-width:620px;background:var(--bg);border:1px solid var(--line);border-radius:22px 22px 0 0;padding:20px 18px calc(24px + env(safe-area-inset-bottom));max-height:90%;overflow:auto}
   button:focus-visible,a:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.rlink{background:none;border:0;padding:0;font:inherit;color:var(--gold2);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -740,15 +741,23 @@ async function sharedText(key,prompt,target,xo={}){
 const PREGEN={run:false,label:""};
 function refForDate(d){ return PASS[(doy(d)+(d.getFullYear()-2026)*366)%PASS.length]; }
 async function pregen(days,btn){
-  if(PREGEN.run){ toast("Já está preparando. Deixe o app aberto."); return; }
   const jobs=[]; const base=new Date();
-  for(let i=0;i<days;i++){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i); const ref=refForDate(d); jobs.push([ref,"s"],[ref,"d"]); }
-  PREGEN.run=true; let done=0, made=0, fail=0; let lock=null;
+  for(let i=0;i<days;i++){ const d=new Date(base.getFullYear(),base.getMonth(),base.getDate()+i); const ref=refForDate(d); jobs.push(["s",ref],["d",ref]); }
+  return pregenRun(jobs,btn,"Os próximos "+days+" dias estão prontos");
+}
+function pregenEnc(btn){ return pregenRun(ENC.map(e=>["e",e[0]]),btn,"Os verbetes do dicionário estão prontos"); }
+async function pregenRun(jobs,btn,okMsg){
+  if(PREGEN.run){ toast("Já está preparando. Deixe o app aberto."); return; }
+  PREGEN.run=true; PREGEN.btn=btn; let done=0, made=0, fail=0; let lock=null;
   try{ if(navigator.wakeLock) lock=await navigator.wakeLock.request("screen"); }catch(e){}
-  const upd=()=>{ PREGEN.label=`Preparando… ${done} de ${jobs.length} (novos: ${made}${fail?", falhas: "+fail:""})`; const b=$("pregenBtn")||btn; if(b) b.textContent=PREGEN.label; };
+  const upd=()=>{ PREGEN.label=`Preparando… ${done} de ${jobs.length} (novos: ${made}${fail?", falhas: "+fail:""})`; const b=(PREGEN.btn&&document.body.contains(PREGEN.btn))?PREGEN.btn:$(btn.id); if(b) b.textContent=PREGEN.label; };
   upd();
-  const one=async([ref,kind])=>{ const key=rfKey(ref,kind==="d"?"d2":"s");
-    try{ const c=await kvGet(key); if(c&&c.text){ return; }
+  const one=async([kind,x])=>{
+    try{
+      if(kind==="e"){ const k=entKey(x); const c=await kvGet(k); if(c&&c.text) return;
+        const s=await getSample(); if(!s) throw 0; const r=await s(entryPrompt(x,false),{modelTier:"complex",shared:true});
+        if(r&&r.text&&!r.truncated){ await kvSet(k,{text:r.text}); made++; } else fail++; return; }
+      const ref=x, key=rfKey(ref,kind==="d"?"d2":"s"); const c=await kvGet(key); if(c&&c.text) return;
       const deep=kind==="d"; const pre=await staticPassage(ref,deep?0:10); const po=preOpts(pre,deep);
       const box=document.createElement("div");
       const t=await stream(deep?deepPrompt(ref,pre):shortPrompt(ref,true,pre),box,Object.assign({shared:true},po,deep?{feature:"deep"}:{}));
@@ -757,8 +766,8 @@ async function pregen(days,btn){
   let next=0; const worker=async()=>{ while(next<jobs.length){ const j=jobs[next++]; await one(j); } };
   await Promise.all([worker(),worker()]);
   PREGEN.run=false; try{ lock&&lock.release(); }catch(e){}
-  PREGEN.label=`Pronto: ${made} textos novos${fail?", "+fail+" falharam (toque de novo para tentar)":""}.`; const b=$("pregenBtn")||btn; if(b) b.textContent=PREGEN.label;
-  toast(fail?"Terminou com algumas falhas":"Os próximos "+days+" dias estão prontos");
+  PREGEN.label=`Pronto: ${made} textos novos${fail?", "+fail+" falharam (toque de novo para tentar)":""}.`; upd(); const b=$(btn.id); if(b) b.textContent=PREGEN.label;
+  toast(fail?"Terminou com algumas falhas":okMsg);
 }
 function isPro(){ return !!(window.RB&&RB.plan==="pro"); }
 function weekKey(){ const d=new Date(); d.setDate(d.getDate()-((d.getDay()+6)%7)); return d.toISOString().slice(0,10); }
@@ -1053,8 +1062,7 @@ const ENC=[
  ["Evangelho de Tomé","Livros e manuscritos","Coleção de ditos encontrada em Nag Hammadi."],
  ["Evangelhos sinóticos","Livros e manuscritos","Mateus, Marcos e Lucas e a 'fonte Q'."],
  ["Cartas paulinas","Livros e manuscritos","As cartas de Paulo e o debate sobre autoria."],
- ["Apocalipse (gênero)","Livros e manuscritos","Literatura de revelação: símbolos, números e visões."]
-];
+ ["Apocalipse (gênero)","Livros e manuscritos","Literatura de revelação: símbolos, números e visões."],["Gideão","Pessoas","Juiz que derrotou Midiã com 300 homens"],["Raabe","Pessoas","Mulher de Jericó que acolheu os espias"],["Ana, mãe de Samuel","Pessoas","A oração da estéril em Siló"],["Miriã","Pessoas","Profetisa, irmã de Moisés e Arão"],["Boaz","Pessoas","O parente resgatador de Rute"],["Natã","Pessoas","Profeta que confrontou Davi"],["Ezequias","Pessoas","Rei reformador de Judá"],["Josias","Pessoas","Rei que reencontrou o livro da Lei"],["Neemias","Pessoas","Reconstrutor dos muros de Jerusalém"],["Esdras","Pessoas","Sacerdote e escriba da volta do exílio"],["Nabucodonosor","Pessoas","Rei da Babilônia que destruiu Jerusalém"],["Marta e Maria de Betânia","Pessoas","As irmãs de Lázaro"],["Zaqueu","Pessoas","O cobrador de impostos de Jericó"],["Mateus (Levi)","Pessoas","Cobrador de impostos que virou apóstolo"],["André","Pessoas","Pescador, irmão de Pedro"],["Barnabé","Pessoas","O 'filho da consolação', parceiro de Paulo"],["Timóteo","Pessoas","Discípulo e colaborador de Paulo"],["Priscila e Áquila","Pessoas","Casal missionário do Novo Testamento"],["Lídia","Pessoas","Comerciante de púrpura convertida em Filipos"],["Cornélio","Pessoas","Centurião romano batizado por Pedro"],["Jericó","Lugares","A cidade cujos muros caíram"],["Nínive","Lugares","Capital da Assíria, destino de Jonas"],["Sodoma e Gomorra","Lugares","As cidades destruídas na planície"],["Betel","Lugares","'Casa de Deus', lugar do sonho de Jacó"],["Siló","Lugares","Onde ficou o tabernáculo antes de Jerusalém"],["Monte Carmelo","Lugares","O desafio de Elias aos profetas de Baal"],["Monte das Oliveiras","Lugares","Diante de Jerusalém, lugar da ascensão"],["Mar da Galileia","Lugares","O lago do ministério de Jesus"],["Cafarnaum","Lugares","Base de Jesus na Galileia"],["Betânia","Lugares","A aldeia de Lázaro, Marta e Maria"],["Damasco","Lugares","Onde Paulo encontrou o Ressuscitado"],["Antioquia","Lugares","Onde os discípulos foram chamados cristãos"],["Éfeso","Lugares","Grande cidade da Ásia, igreja de Paulo e João"],["Corinto","Lugares","Cidade portuária grega, igreja de Paulo"],["Roma","Lugares","Capital do Império, destino de Paulo"],["Patmos","Lugares","A ilha do Apocalipse"],["Arrependimento","Conceitos","Teshuvá e metanoia: voltar e mudar a mente"],["Perdão","Conceitos","Como a Bíblia fala de perdoar e ser perdoado"],["Oração","Conceitos","Formas e palavras de oração na Bíblia"],["Santidade","Conceitos","Qadosh: separado para Deus"],["Justificação","Conceitos","Ser declarado justo diante de Deus"],["Redenção","Conceitos","Resgate: do go'el ao preço pago"],["Glória (kavod)","Conceitos","O 'peso' e o esplendor da presença de Deus"],["Alma (nefesh, psychê)","Conceitos","O que a Bíblia chama de alma"],["Espírito (ruach, pneuma)","Conceitos","Sopro, vento e espírito"],["Coração (lev)","Conceitos","O centro da pessoa na Bíblia"],["Amor de Deus","Conceitos","Ahavá, hesed e ágape"],["Temor do Senhor","Conceitos","Reverência, não pavor"],["Esperança","Conceitos","Esperar em Deus no AT e no NT"],["Parábola","Conceitos","Mashal: as histórias de Jesus e dos sábios"],["Milagre","Conceitos","Sinais, prodígios e poderes"],["Apóstolo","Conceitos","Enviado: quem foram e o que faziam"],["Discípulo","Conceitos","Aprendiz que segue o mestre"],["Idolatria","Conceitos","Ídolos, imagens e outros deuses"],["Jubileu","Conceitos","O ano da libertação e do recomeço"],["Pureza e impureza","Conceitos","Leis de puro e impuro"],["Milênio","Conceitos","Os mil anos de Apocalipse 20"],["Escatologia","Conceitos","O que a Bíblia diz sobre o fim"],["Shekinah","Conceitos","A presença de Deus que habita"],["Amém","Palavras do culto","Firme, verdadeiro: assim seja"],["Aleluia","Palavras do culto","'Louvem a Yah'"],["Hosana","Palavras do culto","'Salva, por favor!'"],["Maranata","Palavras do culto","'Vem, Senhor!' em aramaico"],["Abba","Palavras do culto","'Pai' na língua de Jesus"],["Selá","Palavras do culto","A palavra misteriosa dos Salmos"],["Éfode","Objetos e ritos","A veste sacerdotal"],["Urim e Tumim","Objetos e ritos","Os objetos de consulta do sumo sacerdote"],["Shofar","Objetos e ritos","A trombeta de chifre de carneiro"],["Filactérios (tefilin)","Objetos e ritos","As caixinhas com a Palavra"],["Jejum","Objetos e ritos","Abster-se de comida diante de Deus"],["Festa das Tendas (Sucot)","Objetos e ritos","A festa da colheita e do deserto"],["Unção","Objetos e ritos","Óleo sobre reis, sacerdotes e profetas"],["Peshitta","Livros e manuscritos","A Bíblia em siríaco"],["Talmude e Mishná","Livros e manuscritos","A tradição rabínica escrita"]];
 
 /* ---------- Leitor ---------- */
 function flashVerse(v){ if(!v) return; const q=[...$("chOut").querySelectorAll("blockquote.v")].find(x=>x.dataset.ref.endsWith(":"+v)); if(q){ q.scrollIntoView({behavior:"smooth",block:"center"}); q.classList.add("flash"); } }
@@ -1164,10 +1172,17 @@ function renderDic(){
   $("dList").querySelectorAll("[data-e]").forEach(b=>b.onclick=()=>{ const e=ENC.find(x=>x[0]===b.dataset.e); openEntry(e[0],e[1],e[2]); });
   const f=$("dFree"); if(f) f.onclick=()=>openEntry($("dSearch").value.trim(),"Pesquisa","");
 }
-function entKey(t){ return "ent_"+norm(t).replace(/[^a-z0-9]/g,"").slice(0,60); }
+function entKey(t){ return "ent_v2"+norm(t).replace(/[^a-z0-9]/g,"").slice(0,58); }
 function entryPrompt(t,deep){ return deep ? `${BASE}
 
 Aprofunde o verbete bíblico "${t}" para quem quer estudar a fundo (até 900 palavras, títulos "## "):
+REGRAS DE RIGOR (obrigatórias):
+- Separe sempre três coisas: o que o texto bíblico diz, o que é interpretação/tradição posterior e o que é crença popular. Nunca apresente tradição como se fosse o texto.
+- Ao ligar textos entre si, diga se é citação direta, alusão ou leitura da tradição.
+- Confira nomes, números, datas e referências; use a numeração das Bíblias em português (ex.: Salmo 23, Malaquias 4). Se não tiver certeza de um dado, não o afirme.
+- Escreva cada referência por extenso, no formato "Livro capítulo:versículo" (ex.: "Isaías 14:12"), sem abreviar o nome do livro.
+- Quando o termo não existir na Bíblia (ex.: um nome que vem de tradução ou da tradição), diga isso logo no início.
+
 ## Textos principais
 Os 2 ou 3 trechos mais importantes, traduzidos do original ("> **v** …"), com a referência em "### ".
 ## História da interpretação
@@ -1178,6 +1193,13 @@ Como o tema passou para a arte, a literatura e a imaginação popular, e onde el
 3 a 5 obras de referência reais e conhecidas (se não tiver certeza de uma obra, não cite).` : `${BASE}
 
 Escreva o verbete de enciclopédia bíblica "${t}". Até 550 palavras, títulos "## ".
+REGRAS DE RIGOR (obrigatórias):
+- Separe sempre três coisas: o que o texto bíblico diz, o que é interpretação/tradição posterior e o que é crença popular. Nunca apresente tradição como se fosse o texto.
+- Ao ligar textos entre si, diga se é citação direta, alusão ou leitura da tradição.
+- Confira nomes, números, datas e referências; use a numeração das Bíblias em português (ex.: Salmo 23, Malaquias 4). Se não tiver certeza de um dado, não o afirme.
+- Escreva cada referência por extenso, no formato "Livro capítulo:versículo" (ex.: "Isaías 14:12"), sem abreviar o nome do livro.
+- Quando o termo não existir na Bíblia (ex.: um nome que vem de tradução ou da tradição), diga isso logo no início.
+
 ## Em resumo
 2 a 3 frases.
 ## No original
@@ -1191,6 +1213,18 @@ Judaica, católica, protestante, ortodoxa e acadêmica, com concordâncias e div
 ## Mito × texto
 O que a imaginação popular diz e o que o texto realmente diz.
 Por fim, numa linha separada e sem título: "RELACIONADOS: termo1; termo2; termo3; termo4" (4 verbetes bíblicos relacionados).`; }
+
+/* Referências clicáveis: "Isaías 14:12" abre o capítulo no leitor da Bíblia */
+let _refRx=null;
+function refRx(){ if(_refRx) return _refRx; const names=Object.values(BOOKS).flat().map(x=>x[0]).concat(["Salmo"]).sort((a,b)=>b.length-a.length).map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  _refRx=new RegExp("(^|[^A-Za-zÀ-ÿ])("+names.join("|")+")\\s+(\\d{1,3})(?::(\\d{1,3})(?:\\s*[-–]\\s*\\d{1,3})?)?","g"); return _refRx; }
+function bookCount(b){ const t=Object.keys(BOOKS).find(k=>BOOKS[k].some(x=>x[0]===b)); return t?BOOKS[t].find(x=>x[0]===b)[1]:0; }
+function linkRefs(el){ if(!el) return; const rx=refRx(); const w=document.createTreeWalker(el,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentNode.closest("a,button,.rlink")?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}); const nodes=[]; while(w.nextNode()) nodes.push(w.currentNode);
+  nodes.forEach(n=>{ const t=n.nodeValue; rx.lastIndex=0; if(!rx.test(t)) return; rx.lastIndex=0; const f=document.createDocumentFragment(); let last=0, m;
+    while((m=rx.exec(t))){ const book=m[2]==="Salmo"?"Salmos":m[2], c=+m[3], v=m[4]?+m[4]:null; const st=m.index+m[1].length; if(c<1||c>bookCount(book)) continue;
+      f.appendChild(document.createTextNode(t.slice(last,st))); const a=document.createElement("button"); a.className="rlink"; a.type="button"; a.textContent=t.slice(st,m.index+m[0].length); a.setAttribute("aria-label","Abrir "+a.textContent+" na Bíblia");
+      a.onclick=e=>{ e.stopPropagation(); go("biblia"); openChapter(book,c,v); }; f.appendChild(a); last=m.index+m[0].length; }
+    if(last===0) return; f.appendChild(document.createTextNode(t.slice(last))); n.parentNode.replaceChild(f,n); }); }
 function splitRel(t){ const m=(t||"").match(/^\s*RELACIONADOS:\s*(.+)$/mi); return m?{body:t.replace(m[0],"").trim(),rel:m[1].split(/[;,]/).map(x=>x.trim().replace(/[.*]/g,"")).filter(Boolean).slice(0,6)}:{body:t||"",rel:[]}; }
 function renderRel(rel){ const box=$("dRel"); if(!dCur) return; let R=rel&&rel.length?rel:ENC.filter(e=>e[1]===dCur.cat&&e[0]!==dCur.t).slice(0,4).map(e=>e[0]);
   box.innerHTML=R.length?`<div class="eyebrow" style="margin:18px 0 8px">Verbetes relacionados</div><div class="chips">${R.map(r=>`<button class="chip" data-rel="${esc(r)}">${esc(r)}</button>`).join("")}</div>`:"";
@@ -1200,7 +1234,7 @@ async function openEntry(t,cat,sub){
   $("dCat").textContent=cat; $("dTitle").textContent=t; $("dSub").textContent=sub||""; $("dNote").hidden=true; $("dDeepOut").innerHTML=""; $("dDeep").hidden=true;
   $("dOut").innerHTML='<div class="row muted sm"><span class="spin"></span>Abrindo…</div>';
   const d=await kvGet(entKey(t)); if(dCur.t!==t) return;
-  if(d&&d.text){ const sr=splitRel(d.text); $("dOut").innerHTML=md(sr.body); renderRel(sr.rel); if(d.deep) $("dDeepOut").innerHTML=md(d.deep); else $("dDeep").hidden=false; } else genEntry(false);
+  if(d&&d.text){ const sr=splitRel(d.text); $("dOut").innerHTML=md(sr.body); linkRefs($("dOut")); renderRel(sr.rel); if(d.deep){ $("dDeepOut").innerHTML=md(d.deep); linkRefs($("dDeepOut")); } else $("dDeep").hidden=false; } else genEntry(false);
 }
 async function genEntry(deep){
   if(dBusy||!dCur) return; dBusy=true; const t=dCur.t, k=entKey(t), el=deep?$("dDeepOut"):$("dOut");
@@ -1208,7 +1242,7 @@ async function genEntry(deep){
   try{ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; };
     const r=await s(entryPrompt(t,deep),{modelTier:"complex",shared:true,feature:deep?"entry_deep":"",onText:({text})=>{ el.innerHTML=md(text); }});
     const d=(await kvGet(k))||{}; if(deep) d.deep=r.text; else { d.text=r.text; d.deep=null; } await kvSet(k,d);
-    if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
+    if(dCur.t===t){ const sr=splitRel(r.text); el.innerHTML=md(deep?r.text:sr.body); linkRefs(el); if(!deep) renderRel(sr.rel); autoRead(r.text,t,"dic"); if(!deep){ $("dDeepOut").innerHTML=""; $("dDeep").hidden=false; } } }
   catch(e){ console.warn(e); el.innerHTML=""; const n=$("dNote"); n.textContent=e&&e.code==="no_sample"?"Crie sua conta grátis para abrir este verbete.":errMsg(e); n.hidden=false; if(deep) $("dDeep").hidden=false; }
   dBusy=false;
 }
@@ -1651,7 +1685,9 @@ function openSettings(mode){ const a=S.a11y; const draw=()=>{ $("setSheet").inne
   $("tgS").onclick=()=>{ a.seq=!a.seq; save(); draw(); }; $("remTg").onclick=async()=>{ const h=+$("remH").value; if((S.remind||{}).on) await remindOff(); else await remindOn(h); draw(); }; $("remH").onchange=async()=>{ if((S.remind||{}).on){ await remindOn(+$("remH").value); draw(); } }; $("tgV").onclick=()=>{ a.vc=!a.vc; save(); applyVc(); draw(); if(a.vc) toast("Botão de voz ligado: fica no canto da tela"); };
   $("setNameOk").onclick=()=>{ S.name=$("setName").value.trim().slice(0,30); save(); greet(); toast("Nome salvo"); };
   if(window.RB&&RB.api&&RB.user) RB.api("/api/me").then(m=>{ const u=$("usageLine"); if(u) u.textContent=`Perguntas ao mentor hoje: ${Math.min(m.used,m.limit)} de ${m.limit}`+(m.plan==="pro"?"":" · ler e estudar não conta");
-    if(m.admin&&u&&!$("pregenBtn")){ const b=document.createElement("button"); b.className="btn ghost full"; b.id="pregenBtn"; b.style.marginTop="10px"; b.textContent=PREGEN.run?PREGEN.label:"Preparar os próximos 30 dias (dono)"; b.onclick=()=>pregen(30,b); u.after(b); } }).catch(()=>{});
+    if(m.admin&&u&&!$("pregenBtn")){ const mk=(id,lab,fn)=>{ const b=document.createElement("button"); b.className="btn ghost full"; b.id=id; b.style.marginTop="10px"; b.textContent=lab; b.onclick=()=>fn(b); return b; };
+      const b1=mk("pregenBtn","Preparar os próximos 30 dias (dono)",b=>pregen(30,b)), b2=mk("pregenEncBtn","Preparar os verbetes do dicionário (dono)",b=>pregenEnc(b));
+      if(PREGEN.run&&PREGEN.btn){ const cur=PREGEN.btn.id==="pregenEncBtn"?b2:b1; cur.textContent=PREGEN.label; PREGEN.btn=cur; } u.after(b1); b1.after(b2); } }).catch(()=>{});
   $("shareApp").onclick=shareApp; const gp=$("goPro"); if(gp) gp.onclick=()=>{ $("setBg").hidden=true; openPro(); }; $("signOut").onclick=()=>{ if(RB.user) RB.signOut(); else { $("setBg").hidden=true; openLogin(); } }; $("delAcc").onclick=async()=>{ const b=$("delAcc"); if(b.dataset.c!=="1"){ b.dataset.c="1"; b.textContent="Toque de novo para excluir DEFINITIVAMENTE"; return; } const t=(await RB.sb.auth.getSession()).data.session?.access_token; const r=await fetch("/api/delete-account",{method:"POST",headers:{authorization:"Bearer "+t}}); if(r.ok){ try{ localStorage.clear(); }catch(e){} toast("Conta excluída"); setTimeout(()=>RB.signOut(),800); } else toast("Não consegui excluir agora. Tente de novo."); };
   $("setClose").onclick=()=>{ $("setBg").hidden=true; $("setBtn").focus(); }; };
   draw(); $("setBg").hidden=false; setTimeout(()=>$("setSheet").querySelector("button:not([hidden] *)")?.focus(),50); }
