@@ -1322,8 +1322,17 @@ function openVerse(ref,text){
   };
   draw();
 }
+const XRF={};
+async function staticXr(ref){ const p=parseRef(ref); if(!p||!p.v) return null; const k=bookSlug(p.book==="Salmo"?"Salmos":p.book);
+  if(!(k in XRF)) XRF[k]=fetch(`/xr/${k}.json`).then(r=>r.ok?r.json():null).catch(()=>null); const j=await XRF[k]; if(!j){ delete XRF[k]; return null; } return j[`${p.chapter}:${p.v}`]||[]; }
+async function xrSnippet(r){ try{ const first=r.split("–")[0]; const p=await staticPassage(first,0); if(!p||!p.md) return ""; const l=p.md.split("\n").find(x=>/^>/.test(x))||""; const t=l.replace(/^>\s*\*\*\d+\*\*\s*/,""); return t.length>150?t.slice(0,147)+"…":t; }catch(e){ return ""; } }
 async function verseAI(ref,text,kind,q){
   const out=kind==="ask"?$("vQA"):$("vOut"); if(!out) return; const k=`${kind}_${vKey(ref)}`;
+  if(kind==="xr"){ out.innerHTML='<div class="row muted sm"><span class="spin"></span>Buscando…</div>'; const L=await staticXr(ref);
+    if(L&&L.length){ const sn=await Promise.all(L.map(xrSnippet));
+      out.innerHTML=`<div class="eyebrow" style="margin-bottom:6px">Referências cruzadas</div>${L.map((x,i)=>`<button class="li xref" data-go="${esc(x.split("–")[0])}" style="width:100%;text-align:left"><div style="flex:1"><div class="t" style="font-size:16px">${esc(x)}</div>${sn[i]?`<div class="sm muted">${esc(sn[i])}</div>`:""}</div><span class="pill">›</span></button>`).join("")}<p class="sm muted" style="margin:8px 0 0">Ligações por relevância, da base aberta OpenBible.info (CC BY). Textos na tradução do app.</p>`;
+      wireRefLinks(out); return; }
+    if(L&&!L.length){ out.innerHTML='<p class="sm muted">Não há referências cruzadas registradas para este versículo.</p>'; return; } }
   if(kind!=="ask"){ const c=await kvGet(k); if(c&&c.html){ out.innerHTML=c.html; wireRefLinks(out); return; } }
   const s=await getSample(); if(!s){ out.innerHTML=""; openLogin("Crie sua conta grátis para fazer perguntas e estudar. Leva 5 segundos."); return; }
   out.innerHTML='<div class="row muted sm"><span class="spin"></span>Consultando o original…</div>';
@@ -1343,7 +1352,7 @@ async function verseAI(ref,text,kind,q){
 }
 async function askJSONb(p,xo={}){ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; } if(typeof s.json==="function"){ try{ return await s.json(p,Object.assign({modelTier:"complex"},xo)); }catch(e){ if(e&&(e.code==="not_granted"||e.code==="rate_limited")) throw e; } }
   const r=await s(p+"\n\nResponda APENAS com o JSON válido.",Object.assign({modelTier:"complex"},xo)); const a=r.text.indexOf("{"),b=r.text.lastIndexOf("}"); return JSON.parse(r.text.slice(a,b+1)); }
-function wireRefLinks(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeModal(); mode="short"; openRef(b.dataset.go); }); }
+function wireRefLinks(root){ root.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{ closeModal(); const p=parseRef(b.dataset.go); if(p&&bookCount(p.book)&&p.chapter<=bookCount(p.book)){ go("biblia"); openChapter(p.book,p.chapter,p.v); } else { mode="short"; openRef(b.dataset.go); } }); }
 /* ---------- Cartão para compartilhar ---------- */
 async function shareCard(text,ref){
   const c=document.createElement("canvas"); c.width=1080; c.height=1350; const x=c.getContext("2d");
