@@ -9,4 +9,5 @@ jobs:
     timeout-minutes: 3
     steps:
       - name: Enviar lembretes desta hora
-        run: curl -fsS -X POST "https://reflexao-biblica.pages.dev/api/cron" -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
+        run: |
+          curl -fsS -X POST "https://reflexao-biblica.pages.dev/api/cron" -H "x-cron-secret: ${{ secrets.CRON_SECRET }}"
