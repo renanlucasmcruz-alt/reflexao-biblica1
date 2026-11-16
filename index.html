@@ -633,7 +633,10 @@ ${pre?PRE_SLOT:'Tradução do original, um versículo por linha começando com "
 ## Reflexão
 Dois parágrafos curtos. Uma leitura filosófica e existencial do texto, que faça pensar: o que ele diz sobre a condição humana, o tempo, o sofrimento, a escolha, o sentido. Pode dialogar com um pensador (antigo ou moderno) se ajudar. Sem clichê e sem sermão.
 ## Para levar hoje
-Uma frase de síntese e uma pergunta honesta.`; }
+Exatamente três linhas, cada uma começando com o rótulo em negrito:
+**Para lembrar:** uma frase curta e marcante (até 15 palavras) que saia deste texto, para repetir durante o dia; nada genérico que sirva para qualquer passagem.
+**Para fazer hoje:** um gesto pequeno, concreto e possível ainda hoje, ligado ao que a passagem mostra.
+**Para pensar:** uma pergunta honesta e pessoal, que não se responda com sim ou não.`; }
 function deepPrompt(ref,pre){ return `${BASE}${preNote(pre)}
 
 Faça um ESTUDO de ${ref} para um adulto que quer entender o texto. Como um bom professor: primeiro situe o leitor, depois caminhe pelo texto cena por cena e só então tire o sentido. Entre 800 e 1100 palavras no total. Títulos com "## ".
@@ -1280,7 +1283,8 @@ function parseReflection(t){ const T=String(t||"");
   const clean=x=>x.replace(/\*\*|__|[*_`]/g,"").replace(/^>\s?/,"").replace(/^\d+\s*/,"").trim();
   const verses=sec("O texto").split("\n").filter(l=>/^>/.test(l)).map(l=>clean(l.replace(/^>\s*\*\*\d+\*\*\s*/,"")));
   const take=sec("Para levar hoje").split("\n").map(clean).filter(Boolean);
-  const question=take.find(l=>/\?\s*$/.test(l))||""; const phrase=take.find(l=>l!==question)||"";
+  const lab=re=>{ const l=take.find(x=>re.test(x)); return l?l.replace(re,"").trim():""; };
+  const question=lab(/^Para pensar:\s*/i)||take.find(l=>/\?\s*$/.test(l))||""; const phrase=lab(/^Para lembrar:\s*/i)||take.find(l=>l!==question&&!/^Para fazer hoje:/i.test(l))||"";
   let verse=verses.slice(0,2).join(" "); if(verse.length>220) verse=verses[0]||verse.slice(0,220);
   return {verse,phrase,question}; }
 async function storyCard(r){
