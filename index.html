@@ -599,6 +599,7 @@ function doy(d=new Date()){return Math.floor((new Date(d.getFullYear(),d.getMont
 function todayRef(){ const d=new Date(); return PASS[(doy(d)+(d.getFullYear()-2026)*366)%PASS.length]; }
 const BASE=`Você é um biblista com domínio de hebraico bíblico, aramaico e grego koiné, e escreve em português do Brasil.
 REGRAS GERAIS
+- Cite capítulos e versículos pela numeração das Bíblias em português, não pela hebraica (ex.: Salmo 36:7, não 36:8; Salmo 51:1-2, sem contar o título como versículo).
 - Postura respeitosa e analítica, SEM puxar para nenhuma religião ou denominação, sem pregação e sem tentar convencer de nada.
 - Traduza diretamente da língua original: Antigo Testamento do hebraico do Texto Massorético (ou do aramaico, nos trechos em aramaico); Novo Testamento do grego koiné (texto crítico). NÃO copie nem adapte traduções em português já publicadas: faça uma tradução própria e fiel, com [colchetes] para palavras acrescentadas pelo sentido.
 - Quando o Novo Testamento citar o Antigo pela Septuaginta (LXX), ou quando a LXX ou os Manuscritos do Mar Morto divergirem do Texto Massorético de forma relevante, mencione isso.
@@ -635,21 +636,21 @@ Dois parágrafos curtos. Uma leitura filosófica e existencial do texto, que fa�
 Uma frase de síntese e uma pergunta honesta.`; }
 function deepPrompt(ref,pre){ return `${BASE}${preNote(pre)}
 
-Faça um ESTUDO COMPLETO de ${ref}, como um professor sábio e honesto conversando com um adulto pensante. Títulos com "## ".
+Faça um ESTUDO de ${ref} para um adulto que quer entender o texto. Como um bom professor: primeiro situe o leitor, depois caminhe pelo texto cena por cena e só então tire o sentido. Entre 800 e 1100 palavras no total. Títulos com "## ".
 
 FORMATO
+## Onde estamos
+Um parágrafo: o que aconteceu antes no livro, quem são as pessoas, a época (com datação aproximada; se a data do livro for debatida, diga em uma frase) e a situação concreta (social, política, religiosa) que o leitor precisa conhecer para entender o trecho.
 ## O texto
 ${pre?PRE_SLOT:'A tradução completa, versículo por versículo, cada linha começando com "> " e o número em negrito. Depois: "Tradução do [hebraico/aramaico/grego] original."'}
-## Notas de tradução
-De 3 a 5 palavras-chave${pre?" da tradução acima":""}: a palavra transliterada em itálico (com a grafia original entre parênteses), o sentido literal e por que a escolha importa. Variantes de manuscritos relevantes, se houver.
-## Contexto histórico e cultural
-Época (com datação aproximada e, se houver debate, as principais posições), autor provável, destinatários e o que estava acontecendo: situação política e religiosa, costumes, geografia e, quando houver consenso, dados da arqueologia ou de textos do Antigo Oriente Próximo e do judaísmo do Segundo Templo que iluminem a passagem. O que o texto significava para os primeiros leitores.
-## Estrutura e gênero
-O gênero literário e como o trecho está construído (paralelismos, quiasmos, repetições, palavras-gancho), em poucas linhas.
-## Leituras
-Tradição judaica (quando se aplica), tradições cristãs (católica, protestante, ortodoxa) e leitura acadêmica ou filosófica, mostrando as tensões entre elas.
-## Para a vida real
-Uma reflexão concreta.
+## Entendendo, passo a passo
+Divida o trecho em 2 a 4 blocos de versículos. Cada bloco é um parágrafo que começa com um subtítulo em negrito (ex.: "**vv. 1–3: Rute vai ao campo.**"). Explique o que acontece e por quê: costumes, leis, geografia e práticas da época que iluminam o texto, citando as passagens bíblicas relacionadas. Use no máximo 3 palavras do original em todo o estudo, cada uma no ponto em que ela muda o sentido: transliterada em itálico, com o sentido literal. Se houver variante de manuscrito ou trecho de tradução incerta que importe, diga em uma frase.
+## O que o texto quer dizer
+Um parágrafo com a mensagem central e os temas, ligando o trecho ao livro como um todo.
+## Como foi lido
+Até 3 tópicos curtos: tradição judaica (quando se aplica), tradições cristãs e leitura acadêmica, mostrando as tensões entre elas.
+## Para a vida
+Um parágrafo concreto, sem sermão.
 ## Para pensar
 Uma pergunta honesta.`; }
 function lessonPrompt(L){ const all=LESSONS.map(x=>x.title); const idx=LESSONS.indexOf(L);
@@ -681,7 +682,13 @@ Exatamente 3 perguntas numeradas: uma de compreensão, uma de conexão entre os 
 const WAIT=["Traduzindo do original…","Consultando o hebraico, o aramaico e o grego…","Preparando sua leitura…","Pegue seu café, já está quase…","Comparando as tradições…"];
 function skel(el,msg){ if(!el) return; el.innerHTML=`<div class="skel" aria-busy="true" aria-label="${esc(msg||"Carregando")}"><div class="sk-msg">${esc(msg||WAIT[Math.floor(Math.random()*WAIT.length)])}</div><i style="width:40%"></i><i></i><i style="width:92%"></i><i style="width:84%"></i><i style="width:60%"></i></div>`; }
 async function stream(prompt, el, opts={}){ const s=await getSample(); if(!s){ askLogin(); throw {code:"no_sample"}; }; const fx=opts.fill||(t=>t); skel(el); if(opts.early){ const e=el.innerHTML; el.innerHTML=md(opts.early)+e; }
-  const r=await s(prompt,Object.assign({modelTier:"complex",onText:({text})=>{ el.innerHTML=md(fx(text)); }},opts));
+  const base=Object.assign({modelTier:"complex"},opts);
+  let r=await s(prompt,Object.assign({},base,{onText:({text})=>{ el.innerHTML=md(fx(text)); }}));
+  /* Se a conexão cair no meio (tela apagada, troca de app, rede), pede para continuar de onde parou e emenda. */
+  for(let k=0;k<2&&r.truncated&&r.text&&r.text.length>80&&typeof prompt==="string";k++){ const sofar=r.text;
+    try{ const c=await s([{role:"user",content:prompt},{role:"assistant",content:sofar},{role:"user",content:"A resposta acima foi interrompida. Continue exatamente do ponto onde ela parou, sem repetir nada do que já foi escrito e sem nenhum comentário: comece pela próxima palavra."}],
+        Object.assign({},base,{feature:"",onText:({text})=>{ el.innerHTML=md(fx(joinCont(sofar,text))); }}));
+      r={text:joinCont(sofar,c.text),truncated:c.truncated}; }catch(e){ break; } }
   let t=fx(r.text); if(r.truncated){ t+="\n\n⚠️ *O texto veio incompleto. Toque em “Avisar” no fim do texto para refazer.*"; toast("A resposta veio incompleta"); } return t; }
 let lastTap=0; document.addEventListener("pointerdown",()=>{ lastTap=Date.now(); },true);
 function askLogin(why){ if(window.RB&&RB.user) return; if(Date.now()-lastTap>6000) return; $("gate").hidden=false; $("gClose").hidden=false; $("gMsg").textContent=why||"Crie sua conta grátis para usar esta função. Leva 5 segundos."; }
@@ -1049,6 +1056,9 @@ FORMATO
 /* Bíblia já traduzida: arquivos estáticos por livro (/biblia/Genesis.json), abrem na hora e funcionam offline. */
 const BOOKFILES={};
 function bookSlug(b){ return b.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^A-Za-z0-9]/g,""); }
+/* Emenda a continuação: tira o trecho repetido se a IA recomeçar parte do que já tinha escrito. */
+function joinCont(a,b){ if(!b) return a; const tb=b.replace(/^\s+/,""); for(let n=Math.min(200,a.length,tb.length);n>=12;n--){ if(a.endsWith(tb.slice(0,n))) return a+tb.slice(n); }
+  const glue=/\w$/.test(a)&&/^\w/.test(b)?"":(/\s$/.test(a)||/^\s/.test(b)?"":" "); return a+glue+b; }
 const BOOKALIAS={"Salmo":"Salmos"};
 /* Trecho da tradução pronta (/biblia) para uma referência como "Gênesis 1:1-5". maxV: se passar disso, usa os 6 versículos centrais. */
 async function staticPassage(ref,maxV){ try{ const p=String(ref).match(/^(.+?) (\d+)(?::(\d+)(?:-(\d+))?)?$/); if(!p) return null;
@@ -1632,7 +1642,14 @@ RB.ready.then(()=>{ if(!RB.sb){ $("gate").hidden=false; $("gMsg").textContent="N
 $("gClose").onclick=()=>{ $("gate").hidden=true; };
 RB.ready.then(()=>{ const c=$("proChip"); if(c){ c.hidden=RB.plan==="pro"||!RB.user; c.onclick=()=>openPro(); } });
 { const _pf=prefetchNext; prefetchNext=async()=>{ if(window.RB&&RB.plan==="pro") return _pf(); }; }
-if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+if("serviceWorker" in navigator){ window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+  /* Versão nova: ao voltar para o app, procura atualização; quando ela assume, recarrega se nada estiver sendo gerado. */
+  const hadCtl=!!navigator.serviceWorker.controller; let reloading=false, pend=false;
+  const working=()=>busy||!!document.querySelector(".skel,#stream,.spin")||(typeof SP!=="undefined"&&SP.state==="playing");
+  const tryReload=()=>{ if(reloading) return; if(working()){ pend=true; return; } reloading=true; location.reload(); };
+  navigator.serviceWorker.addEventListener("controllerchange",()=>{ if(hadCtl) tryReload(); });
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState!=="visible") return; navigator.serviceWorker.getRegistration().then(r=>r&&r.update()).catch(()=>{}); if(pend) tryReload(); });
+  setInterval(()=>{ if(pend&&!working()) tryReload(); },5000); }
 </script>
 </body>
 </html>
