@@ -30,7 +30,7 @@ async function handle(req) {
   if (!messages.length) return json(400, { error: "messages" });
   const size = JSON.stringify(messages).length; if (size > 120000) return json(413, { error: "grande demais" });
 
-  const plan = await getPlan(user.id);
+  const plan = await getPlan(user.id, user.email);
   const shared = body.shared === true;
   const feature = typeof body.feature === "string" ? body.feature : "";
   if (plan !== "pro" && PRO_ONLY.has(feature)) {

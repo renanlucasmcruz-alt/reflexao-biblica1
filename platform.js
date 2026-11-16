@@ -13,7 +13,7 @@
     if(CFG.user) await refreshPlan();
     return CFG;
   }
-  async function refreshPlan(){ try{ const { data } = await CFG.sb.from("profiles").select("plan,pro_until").eq("id",CFG.user.id).maybeSingle();
+  async function refreshPlan(){ try{ const me=await CFG.api("/api/me").catch(()=>null); if(me&&me.plan){ CFG.plan=me.plan; return CFG.plan; } }catch(e){} try{ const { data } = await CFG.sb.from("profiles").select("plan,pro_until").eq("id",CFG.user.id).maybeSingle();
     CFG.plan = data && data.plan==="pro" && (!data.pro_until || new Date(data.pro_until)>new Date()) ? "pro" : "free"; }catch(e){} return CFG.plan; }
   CFG.refreshPlan=refreshPlan;
   CFG.ready=loadConfig().catch(e=>{ console.warn("config",e); return CFG; });

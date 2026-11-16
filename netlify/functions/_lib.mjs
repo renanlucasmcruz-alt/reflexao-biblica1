@@ -31,7 +31,10 @@ export async function sb(path, init = {}) {
     headers: { ...svcHeaders(), "content-type": "application/json", ...(init.headers || {}) },
   });
 }
-export async function getPlan(userId) {
+/* Dono(s) do app (ADMIN_EMAILS): acesso Pro completo, sem assinatura. */
+export const isAdminEmail = (email) => !!email && env("ADMIN_EMAILS", "").toLowerCase().split(",").map((s) => s.trim()).filter(Boolean).includes(String(email).toLowerCase());
+export async function getPlan(userId, email) {
+  if (isAdminEmail(email)) return "pro";
   const r = await sb(`profiles?id=eq.${userId}&select=plan,pro_until`);
   const [p] = r.ok ? await r.json() : [];
   return p && p.plan === "pro" && (!p.pro_until || new Date(p.pro_until) > new Date()) ? "pro" : "free";
