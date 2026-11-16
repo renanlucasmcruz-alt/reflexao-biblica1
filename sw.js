@@ -1,5 +1,5 @@
 /* Service worker: abre o app sem internet e mantém os arquivos principais em cache. */
-const V = "rb-v75";
+const V = "rb-v76";
 const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/privacidade.html", "/termos.html"];
 self.addEventListener("install", (e) => { e.waitUntil(caches.open(V).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== V).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -8,7 +8,7 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET" || u.pathname.startsWith("/api/") || u.hostname.endsWith("supabase.co")) return;
   if (e.request.mode === "navigate") { e.respondWith(fetch(e.request).then((r) => { caches.open(V).then((c) => c.put("/index.html", r.clone())); return r; }).catch(() => caches.match("/index.html"))); return; }
   /* Bíblia pronta: mostra o que está em cache e atualiza por trás (correções chegam na próxima abertura). */
-  if (u.origin === location.origin && u.pathname.startsWith("/biblia/")) { e.respondWith(caches.open(V).then((c) => c.match(e.request).then((hit) => { const net = fetch(e.request).then((r) => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => hit); return hit || net; }))); return; }
+  if (u.origin === location.origin && (u.pathname.startsWith("/biblia/")||u.pathname.startsWith("/xr/")||u.pathname==="/intros.json")) { e.respondWith(caches.open(V).then((c) => c.match(e.request).then((hit) => { const net = fetch(e.request).then((r) => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => hit); return hit || net; }))); return; }
   e.respondWith(caches.match(e.request).then((hit) => hit || fetch(e.request).then((r) => { if (r.ok && (u.origin === location.origin || /esm\.sh|fonts\.(googleapis|gstatic)\.com/.test(u.hostname))) { const cp = r.clone(); caches.open(V).then((c) => c.put(e.request, cp)); } return r; })));
 });
 /* Lembrete diário: o servidor só "cutuca"; o texto do aviso fica aqui. */

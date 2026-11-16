@@ -1140,6 +1140,7 @@ async function bookIntro(b){
   const k="intro_"+chKey(b,0); openModal(`<div class="row" style="justify-content:space-between"><h2 style="font-family:var(--display);font-size:24px;margin:0">Sobre ${esc(b)}</h2><button class="iconbtn" id="biClose" aria-label="Fechar">✕</button></div><div class="md" id="biOut" style="margin-top:12px;font-size:16px"></div><button class="btn ghost full" data-sayintro="1" style="margin-top:12px">${ic("vol")} Ouvir</button>`);
   $("biClose").onclick=closeModal; const out=$("biOut");
   $("setSheet").querySelector("[data-sayintro]").onclick=()=>startSpeech("intro",`Sobre o livro de ${b}.`,out.innerText,`Sobre ${b}`);
+  try{ if(!window._INTROS) window._INTROS=fetch("/intros.json").then(r=>r.ok?r.json():{}).catch(()=>({})); const I=await window._INTROS; if(I&&I[b]){ const t=await staticSwap(I[b]); out.innerHTML=md(t); linkRefs(out); decorate(out,""); return; } }catch(e){}
   const c=await kvGet(k); if(c&&c.text){ out.innerHTML=md(c.text); return; }
   try{ const t=await stream(`${BASE}
 
