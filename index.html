@@ -1300,17 +1300,24 @@ async function storyCard(r){
   x.beginPath(); x.arc(622,345,32,-1.3,1.3); x.stroke(); [500,540,580].forEach(px=>{ x.beginPath(); x.moveTo(px,270); x.quadraticCurveTo(px-14,240,px,215); x.quadraticCurveTo(px+14,190,px,165); x.stroke(); });
   const wrap=(text,font,maxW)=>{ x.font=font; const words=String(text).split(/\s+/), lines=[]; let l=""; words.forEach(w=>{ const t=l?l+" "+w:w; if(x.measureText(t).width>maxW&&l){ lines.push(l); l=w; } else l=t; }); if(l) lines.push(l); return lines; };
   x.textAlign="center";
-  x.fillStyle="#f0d28f"; x.font="600 34px Manrope,Arial,sans-serif"; const day=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"}).toUpperCase();
-  x.fillText("REFLEXÃO DO DIA · "+day,540,560);
-  x.fillStyle="#fbf1e4"; x.font="bold 76px Fraunces,Georgia,serif"; wrap(shownRef(r),"bold 76px Fraunces,Georgia,serif",900).forEach((l,i)=>x.fillText(l,540,670+i*86));
-  let y=860;
-  if(verse){ let fs=50, L; do{ L=wrap("“"+verse+"”",`italic ${fs}px Literata,Georgia,serif`,880); if(L.length*fs*1.4<=430) break; fs-=4; }while(fs>32);
-    x.fillStyle="#f6e7d2"; L.forEach((l,i)=>x.fillText(l,540,y+i*fs*1.4)); y+=L.length*fs*1.4+70; }
-  x.strokeStyle="rgba(240,210,143,.55)"; x.lineWidth=3; x.beginPath(); x.moveTo(440,y-20); x.lineTo(640,y-20); x.stroke(); y+=50;
-  if(phrase){ let fs=56, L; do{ L=wrap(phrase,`bold ${fs}px Fraunces,Georgia,serif`,880); if(L.length*fs*1.35<=360) break; fs-=4; }while(fs>34);
-    x.fillStyle="#ffffff"; L.forEach((l,i)=>x.fillText(l,540,y+i*fs*1.35)); y+=L.length*fs*1.35+50; }
-  if(question){ let fs=42, L; do{ L=wrap(question,`${fs}px Literata,Georgia,serif`,860); if(L.length*fs*1.4<=260) break; fs-=3; }while(fs>30);
-    x.fillStyle="#e9cfae"; L.forEach((l,i)=>x.fillText(l,540,y+i*fs*1.4)); }
+  x.fillStyle="#f0d28f"; const day=new Date().toLocaleDateString("pt-BR",{weekday:"long",day:"numeric",month:"long"}).toUpperCase();
+  { const t="REFLEXÃO DO DIA · "+day; let fs=34; do{ x.font=`600 ${fs}px Manrope,Arial,sans-serif`; if(x.measureText(t).width<=900) break; fs-=2; }while(fs>22); x.fillText(t,540,560); }
+  x.fillStyle="#fbf1e4"; const refL=wrap(shownRef(r),"bold 76px Fraunces,Georgia,serif",900); refL.forEach((l,i)=>x.fillText(l,540,670+i*86));
+  /* Mede tudo antes de desenhar e reduz as letras até caber acima do rodapé (nada encosta no nome do app). */
+  const top=790+refL.length*86, bottom=1665;
+  const lay=k=>{ const B=[]; let h=0;
+    if(verse){ let fs=Math.round(50*k), L; do{ L=wrap("“"+verse+"”",`italic ${fs}px Literata,Georgia,serif`,880); if(L.length*fs*1.4<=430*k) break; fs-=2; }while(fs>26); B.push({t:"v",L,fs,lh:fs*1.4}); h+=L.length*fs*1.4+70*k; }
+    B.push({t:"rule"}); h+=50*k;
+    if(phrase){ let fs=Math.round(56*k), L; do{ L=wrap(phrase,`bold ${fs}px Fraunces,Georgia,serif`,880); if(L.length*fs*1.35<=360*k) break; fs-=2; }while(fs>28); B.push({t:"p",L,fs,lh:fs*1.35}); h+=L.length*fs*1.35+(question?50*k:0); }
+    if(question){ let fs=Math.round(42*k), L; do{ L=wrap(question,`${fs}px Literata,Georgia,serif`,860); if(L.length*fs*1.4<=260*k) break; fs-=2; }while(fs>24); B.push({t:"q",L,fs,lh:fs*1.4}); h+=L.length*fs*1.4; }
+    return {B,h}; };
+  let k=1, P=lay(k); while(top+P.h>bottom&&k>0.6){ k-=0.05; P=lay(k); }
+  let y=top+Math.max(0,(bottom-top-P.h)/2)*0.35;
+  P.B.forEach(b=>{
+    if(b.t==="rule"){ x.strokeStyle="rgba(240,210,143,.55)"; x.lineWidth=3; x.beginPath(); x.moveTo(440,y-20*k); x.lineTo(640,y-20*k); x.stroke(); y+=50*k; return; }
+    x.font=b.t==="v"?`italic ${b.fs}px Literata,Georgia,serif`:b.t==="p"?`bold ${b.fs}px Fraunces,Georgia,serif`:`${b.fs}px Literata,Georgia,serif`;
+    x.fillStyle=b.t==="v"?"#f6e7d2":b.t==="p"?"#ffffff":"#e9cfae";
+    b.L.forEach((l,i)=>x.fillText(l,540,y+i*b.lh)); y+=b.L.length*b.lh+(b.t==="v"?70*k:b.t==="p"?50*k:0); });
   x.fillStyle="#f0d28f"; x.font="bold 40px Manrope,Arial,sans-serif"; x.fillText("☕ Reflexão Bíblica",540,1760);
   x.fillStyle="#d8bfa3"; x.font="32px Manrope,Arial,sans-serif"; x.fillText(location.host,540,1815);
   const blob=await new Promise(res=>c.toBlob(res,"image/png")); const file=new File([blob],"reflexao-"+dstr()+".png",{type:"image/png"});
